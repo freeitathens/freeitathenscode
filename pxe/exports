@@ -7,7 +7,9 @@
 # Example for NFSv4:
 # /srv/nfs4        gss/krb5i(rw,sync,fsid=0,crossmnt,no_subtree_check)
 # /srv/nfs4/homes  gss/krb5i(rw,sync,no_subtree_check)
-#
 
-/home 192.168.1.1/24(rw,no_root_squash,no_subtree_check)
-/var/lib/tftpboot 192.168.1.1/24(ro,no_root_squash,no_subtree_check)
+/home/frita 	192.168.1.0/24(rw,no_root_squash,no_subtree_check)
+#/home		192.168.1.0/255.255.255.0(ro,no_subtree_check)
+/tftpboot 	192.168.1.0/24(ro,no_root_squash,no_subtree_check)
+/usr/local/Old_server/home/frita	192.168.1.0/255.255.255.0(rw,no_subtree_check)
+

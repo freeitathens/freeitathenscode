@@ -3,11 +3,12 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Terminal=false
-Icon[en_US]=/
+Terminal=true
+Icon[en_US]=/usr/share/icons/Mint-X/apps/scalable/gdm-setup.svg
 Name[en_US]=Quality Control
-Exec=gnome-terminal -e /home/oem/freeitathenscode/QC_Process/QC.sh
+Exec=/home/oem/freeitathenscode/QC_Process/QC.sh
 Comment[en_US]=Ensure machine is within FreeIT guidelines
 Name=Quality Control
 Comment=Ensure machine is within FreeIT guidelines
-Icon=/usr/share/icons/gnome/scalable/apps/utilities-system-monitor.svg
+Icon=/usr/share/icons/Mint-X/apps/scalable/gdm-setup.svg
+GenericName=
