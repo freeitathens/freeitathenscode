@@ -1,72 +1,45 @@
 default menu.c32
 prompt 0
 
-menu title PXE Boot Menu
+menu title Free I.T. Athens PXE Boot Menu
 #MENU AUTOBOOT Starting Local System in # seconds
 
 label local
-  menu label Boot from local disk
+  menu default
+  menu label Boot from Local Disk
   localboot 0x80
   timeout 600
 
-# ubuntu debugging tips
-#
-# append break=mount debug=y
-# when this drops you to busybox run
-# t=/dev/tty2; sh <$t >$t 2>$t &
-# then run exit
-# now the install continues but you have a shell on the second vt
-#
-# for live cd
-# automatic-ubiquity debug-ubiquity
-#
-# for alternate installer
-# DEBCONF_DEBUG=5
-# ocs_lang and ocs_live_keymap are deprecated
+# See end of file for debugging tips
 
 label live-u10043
   menu label Run Ubuntu 10.04.3
-  menu default
   kernel u-10.04.3/casper/vmlinuz
   append boot=casper netboot=nfs initrd=u-10.04.3/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-10.04.3 file=/cdrom/preseed/ubuntu.seed
 
-label clonezilla_64
-  menu label Clonezilla live (64 bit)
-  kernel clonezilla/live/vmlinuz
-  append initrd=clonezilla/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla/live/filesystem.squashfs
-
-label clonezilla_32
-  menu label Clonezilla live (32 bit)
-  kernel clonezilla-live-2.1.2-43-i486/live/vmlinuz
-  append initrd=clonezilla-live-2.1.2-43-i486/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-live-2.1.2-43-i486/live/filesystem.squashfs
-
-#TODO Following allegedly will build a usb stick with the named image:
-#ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
-#"-g auto -e1 auto -e2 -c -r -j2 -srel -k -p true restoreparts 2013-10-09-20-fritagonal-img sda1 sda3" 2013-10-09-20-fritagonal-img
-
-# symlinks set up to shorten path, fails to work otherwise
-#label clonezilla64-live-ubuntu
-#  menu label Install Mint13 Mate (64 bit) oem-config With Clonezilla
-#  kernel c/v64
-#  append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 20" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/frita/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+#symlinks set up to shorten path, fails to work otherwise
+label clonezilla32-live-ubuntu
+  menu label Install Mint13 XFCE (32 bit PAE)
+  kernel c/v32
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 10" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 30" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 
 label clonezilla32-live-ubuntu
-  menu label Install Mint13 XFCE (32 bit) With Clonezilla
+  menu label Install Mint13 XFCE (32 bit)
   kernel c/v32
-  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 10" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh;sleep 20" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 10" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 30" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+# append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 10"  ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh;sleep 20"               ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 
-# append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 18" ocs_prerun2="sshfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/frita/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/opt/drbl/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-ubuntu sda1 sda3" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+label clonezilla64-live-ubuntu
+ menu label Install Mint13 Mate (64 bit) oem-config
+ kernel c/v64
+ append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 10" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+# append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 20" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-mint64 sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
 # Following from http://www.dslreports.com/forum/r24834879-How-To-PXE-Boot-DBAN
 label DBAN_2
   menu label DBAN version 2
   kernel dban2/dban.bzi
   append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
-
-label dban
-  menu label Wipe hard drive (Old DBAN)
-  kernel memdisk
-  append initrd=dban/dban.img floppy
 
 LABEL memtest
   menu label Test RAM
@@ -78,12 +51,26 @@ label hdt
   kernel memdisk
   append initrd=hdt/hdt.img floppy
 
+label clonezilla_64
+  menu label Clonezilla live (64 bit)
+  kernel clonezilla/live/vmlinuz
+  append initrd=clonezilla/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla/live/filesystem.squashfs
+
+label clonezilla_32
+  menu label Clonezilla live (32 bit)
+  kernel clonezilla-live-2.1.2-43-i486/live/vmlinuz
+  append initrd=clonezilla-live-2.1.2-43-i486/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-live-2.1.2-43-i486/live/filesystem.squashfs
+
 #label install-1004
 #  menu label Auto install Ubuntu 10.04.1
 #  kernel 10.04.1/casper/vmlinuz
 ## change "noscrub.seed" to "scrub.seed" to use a preseed file with scrubbing
 ## add "noninteractive" to install on low ram
 #  append  boot=casper netboot=nfs initrd=10.04.1/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/10.04.1 automatic-ubiquity debug-ubiquity noprompt file=/cdrom/preseed/noscrub.seed
+
+#TODO Following allegedly will build a usb stick with the named image:
+#ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
+#"-g auto -e1 auto -e2 -c -r -j2 -srel -k -p true restoreparts 2013-10-09-20-fritagonal-img sda1 sda3" 2013-10-09-20-fritagonal-img
 
 label live-u1204
   menu label Run Ubuntu 12.04
@@ -119,6 +106,26 @@ label live-mc-13
   menu label Run Mint 13 with Cinnamon
   kernel mc-13/casper/vmlinuz
   append boot=casper netboot=nfs initrd=mc-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mc-13 file=/cdrom/preseed/mint.seed
+
+label dban
+  menu label (DEPRECATED, OLD DBAN) Wipe hard drive
+  kernel memdisk
+  append initrd=dban/dban.img floppy
+
+# *buntu debugging tips
+#
+# append break=mount debug=y
+# when this drops you to busybox run
+# t=/dev/tty2; sh <$t >$t 2>$t &
+# then run exit
+# now the install continues but you have a shell on the second vt
+#
+# for live cd
+# automatic-ubiquity debug-ubiquity
+#
+# for alternate installer
+# DEBCONF_DEBUG=5
+# ocs_lang and ocs_live_keymap are deprecated
 
 label its-broken
   menu label ALL OPTIONS BELOW HERE ARE CURRENTLY UNAVAILABLE
