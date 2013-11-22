@@ -1,0 +1,4 @@
+[Desktop Entry]
+Name=Ubuntu Introduction
+Exec=/usr/local/bin/watch_intro
+Type=Application

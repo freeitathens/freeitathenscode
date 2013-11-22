@@ -1,0 +1,123 @@
+default menu.c32
+prompt 0
+
+menu title PXE Boot Menu
+#MENU AUTOBOOT Starting Local System in # seconds
+
+label local
+  menu label Boot from local disk
+  localboot 0x80
+  timeout 600
+
+# ubuntu debugging tips
+#
+# append break=mount debug=y
+# when this drops you to busybox run
+# t=/dev/tty2; sh <$t >$t 2>$t &
+# then run exit
+# now the install continues but you have a shell on the second vt
+#
+# for live cd
+# automatic-ubiquity debug-ubiquity
+#
+# for alternate installer
+# DEBCONF_DEBUG=5
+
+#label install-1004
+#  menu label Auto install Ubuntu 10.04.1
+#  kernel 10.04.1/casper/vmlinuz
+## change "noscrub.seed" to "scrub.seed" to use a preseed file with scrubbing
+## add "noninteractive" to install on low ram
+#  append  boot=casper netboot=nfs initrd=10.04.1/casper/initrd.lz nfsroot=192.168.1.1:/var/lib/tftpboot/10.04.1 automatic-ubiquity debug-ubiquity noprompt file=/cdrom/preseed/noscrub.seed
+
+label live-u10043
+  menu label Run Ubuntu 10.04.3
+  menu default
+  kernel u-10.04.3/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=u-10.04.3/casper/initrd.lz nfsroot=192.168.1.1:/var/lib/tftpboot/u-10.04.3 file=/cdrom/preseed/ubuntu.seed
+
+label clonezilla
+  menu label Clonezilla live
+  kernel clonezilla/vmlinuz
+  append initrd=clonezilla/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash fetch=tftp://192.168.1.1/clonezilla/filesystem.squashfs
+
+# symlinks set up to shorten path, fails to work otherwise
+label clonezilla-live-ubuntu
+  menu label Install Mint13 With Clonezilla
+  kernel c/v
+  append initrd=c/i boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 30" ocs_prerun2="mount -t nfs server:/home /home" ocs_prerun3="/home/frita/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/opt/drbl/sbin/ocs-sr -g auto -e1 auto -e2 -j2 -k -r -p true restoredisk latest-ubuntu sda" ocs_live_keymap="NONE" ocs_live_batch="yes" ocs_lang="en_US.UTF-8" vga=788 nosplash fetch=tftp://192.168.1.1/c/f.squashfs
+
+# Following from http://www.dslreports.com/forum/r24834879-How-To-PXE-Boot-DBAN
+label DBAN_2
+  menu label DBAN version 2
+  kernel dban2/dban.bzi
+  append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+
+label dban
+  menu label Wipe hard drive (Old DBAN)
+  kernel memdisk
+  append initrd=dban/dban.img floppy
+
+LABEL memtest
+  menu label Test RAM
+  kernel memtest/memtestp
+  append -
+
+label hdt
+  menu label Identify Hardware
+  kernel memdisk
+  append initrd=hdt/hdt.img floppy
+
+label live-u1204
+  menu label Run Ubuntu 12.04
+  kernel u-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=u-12.04/casper/initrd.lz nfsroot=192.168.1.1:/var/lib/tftpboot/u-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-k1204
+  menu label Run Kubuntu 12.04
+  kernel k-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=k-12.04/casper/initrd.lz nfsroot=192.168.1.1:/var/lib/tftpboot/k-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-x1204
+  menu label Run Xubuntu 12.04
+  kernel x-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=x-12.04/casper/initrd.lz nfsroot=192.168.1.1:/var/lib/tftpboot/x-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-l1204
+  menu label Run Lubuntu 12.04
+  kernel l-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=l-12.04/casper/initrd.lz nfsroot=192.168.1.1:/var/lib/tftpboot/l-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-mm-13
+  menu label Run Mint 13 with Mate
+  kernel mm-13/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mm-13/casper/initrd.lz nfsroot=192.168.1.1:/var/lib/tftpboot/mm-13 file=/cdrom/preseed/mint.seed
+
+label live-mc-13
+  menu label Run Mint 13 with Cinnamon
+  kernel mc-13/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mc-13/casper/initrd.lz nfsroot=192.168.1.1:/var/lib/tftpboot/mc-13 file=/cdrom/preseed/mint.seed
+
+label its-broken
+  menu label ALL OPTIONS BELOW HERE ARE CURRENTLY UNAVAILABLE
+
+label systemrescuecd
+menu label Start SystemRescueCD (Currently Borken)
+kernel systemrescuecd/rescuecd
+# some machines need acpi=off no-hlt edd=off
+# can have it autorun a script ar_nowait ar_source=http://server/autorun
+# can load entire filesystem in ram isntead of as needed boottftp=tftp://server/sysrcd/sysrcd.dat
+append initrd=systemrescuecd/initram.igz setkmap=us vga=5 nfsboot=192.168.1.1:/var/lib/tftpboot/systemrescuecd/
+
+# Previous default boot phased out on 6 Jun 2011 in favor of parted based partition resizing
+#label clonezilla-live-ubuntu
+#  menu label Install Ubuntu With Clonezilla
+#  kernel clonezilla-live-1.2.6-40/vmlinuz1
+#  append initrd=clonezilla-live-1.2.6-40/initrd1.img boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun1="sleep 30" ocs_prerun2="sudo mount -t nfs 192.168.1.1:/home/partimag /home/partimag" ocs_live_run="/opt/drbl/sbin/ocs-sr -g auto -e1 auto -e2 -c -r -j2 -k1 -r -p true restoredisk latest-ubuntu sda" ocs_live_extra_param="" ocs_live_keymap="NONE" ocs_live_batch="yes" ocs_lang="en_US.UTF-8" vga=788 nosplash fetch=tftp://192.168.1.1/clonezilla-live-1.2.6-40/filesystem.squashfs
+
+# does not work, says invalid ar_source.  possibly problem with sysrcd.  also sysrcd takes a long time to get to this point, is there any faster option?
+label sysrcd-wipe
+menu label Wipe Hard Drive (Experimental)
+kernel sysrcd/rescuecd
+append initrd=sysrcd/initram.igz setkmap=us vga=5 nfsboot=192.168.1.1:/var/lib/tftpboot/sysrcd/ ar_nowait ar_source=192.168.1.1:/var/lib/tftpboot/sysrcd/
+

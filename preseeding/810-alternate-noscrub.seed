@@ -1,0 +1,52 @@
+# documentation at http://d-i.alioth.debian.org/manual/en.i386/apb.html
+
+# must change mirror after install
+d-i mirror/country string US
+d-i mirror/http/hostname string us.archive.ubuntu.com
+d-i mirror/http/directory string /ubuntu
+d-i mirror/http/proxy string http://server:9999
+
+# Enable oem mode and set blank password for user with name "oem"
+d-i oem-config/enable boolean true
+d-i passwd/allow-password-empty boolean true
+d-i passwd/user-fullname string OEM Configuration (temporary user)
+d-i passwd/username string oem
+d-i passwd/user-password string
+d-i passwd/user-password-again string
+
+# set hostname
+d-i netcfg/get_hostname string ubuntu
+
+# Locale sets language and country.
+d-i debian-installer/locale string en_US.UTF-8
+
+# Keyboard selection
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string us
+
+# Controls whether or not the hardware clock is set to UTC.
+d-i clock-setup/utc boolean true
+
+# Set timezone
+d-i time/zone string America/New_York
+
+# Controls whether to use NTP to set the clock during the install
+# Say no so we don't wait if there's no network connection
+d-i clock-setup/ntp boolean false
+
+# partition the disk
+# wipe everything and put everything in /
+d-i partman-auto/method string regular
+d-i partman-auto/choose_recipe select atomic
+d-i partman/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+
+# found these with debconf-get-selections --installer
+flashplugin-nonfree flashplugin-nonfree/httpget boolean true
+
+tasksel tasksel/first multiselect standard, ubuntu-desktop
+d-i pkgsel/include string atomix audacity avidemux b43-fwcutter blender dia-gnome edubuntu-addon-kde flashplugin-nonfree freemind gcompris gcompris-sound-en gcompris-sound-es gimp-gap gpaint gstreamer0.10-ffmpeg gstreamer0.10-plugins-bad gstreamer0.10-plugins-bad-multiverse gstreamer0.10-plugins-ugly gstreamer0.10-plugins-ugly-multiverse icedtea6-plugin inkscape kompozer language-pack-es language-support-es libavcodec-unstripped-51 libdvdread3 libmp3lame0 msttcorefonts oem-config qcad scribus secure-delete tuxmath tuxpaint tuxpaint-stamps-default tuxtype unrar
+
+# remove proxy setting and prepare for end user
+d-i preseed/late_command string rm /target/etc/apt/apt.conf; in-target oem-config-prepare

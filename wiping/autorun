@@ -1,0 +1,4 @@
+mkdir /mnt/ipxe/
+mount server:/var/lib/tftpboot/sysrcd/ /mnt/ipxe/
+badblocks -w /dev/sda
+dd if=/mnt/ipxe/ipxe.iso of=/dev/sda

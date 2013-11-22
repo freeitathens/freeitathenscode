@@ -1,0 +1,7 @@
+These are preseed files and scripts from when we used to use the Ubuntu installer.
+
+For Ubuntu 8.10, we had a customized CD that contained the packages we wanted. For 10.04 we did not. That's why in thr 8.10 preseeds and scripts you don't see any mention of indtalling extra packages, whereas in the 10.04 ones you do.
+
+The scripts were used when we did not install from a CD with our preseed files.
+
+The file before_preseeding documents the original imaging "system" we used at Free IT Athens.

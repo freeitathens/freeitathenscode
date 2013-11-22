@@ -1,0 +1,58 @@
+# Install the Ubuntu desktop.
+tasksel	tasksel/first	multiselect ubuntu-desktop
+# Try to avoid bug where oem-config-gtk is sometimes gone after install
+ubiquity	ubiquity/keep-installed	string oem-config
+
+# Enable oem mode and set empty password for user with name "oem"
+d-i oem-config/enable boolean true
+d-i user-setup/allow-password-weak boolean true
+d-i passwd/user-fullname string OEM Configuration (temporary user)
+d-i passwd/username string oem
+d-i passwd/user-password string oem
+d-i passwd/user-password-again string oem
+
+# Locale sets language and country.
+d-i debian-installer/locale string en_US.UTF-8
+
+# Keyboard selection
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string us
+
+# Controls whether or not the hardware clock is set to UTC.
+d-i clock-setup/utc boolean true
+
+# Set timezone
+d-i time/zone string America/New_York
+
+# Controls whether to use NTP to set the clock during the install
+d-i clock-setup/ntp boolean true
+
+# partition the disk
+# wipe everything and put everything in /
+d-i partman-auto/method string regular
+d-i partman-auto/choose_recipe select atomic
+d-i partman/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+
+# preseed this empty to avoid the summary before installation
+ubiquity ubiquity/summary note
+
+# run this command after the install
+# switch to text vt to monitor progress
+# interfaces file is borked when installed via NFS
+# /target is the newly-installed system
+# sfill and sswap wipe free space on hard disk
+# oem-config-prepare sets the first run wizard for next login
+ubiquity ubiquity/success_command string \
+exec < /dev/tty6 > /dev/tty6; \
+chvt 6; \
+echo Fixing Network; \
+sed -i "/manual/d" /target/etc/network/interfaces; \
+echo 'sudo aptitude update; sudo http_proxy="http://192.168.8.1:9999" aptitude -y install b43-fwcutter; sudo http_proxy="http://192.168.8.1:9999" aptitude -y install ubuntu-restricted-extras edubuntu-desktop; sudo http_proxy="http://192.168.8.1:9999" aptitude -y dist-upgrade' > /target/home/oem/Desktop/install_updates; \
+chmod +x /target/home/oem/Desktop/install_updates
+
+# reboot after installation
+# you will still be prompted "Close the tray and press ENTER to continue?"
+# unless you add noprompt to the kernel command line
+ubiquity ubiquity/reboot boolean true

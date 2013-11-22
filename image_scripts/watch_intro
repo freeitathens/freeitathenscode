@@ -1,0 +1,9 @@
+#!/bin/sh
+
+INTRO="/usr/local/share/intro_ubuntu/intro_ubuntu_1004.odp" 
+FLAG="$HOME/.watched_intro" 
+
+if [ ! -f $FLAG ]; then
+        ooimpress -show $INTRO
+        touch $FLAG
+fi

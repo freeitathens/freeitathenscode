@@ -1,0 +1,150 @@
+Currently, we're using Clonezilla for imaging. Before that, we used a preseeded Ubuntu live cd. But what did we do before that? We rolled our own imaging "system". This isn't an exact reproduction of what we did; I wrote this up later to answer a question on Ask Metafilter.
+
+-Brian
+
+This assumes
+
+A) You want to use /var/lib/tftpboot as your tftp root directory
+B) You want to store system images in /srv/images
+C) The clients have a 512MB swap partition /dev/sda1 and the rest of the disk is an ext3 root partition
+D) The clients use GRUB to boot
+E) Your PXE server has an ip address of 192.168.1.1 on eth0
+F) eth0 connects to the same network that your clients do
+G) There is no DHCP server already on this network. If there is already a DHCP server, replace step 1a with setting up the tftp-hpa server and reconfiguring your existing DHCP server.
+
+1) Set up a PXE server.
+
+a) Install dnsmasq. In /etc/dnsmasq.conf configure it to provide dhcp and tftp via
+
+
+interface=eth0
+dhcp-range=192.168.1.2,192.168.1.254,1h
+dhcp-boot=pxelinux.0
+enable-tftp
+tftp-root=/var/lib/tftpboot
+
+
+b) Download syslinux and extract pxelinux.0 (it's in syslinux-*/core) to /var/lib/tftpboot
+
+2) Set up SystemRescueCD to PXE boot. SystemRescueCD is by far my favorite live cd. I use a customized version where I've stripped out all the graphical utilities to reduce RAM requirements and have set the imaging script to automatically run.
+
+a) Download the latest iso and extract the files rescuecd, initram.igz, sysrcd.dat, and sysrcd.md5 to /var/lib/tftpboot/sysrcd
+
+b) Place the following in the file /var/lib/tftpboot/pxelinux.cfg/default
+
+
+default menu.c32
+prompt 0
+
+menu title PXE Boot Menu
+MENU AUTOBOOT Starting Local System in # seconds
+
+label local
+menu label Boot from local disk
+menu default
+localboot 0
+timeout 100
+
+label sysrcd
+menu label Boot SystemRescueCD over the network
+kernel sysrcd/rescuecd
+append initrd=sysrcd/initram.igz setkmap=us vga=5 boottftp=tftp://192.168.1.1/sysrcd/sysrcd.dat
+
+
+3) Set up an NFS server to store your images
+
+a) Install the nfs kernel module and services if they aren't already. This procedure varies depending on your distribution so I won't try to describe it.
+
+b) Export your image directory by adding to /etc/fstab
+
+
+/srv/images 192.168.1.*(rw,no_root_squash)
+
+
+4) Use partimage to create an image
+
+a) Use your new PXE setup to boot SystemRescueCD
+b) Mount your nfs share somewhere
+
+
+mount -t nfs 192.168.1.1:/srv/images /mnt/custom
+
+
+c) Run partimage and follow the prompts to backup /dev/sda2 to your nfs share. I recommend enabling gzip compression
+
+5) Write a script for restoring an image and save it to /srv/images
+
+
+#!/bin/sh
+
+function error_exit {
+# Display error message and exit
+echo "$1" | tee /root/image.log
+exit 1
+}
+
+function show_status {
+# Display next operation and pause
+echo "$1..."
+sleep 3
+}
+
+IMAGE=$1
+
+DEVICE="/dev/sda"
+SWAPPART="${DEVICE}1"
+LINUXPARTNUM="2"
+LINUXPART="${DEVICE}${LINUXPARTNUM}"
+MOUNTPOINT="/mnt/local"
+
+if [ $# -ne 1 ]
+then
+error_exit "Must specify path to image"
+fi
+
+show_status "WARNING: About to overwrite all data on the first hard disk"
+
+show_status "Disabling swap"
+swapoff -a || error_exit "$LINENO: Couldn't deactivate swap"
+
+show_status "Erasing partition table"
+parted -s $DEVICE mklabel msdos || error_exit "$LINENO: Couldn't create new partition table"
+
+show_status "Creating and enabling swap"
+parted -s $DEVICE mkpart primary linux-swap 0GB 0.5GB || error_exit "$LINENO: Couldn't create partiton for swap"
+sleep 1
+mkswap -L swap $SWAPPART || error_exit "$LINENO: Couldn't make swap"
+sleep 1
+swapon /dev/sda1 || error_exit "$LINENO: Couldn't activate swap"
+
+show_status "Creating linux partition"
+parted -s $DEVICE mkpart primary ext2 0.5GB 100% || error_exit "$LINENO: Couldn't create partiton for linux"
+parted -s $DEVICE set $LINUXPARTNUM boot on || error_exit "$LINENO: COuldn't amke linux partiton bootable"
+
+show_status "Restoring linux from system image"
+partimage -b restore $LINUXPART $IMAGE || error_exit "$LINENO: Image failed"
+
+show_status "Verifying then expanding linux filesystem"
+e2fsck -f -p $LINUXPART || echo "$LINENO: Error $? encountered while checking linux filesystem, continuing anyway"
+resize2fs -p $LINUXPART || error_exit "$LINENO: Couldn't expand linux filesystem"
+
+show_status "Installing bootloader"
+mount $LINUXPART "$MOUNTPOINT" || error_exit "$LINENO: Couldn't mount linux filesystem"
+grub-install "--root-directory=$MOUNTPOINT" $DEVICE || error_exit "$LINENO: Couldn't install grub"
+
+show_status "Finished! Shutting down."
+halt
+
+
+6) Use the script to restore an image
+
+a) Use your new PXE setup to boot SystemRescueCD
+b) Mount your nfs share somewhere
+
+
+mount -t nfs 192.168.1.1:/srv/images /mnt/custom
+
+
+c) Run the script with the path to the image file as the argument
+
+Hopefully the above makes sense and there aren't too many typos. You may run into trouble if your clients use UUIDs or labels in their /etc/fstab to keep track of partitions. The UUID of the root filesystem will stay the same when it's reimaged but swap will change since it's recreated.
