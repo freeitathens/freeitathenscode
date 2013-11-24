@@ -2,21 +2,27 @@
 set -u
 
 type dialog &>/dev/null || {
-  echo "The 'dialog' program must be installed for the QC script to work, but it is not.";
-  exit 1;
+  echo "The 'dialog' program must be installed for the QC script to work: will attempt to install ...";
+	sudo apt-get update && sudo apt-get install dialog || exit 1
 }
+
+Lock_file="$HOME/Desktop/3D_Test_Started"
 
 if test -z "$DISPLAY"
 then export DISPLAY=:0
 fi
 
-
 #create log file
 rm QC.log* 2> /dev/null
 touch QC.log
 
-# volunteers will return any CDs in the drive to the refurb room
-eject /dev/sr0
+eject /dev/sr0;RC=$?
+if [ $RC -eq 0 ]
+then
+	(sleep 8 && eject -t /dev/sr0) &
+	dialog --title "Free IT Athens Quality Control Test"\
+	--pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 12;clear
+fi
 
 #optical drives
 QCVAR=$(ls /sys/block/ | grep sr | wc -l)
@@ -101,23 +107,6 @@ else
 echo "PASSED  : User count test." >> QC.log
 fi
 
-#edubuntu
-QCVAR=$(dpkg --list 'ubuntu-edu*' | grep ii | wc -l)
-if test $QCVAR -lt 4
-then echo "PROBLEM : Edubuntu. Install educational software!" >> QC.log
-elif test $QCVAR -gt 4
-then echo "PROBLEM : Edubuntu. Something is wrong with this test!" >> QC.log
-else
-echo "PASSED  : Edubuntu test." >> QC.log
-fi
-
-#restricted extras
-QCVAR=$(dpkg --list 'ubuntu-restricted-extras' | grep ii | wc -l)
-if test $QCVAR -ne 1
-then echo "PROBLEM : Restricted extras test. Install restricted extras!" >> QC.log
-else echo "PASSED  : Restricted extras test." >> QC.log
-fi
-
 #CPU speed
 QCVAR=$(awk '/MHz/ {print $4; exit}' /proc/cpuinfo)
 LEN=$(expr match $QCVAR '[0-9]*')
@@ -134,20 +123,21 @@ CORES=$(grep 'core id' /proc/cpuinfo | sort -u | wc -l)
 if test $PROCESSORS -gt 1 -o $CORES -gt 1
 then
     FS_LOW_VALUE=70000
+    #FS_LOW_VALUE=65200   #65271 for forgiving image part
     FS_HIGH_VALUE=1000000
     FS_TEXT="80GB to 1TB"
     # up to 128MB of shared memory for video
     RAM_LOW_VALUE=$(expr 1920 \* 1024)
     RAM_HIGH_VALUE=$(expr 2048 \* 1024)
-    RAM_TEXT="2048MB"
+    RAM_TEXT="2GB"
 else
     FS_LOW_VALUE=5001
     FS_HIGH_VALUE=80000
     FS_TEXT="10 to 80GB"
     # up to 32MB of shared memory for video
     RAM_LOW_VALUE=$(expr 480 \* 1024)
-    RAM_HIGH_VALUE=$(expr 512 \* 1024)
-    RAM_TEXT="512MB"
+    RAM_HIGH_VALUE=$(expr 1024 \* 1024)
+    RAM_TEXT="1GB"
 fi
 
 #filesystem size
@@ -169,18 +159,18 @@ fi
 
 # this file will exist if the user is running the QC script
 # again after it hung during the 3D test
-if [ -e ~/Desktop/3D_Test_Started ]
+if [ -e $Lock_file ]
 then
     echo "PROBLEM  : 3D stability test. Replace video card or disable 3D" >> QC.log
 else
-    echo "10 second long 3D test started" | tee ~/Desktop/3D_Test_Started
+    echo "10 second long 3D test started" | tee $Lock_file
     # run a 3D screensaver in a window for 10 seconds then stop it
     /usr/lib/xscreensaver/antspotlight -window &
     PID=$!
     sleep 10
     kill $PID
     # if the computer doesnt hang, it passes
-    rm  ~/Desktop/3D_Test_Started
+    rm -f $Lock_file
     echo "PASSED  : 3D stability test." >> QC.log
 fi
 
@@ -188,5 +178,5 @@ fi
 sort -r QC.log > QC.sorted.log
 
 #output log to dialog box for ease of reading
-dialog --title "Free IT Athens Quality Control Test Results" --textbox QC.sorted.log 17 80
+dialog --title "Free IT Athens Quality Control Test Results" --textbox QC.sorted.log 20 80
 clear
