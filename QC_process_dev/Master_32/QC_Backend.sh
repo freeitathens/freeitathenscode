@@ -2,8 +2,8 @@
 set -u
 
 type dialog &>/dev/null || {
-  echo "The 'dialog' program must be installed for the QC script to work, but it is not.";
-  exit 1;
+  echo "The 'dialog' program must be installed for the QC script to work: will attempt to install ...";
+	sudo apt-get update && sudo apt-get install dialog || exit 1
 }
 
 Lock_file="$HOME/Desktop/3D_Test_Started"
@@ -19,9 +19,9 @@ touch QC.log
 eject /dev/sr0;RC=$?
 if [ $RC -eq 0 ]
 then
-	(sleep 12 && eject -t /dev/sr0) &
+	(sleep 8 && eject -t /dev/sr0) &
 	dialog --title "Free IT Athens Quality Control Test"\
-	--pause 'remove any Frita CDs (drive will close automatically)' 8 90 12;clear
+	--pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 12;clear
 fi
 
 #optical drives
@@ -123,6 +123,7 @@ CORES=$(grep 'core id' /proc/cpuinfo | sort -u | wc -l)
 if test $PROCESSORS -gt 1 -o $CORES -gt 1
 then
     FS_LOW_VALUE=70000
+    #
     FS_HIGH_VALUE=1000000
     FS_TEXT="80GB to 1TB"
     # up to 128MB of shared memory for video

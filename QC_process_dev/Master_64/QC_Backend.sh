@@ -19,9 +19,9 @@ touch QC.log
 eject /dev/sr0;RC=$?
 if [ $RC -eq 0 ]
 then
-	(sleep 12 && eject -t /dev/sr0) &
+	(sleep 8 && eject -t /dev/sr0) &
 	dialog --title "Free IT Athens Quality Control Test"\
-	--pause 'remove any Frita CDs (drive will close automatically)' 8 90 12;clear
+	--pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 12;clear
 fi
 
 #optical drives
