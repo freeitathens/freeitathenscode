@@ -6,7 +6,6 @@ Type=Application
 Terminal=false
 Icon[en_US]=/usr/share/icons/Mint-X/apps/scalable/gdm-setup.svg
 Name[en_US]=Quality Control
-#Exec=                                        /home/oem/freeitathenscode/QC_Process/QC.sh
 Exec=/etc/alternatives/x-terminal-emulator -e /home/oem/freeitathenscode/QC_Process/QC.sh
 Comment[en_US]=Ensure machine is within FreeIT guidelines
 Name=Quality Control

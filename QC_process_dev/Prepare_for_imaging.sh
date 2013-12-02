@@ -29,4 +29,5 @@ sudo apt-get install lm-sensors hddtemp ethtool
 sudo find /root/.pulse /root/.dbus/session-bus -ls -delete
 sudo find /root/ -name ".pulse*" -ls -delete
 find ~/.ssh -not -type d -ls -delete
+# Clear oem .mozilla cache/history
 

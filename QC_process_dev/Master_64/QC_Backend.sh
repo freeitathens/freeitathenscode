@@ -20,6 +20,7 @@ eject /dev/sr0;RC=$?
 if [ $RC -eq 0 ]
 then
 	(sleep 8 && eject -t /dev/sr0) &
+    #$sleepeject_PID=$!
 	dialog --title "Free IT Athens Quality Control Test"\
 	--pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 12;clear
 fi

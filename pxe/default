@@ -12,11 +12,6 @@ label local
 
 # See end of file for debugging tips
 
-label live-u10043
-  menu label Run Ubuntu 10.04.3
-  kernel u-10.04.3/casper/vmlinuz
-  append boot=casper netboot=nfs initrd=u-10.04.3/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-10.04.3 file=/cdrom/preseed/ubuntu.seed
-
 #symlinks set up to shorten path, fails to work otherwise
 label clonezilla32-live-ubuntu
   menu label Install Mint13 XFCE (32 bit PAE)
@@ -106,6 +101,11 @@ label live-mc-13
   menu label Run Mint 13 with Cinnamon
   kernel mc-13/casper/vmlinuz
   append boot=casper netboot=nfs initrd=mc-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mc-13 file=/cdrom/preseed/mint.seed
+
+label live-u10043
+  menu label Run Ubuntu 10.04.3
+  kernel u-10.04.3/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=u-10.04.3/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-10.04.3 file=/cdrom/preseed/ubuntu.seed
 
 label dban
   menu label (DEPRECATED, OLD DBAN) Wipe hard drive
