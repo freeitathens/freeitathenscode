@@ -30,6 +30,13 @@ label clonezilla64-live-ubuntu
  append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 10" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 # append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 20" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-mint64 sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
+MENU BEGIN Beta Test Section
+label clonezilla32-test-ubuntu
+  menu label beta test Mint13 XFCE (32 bit PAE)
+  kernel c/v32
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 10" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 30" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+MENU END
+
 # Following from http://www.dslreports.com/forum/r24834879-How-To-PXE-Boot-DBAN
 label DBAN_2
   menu label DBAN version 2
@@ -107,6 +114,7 @@ label live-u10043
   kernel u-10.04.3/casper/vmlinuz
   append boot=casper netboot=nfs initrd=u-10.04.3/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-10.04.3 file=/cdrom/preseed/ubuntu.seed
 
+MENU BEGIN Script Graveyard (Enter at your own risk...)
 label dban
   menu label (DEPRECATED, OLD DBAN) Wipe hard drive
   kernel memdisk
@@ -127,8 +135,7 @@ label dban
 # DEBCONF_DEBUG=5
 # ocs_lang and ocs_live_keymap are deprecated
 
-label its-broken
-  menu label ALL OPTIONS BELOW HERE ARE CURRENTLY UNAVAILABLE
+#label its-broken menu label ALL OPTIONS BELOW HERE ARE CURRENTLY UNAVAILABLE
 
 label systemrescuecd
 menu label Start SystemRescueCD (Currently Borken)
@@ -149,4 +156,5 @@ label sysrcd-wipe
 menu label Wipe Hard Drive (Experimental)
 kernel sysrcd/rescuecd
 append initrd=sysrcd/initram.igz setkmap=us vga=5 nfsboot=192.168.1.9:/tftpboot/sysrcd/ ar_nowait ar_source=192.168.1.2:/tftpboot/sysrcd/
+MENU END
 
