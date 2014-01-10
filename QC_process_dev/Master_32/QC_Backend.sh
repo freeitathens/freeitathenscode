@@ -168,6 +168,8 @@ else
     # run a 3D screensaver in a window for 10 seconds then stop it
     /usr/lib/xscreensaver/antspotlight -window &
     PID=$!
+	#dialog --title "Free IT Athens Quality Control Test"\
+	#	--pause '10 second 3D test started' 8 90 10;clear
     sleep 10
     kill $PID
     # if the computer doesnt hang, it passes
@@ -177,10 +179,11 @@ fi
 
 # sort to make problems more visible
 sort -r QC.log > QC.sorted.log
+echo 'Remember to save the first XFCE session for the new user!' >>QC.sorted.log
 
 #output log to dialog box for ease of reading
 dialog --title "Free IT Athens Quality Control Test Results" --textbox QC.sorted.log 20 80
 clear
-#ensure existence of : /home/oem/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml:    <property name="SessionName" type="string" value="Default"/>
-#  and offer to copy over to /usr/local/etc/...
+# Note to geekaholics: 
+#     existence of : /home/"Newuser"/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml:    <property name="SessionName" type="string" value="Default"/>
 
