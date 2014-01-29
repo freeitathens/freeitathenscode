@@ -10,17 +10,16 @@ MENU MARGIN 2
  MENU COLOR HELP 1;36;40 #c0000090 #00000000
 
 menu title Free I.T. Athens PXE Boot Menu
-#MENU AUTOBOOT Starting Local System in # seconds
 
+#MENU AUTOBOOT Starting Local System in (timeout #) seconds
 label local
   menu default
   menu label Boot from Local Disk
   localboot 0x80
-  timeout 600
+  timeout 0
 
-# See end of file for debugging tips
-
-#symlinks set up to shorten path, fails to work otherwise
+# *--* Symlinks set up to shorten path, fails to work otherwise
+# *--* See end of file for debugging tips
 label clonezilla32-live-ubuntu
   menu label Install Mint13 XFCE (32 bit PAE)
   kernel c/v32
@@ -48,31 +47,6 @@ label DBAN_2
   kernel dban2/dban.bzi
   append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
 
-MENU BEGIN Utilities
-LABEL memtest
-  menu label Test RAM
-  kernel memtest/memtestp
-  append -
-
-label systemrescuecd
-menu label SystemRescueCD
-kernel systemrescuecd/isolinux/rescue32
-# some machines need acpi=off no-hlt edd=off
-# can have it autorun a script ar_nowait ar_source=http://server/autorun
-# can load entire filesystem in ram isntead of as needed boottftp=tftp://server/sysrcd/sysrcd.dat
-append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 nfsboot=192.168.1.9:/tftpboot/systemrescuecd/
-
-label clonezilla_64
-  menu label Clonezilla live (64 bit)
-  kernel clonezilla/live/vmlinuz
-  append initrd=clonezilla/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla/live/filesystem.squashfs
-
-label clonezilla_32
-  menu label Clonezilla live (32 bit)
-  kernel clonezilla-live-2.1.2-43-i486/live/vmlinuz
-  append initrd=clonezilla-live-2.1.2-43-i486/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-live-2.1.2-43-i486/live/filesystem.squashfs
-MENU END
-
 #label install-1004
 #  menu label Auto install Ubuntu 10.04.1
 #  kernel 10.04.1/casper/vmlinuz
@@ -84,7 +58,7 @@ MENU END
 #ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
 #"-g auto -e1 auto -e2 -c -r -j2 -srel -k -p true restoreparts 2013-10-09-20-fritagonal-img sda1 sda3" 2013-10-09-20-fritagonal-img
 
-MENU BEGIN Live CDs
+MENU BEGIN Select & Run Mint OR '*buntu' Live CD 
 label live-u1204
   menu label Run Ubuntu 12.04
   kernel u-12.04/casper/vmlinuz
@@ -126,7 +100,32 @@ label live-u10043
   append boot=casper netboot=nfs initrd=u-10.04.3/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-10.04.3 file=/cdrom/preseed/ubuntu.seed
 MENU END
 
-MENU BEGIN Beta Versions
+MENU BEGIN Utilities
+LABEL memtest
+  menu label Test RAM
+  kernel memtest/memtestp
+  append -
+
+label systemrescuecd
+menu label SystemRescueCD
+kernel systemrescuecd/isolinux/rescue32
+# some machines need acpi=off no-hlt edd=off
+# can have it autorun a script ar_nowait ar_source=http://server/autorun
+# can load entire filesystem in ram isntead of as needed boottftp=tftp://server/sysrcd/sysrcd.dat
+append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 nfsboot=192.168.1.9:/tftpboot/systemrescuecd/
+
+label clonezilla_64
+  menu label Clonezilla live (64 bit)
+  kernel clonezilla/live/vmlinuz
+  append initrd=clonezilla/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla/live/filesystem.squashfs
+
+label clonezilla_32
+  menu label Clonezilla live (32 bit)
+  kernel clonezilla-live-2.1.2-43-i486/live/vmlinuz
+  append initrd=clonezilla-live-2.1.2-43-i486/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-live-2.1.2-43-i486/live/filesystem.squashfs
+MENU END
+
+MENU BEGIN Beta Testing  
 label clonezilla32-test-mint
   menu label beta test Mint13 XFCE (32 bit PAE)
   kernel c/v32
