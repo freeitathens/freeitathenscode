@@ -6,26 +6,19 @@ type dialog &>/dev/null || {
 	sudo apt-get update && sudo apt-get install dialog || exit 1
 }
 
-Lock_file="$HOME/Desktop/3D_Test_Started"
-
 if test -z "$DISPLAY"
 then export DISPLAY=:0
 fi
 
+CPU_ADDRESS=32
+CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
+for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
+
 #create log file
 rm QC.log* 2> /dev/null
-touch QC.log
+touch QC.log || exit 2
 
-eject /dev/sr0;RC=$?
-if [ $RC -eq 0 ]
-then
-	(sleep 8 && eject -t /dev/sr0) &
-    #$sleepeject_PID=$!
-	dialog --title "Free IT Athens Quality Control Test"\
-	--pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 8;clear
-fi
-
-#optical drives
+# Optical drive(s) QC_test
 QCVAR=$(ls /sys/block/ | grep sr | wc -l)
 if test $QCVAR -eq 1
 then echo "PASSED  : CD/DVD drive test" >> QC.log
@@ -34,6 +27,17 @@ then echo "PROBLEM : CD/DVD drive test. Too many optical drives exist!" >> QC.lo
 elif test $QCVAR -lt 1
 then echo "PROBLEM : CD/DVD drive test. Add an optical drive!" >> QC.log
 fi
+eject /dev/sr0;RC=$?
+if [ $RC -eq 0 ]
+then
+	(sleep 8 && eject -t /dev/sr0) &
+    #$sleepeject_PID=$!
+	dialog --title "Free IT Athens Quality Control Test"\
+	--pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 8;clear
+else
+	echo 'PROBLEM: Optical drive not at /dev/sr0' >>QC.log
+fi
+
 
 #hdd
 QCVAR=$(ls /sys/block/ | grep sd[a-z] | wc -l)
@@ -160,6 +164,7 @@ fi
 
 # this file will exist if the user is running the QC script
 # again after it hung during the 3D test
+Lock_file="$HOME/Desktop/3D_Test_Started"
 if [ -e $Lock_file ]
 then
     echo "PROBLEM  : 3D stability test. Replace video card or disable 3D" >> QC.log
@@ -179,11 +184,17 @@ fi
 
 # sort to make problems more visible
 sort -r QC.log > QC.sorted.log
-echo 'Remember to save the first XFCE session for the new user!' >>QC.sorted.log
+if [ $CPU_ADDRESS == '32' ]
+then
+    #echo 'This is a 32 bit box (running XFCE)'
+	echo 'Remember to save the first XFCE session for the new user!' >>QC.sorted.log
+fi
 
 #output log to dialog box for ease of reading
 dialog --title "Free IT Athens Quality Control Test Results" --textbox QC.sorted.log 20 80
 clear
 # Note to geekaholics: 
 #     existence of : /home/"Newuser"/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml:    <property name="SessionName" type="string" value="Default"/>
-
+#TODO (for build) include tty fonts on libreoffice (or instructions)
+#TODO Need test for flash content handling
+#TODO Need test for 

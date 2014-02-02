@@ -6,8 +6,6 @@ type dialog &>/dev/null || {
 	sudo apt-get update && sudo apt-get install dialog || exit 1
 }
 
-Lock_file="$HOME/Desktop/3D_Test_Started"
-
 if test -z "$DISPLAY"
 then export DISPLAY=:0
 fi
@@ -160,6 +158,7 @@ fi
 
 # this file will exist if the user is running the QC script
 # again after it hung during the 3D test
+Lock_file="$HOME/Desktop/3D_Test_Started"
 if [ -e $Lock_file ]
 then
     echo "PROBLEM  : 3D stability test. Replace video card or disable 3D" >> QC.log

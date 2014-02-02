@@ -6,8 +6,6 @@ type dialog &>/dev/null || {
 	sudo apt-get update && sudo apt-get install dialog || exit 1
 }
 
-Lock_file="$HOME/Desktop/3D_Test_Started"
-
 if test -z "$DISPLAY"
 then export DISPLAY=:0
 fi
@@ -22,7 +20,7 @@ then
 	(sleep 8 && eject -t /dev/sr0) &
     #$sleepeject_PID=$!
 	dialog --title "Free IT Athens Quality Control Test"\
-	--pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 12;clear
+	--pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 8;clear
 fi
 
 #optical drives
@@ -160,20 +158,23 @@ fi
 
 # this file will exist if the user is running the QC script
 # again after it hung during the 3D test
-if [ -e $Lock_file ]
+Lock_file="$HOME/Desktop/3D_Test_Started"
+
+Possible3d='PROBLEM  : 3D stability test. Replace video card or disable 3D' >> QC.log
+rm -f $Lock_file
+echo "10 second long 3D test started" | tee $Lock_file
+# run a 3D screensaver in a window for 10 seconds then stop it
+/usr/lib/xscreensaver/antspotlight -window &
+PID=$!
+sleep 10
+kill $PID
+# if the computer doesnt hang, it passes
+rm -f $Lock_file
+echo "PASSED: 3D stability test." >> QC.log
+if [ ! -e $Lock_file ]
 then
-    echo "PROBLEM  : 3D stability test. Replace video card or disable 3D" >> QC.log
-else
-    echo "10 second long 3D test started" | tee $Lock_file
-    # run a 3D screensaver in a window for 10 seconds then stop it
-    /usr/lib/xscreensaver/antspotlight -window &
-    PID=$!
-    sleep 10
-    kill $PID
-    # if the computer doesnt hang, it passes
-    rm -f $Lock_file
-    echo "PASSED  : 3D stability test." >> QC.log
 fi
+echo $Possible3d >> QC.log
 
 # sort to make problems more visible
 sort -r QC.log > QC.sorted.log
