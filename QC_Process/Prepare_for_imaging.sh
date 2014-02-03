@@ -33,13 +33,28 @@ sudo apt-get install gimp firefox
 
 # "Before new image out":
 sudo find /root/.pulse /root/.dbus/session-bus -ls -delete
+sudo find /root/.pulse /root/.dbus/session-bus -ls
 sudo find /root/ -name ".pulse*" -ls -delete
+sudo find /root/ -name ".pulse*" -ls
 find ~/.ssh -not -type d -ls -delete
+find ~/.ssh -not -type d -ls
 echo 'Clearing cups settings (if any)'
 for CUPSDEF in /etc/cups/{classes,printers,subscriptions}.conf; do if [ -f ${CUPSDEF}.O ];then sudo cp -v ${CUPSDEF}.O $CUPSDEF;bn=$(basename $CUPSDEF);sudo find /etc/cups/ -name "${bn}*" -exec sudo md5sum {} \; -exec sudo ls -l {} \; ;else :;fi;done
-# 
 
 echo "Remove-ing QC test result files"
-cd
-rm -v QC.log QC.sorted.log 2>/dev/null
+rm -vi ${HOME}{,/Desktop}/QC*log 2>/dev/null
+find $HOME -name 'QC*log' -ls
+
+# Additional options
+#swapoff --all --verbose
+echo 'Composition of fstab:'
+grep -E -v '^\s*(#|$)' /etc/fstab
+#swapon --all --verbose
+swapon --summary --verbose
+#udevadm info --query=env --name=/dev/sda1 |grep UUID
+#udevadm info --query=env --name=/dev/sda2 |grep UUID
+free
+locate iguazu
+lsb_release -a
+#locate xorg.conf
 
