@@ -161,8 +161,30 @@ fi
 Lock_file="$HOME/Desktop/3D_Test_Started"
 if [ -e $Lock_file ]
 then
-    echo "PROBLEM  : 3D stability test. Replace video card or disable 3D" >> QC.log
-else
+    echo "PROBLEM: 3D stability test. A previous test set a lock. Choose from:"
+    select lockchoice in Clear_lock_and_retest Replace_card Disable_3D
+    do break
+    done
+    case $lockchoice in
+        Clear_lock_and_retest)
+            rm -v $Lock_file ;;
+        Replace_card)
+            dialog --title "Free IT Athens Quality Control Test"\
+                --yesno 'Shutdown to replace video card?' 20 80
+            D_rc=$?
+            if [ $D_rc -eq 0 ];then
+                sudo /sbin/shutdown -h now
+            else
+                echo 'Not doing anything!';sleep 3
+            fi
+            ;;
+        Disable_3D)
+            dialog 'Click Disable 3D Icon';;
+            dialog --title "Free IT Athens Quality Control Test" --textbox 'Click Disable 3D Icon' 20 80
+    esac
+fi
+if [ ! -e $Lock_file ]
+then
     echo "10 second long 3D test started" | tee $Lock_file
     # run a 3D screensaver in a window for 10 seconds then stop it
     /usr/lib/xscreensaver/antspotlight -window &
