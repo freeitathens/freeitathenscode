@@ -20,32 +20,26 @@ label local
 
 # *--* Symlinks set up to shorten path, fails to work otherwise
 # *--* See end of file for debugging tips
-label clonezilla32-live-ubuntu
+label clone-mint32pae
   menu label Install Mint13 XFCE (32 bit PAE)
   kernel c/v32
-  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 10" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 30" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 12" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 label clonezilla32-live-ubuntu
   menu label Install Mint13 XFCE (32 bit, emergency only)
   kernel c/v32
-  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 10" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 30" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
-#                                                                                     un="/sbin/dhclient -v"  ocs_prerun1="sleep 10" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag"                        ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh;sleep 20" 
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 12" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+#                                                                                     un="/sbin/dhclient -v"  ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag"                        ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh;sleep 2" 
 
 label clonezilla64-live-ubuntu
  menu label Install Mint13 Mate (64 bit) oem-config
  kernel c/v64
- append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 10" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+ append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 # append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 20" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-mint64 sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
 label hdt
   menu label Identify Hardware
   kernel memdisk
   append initrd=hdt/hdt.img floppy
-
-# Following from http://www.dslreports.com/forum/r24834879-How-To-PXE-Boot-DBAN
-label DBAN_2
-  menu label DBAN version 2.2.7
-  kernel dban2/dban.bzi
-  append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
 
 #label install-1004
 #  menu label Auto install Ubuntu 10.04.1
@@ -100,6 +94,17 @@ label live-u10043
   append boot=casper netboot=nfs initrd=u-10.04.3/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-10.04.3 file=/cdrom/preseed/ubuntu.seed
 MENU END
 
+LABEL Kiosk Boot
+    LINUX systemrescuecd/isolinux/rescue32
+    INITRD systemrescuecd/isolinux/initram.igz
+    APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us dostartx
+
+# Following from http://www.dslreports.com/forum/r24834879-How-To-PXE-Boot-DBAN
+label DBAN_2
+  menu label DBAN version 2.2.7
+  kernel dban2/dban.bzi
+  append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+
 MENU BEGIN Utilities
 LABEL memtest
   menu label Test RAM
@@ -107,7 +112,7 @@ LABEL memtest
   append -
 
 label systemrescuecd
-menu label SystemRescueCD
+menu label System Rescue CD Live Boot
 kernel systemrescuecd/isolinux/rescue32
 # some machines need acpi=off no-hlt edd=off
 # can have it autorun a script ar_nowait ar_source=http://server/autorun
@@ -126,18 +131,25 @@ label clonezilla_32
 MENU END
 
 MENU BEGIN Beta Testing  
-label clonezilla32-test-mint
-  menu label beta test Mint13 XFCE (32 bit PAE)
-  kernel c/v32
-  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 label clonezilla64-test-mint
   menu label beta test Mint13 MATE (64 bit) oem-config
   kernel c/v64
   append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+
+LABEL Kiosk Boot (text environment)
+    LINUX systemrescuecd/isolinux/rescue32
+    INITRD systemrescuecd/isolinux/initram.igz
+    APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us
+
 label DBAN_test
   menu label DBAN version 2.2.8
   kernel dban_test/dban.bzi
   append initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+
+label clonezilla32-test-mint
+  menu label beta test Mint13 XFCE (32 bit PAE)
+  kernel c/v32
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 MENU END
 
 MENU BEGIN Script Graveyard (Enter at your own risk...)
@@ -179,4 +191,4 @@ MENU END
 
 # -p reboot -l en_US.UTF-8
 #systemrescuecd/isolinux/rescue64
-#
+
