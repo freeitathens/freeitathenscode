@@ -9,12 +9,12 @@ MENU MARGIN 2
  MENU COLOR TIMEOUT 1;34;47 #c0000090 #00000000
  MENU COLOR HELP 1;36;40 #c0000090 #00000000
 
-menu title Free I.T. Athens PXE Boot Menu
+MENU TITLE Free I.T. Athens PXE Boot Menu
 
 #MENU AUTOBOOT Starting Local System in (timeout #) seconds
-label local
-  menu default
-  menu label Boot from Local Disk
+LABEL local
+  MENU default
+  MENU LABEL Boot from Local Disk
   localboot 0x80
   timeout 0
 
@@ -40,17 +40,6 @@ label hdt
   menu label Identify Hardware
   kernel memdisk
   append initrd=hdt/hdt.img floppy
-
-#label install-1004
-#  menu label Auto install Ubuntu 10.04.1
-#  kernel 10.04.1/casper/vmlinuz
-## change "noscrub.seed" to "scrub.seed" to use a preseed file with scrubbing
-## add "noninteractive" to install on low ram
-#  append  boot=casper netboot=nfs initrd=10.04.1/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/10.04.1 automatic-ubiquity debug-ubiquity noprompt file=/cdrom/preseed/noscrub.seed
-
-#TODO Following allegedly will build a usb stick with the named image:
-#ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
-#"-g auto -e1 auto -e2 -c -r -j2 -srel -k -p true restoreparts 2013-10-09-20-fritagonal-img sda1 sda3" 2013-10-09-20-fritagonal-img
 
 MENU BEGIN Select & Run Mint OR '*buntu' Live CD 
 label live-u1204
@@ -111,13 +100,12 @@ LABEL memtest
   kernel memtest/memtestp
   append -
 
-label systemrescuecd
-menu label System Rescue CD Live Boot
+LABEL System Rescue CD "Live Image"
 kernel systemrescuecd/isolinux/rescue32
 # some machines need acpi=off no-hlt edd=off
 # can have it autorun a script ar_nowait ar_source=http://server/autorun
 # can load entire filesystem in ram isntead of as needed boottftp=tftp://server/sysrcd/sysrcd.dat
-append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 nfsboot=192.168.1.9:/tftpboot/systemrescuecd/
+append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 dostartx
 
 label clonezilla_64
   menu label Clonezilla live (64 bit)
@@ -173,17 +161,14 @@ label dban
 # DEBCONF_DEBUG=5
 # ocs_lang and ocs_live_keymap are deprecated
 
-#label its-broken menu label ALL OPTIONS BELOW HERE ARE CURRENTLY UNAVAILABLE
-#
-
 # Previous default boot phased out on 6 Jun 2011 in favor of parted based partition resizing
-#  menu label Install Ubuntu With Clonezilla
+#  MENU label Install Ubuntu With Clonezilla
 #  kernel clonezilla-live-1.2.6-40/vmlinuz1
 #  append initrd=clonezilla-live-1.2.6-40/initrd1.img boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun1="sudo mount -t nfs 192.168.1.9:/home/partimag /home/partimag" ocs_live_run="/opt/drbl/sbin/ocs-sr -g auto -e1 auto -e2 -c -r -j2 -k1 -r -p true restoredisk latest-ubuntu sda" ocs_live_extra_param="" ocs_live_keymap="NONE" ocs_live_batch="yes" ocs_lang="en_US.UTF-8" vga=788 nosplash fetch=tftp://192.168.1.9/clonezilla-live-1.2.6-40/filesystem.squashfs
 
 # does not work, says invalid ar_source.  possibly problem with sysrcd.  also sysrcd takes a long time to get to this point, is there any faster option?
 label sysrcd-wipe
-menu label Wipe Hard Drive (needs re-testing)
+menu LABEL Wipe Hard Drive (needs re-testing)
 #kernel sysrcd/rescuecd
 kernel systemrescuecd/isolinux/rescue32
 append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 nfsboot=192.168.1.9:/tftpboot/systemrescuecd/ ar_nowait ar_source=192.168.1.2:/tftpboot/systemrescuecd/
@@ -191,4 +176,16 @@ MENU END
 
 # -p reboot -l en_US.UTF-8
 #systemrescuecd/isolinux/rescue64
+#
+#label install-1004
+#  menu label Auto install Ubuntu 10.04.1
+#  kernel 10.04.1/casper/vmlinuz
+## change "noscrub.seed" to "scrub.seed" to use a preseed file with scrubbing
+## add "noninteractive" to install on low ram
+#  append  boot=casper netboot=nfs initrd=10.04.1/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/10.04.1 automatic-ubiquity debug-ubiquity noprompt file=/cdrom/preseed/noscrub.seed
+
+#TODO Following allegedly will build a usb stick with the named image:
+#ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
+#"-g auto -e1 auto -e2 -c -r -j2 -srel -k -p true restoreparts 2013-10-09-20-fritagonal-img sda1 sda3" 2013-10-09-20-fritagonal-img
+
 
