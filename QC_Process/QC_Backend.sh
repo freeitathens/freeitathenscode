@@ -225,7 +225,7 @@ then
             ;;
         Disable_3D)
             dialog 'Click Disable 3D Icon'
-            dialog --title "Free IT Athens Quality Control Test" --textbox "Click Disable 3D Icon" 20 80
+            dialog --title "Free IT Athens Quality Control Test" --msgbox "Click Disable 3D Icon" 20 80
         ;;
     esac
 fi
@@ -247,8 +247,16 @@ then
 fi
 
 # *--* Test playing flash content
-(iceweasel -no-remote "http://www.youtube.com/watch?v=7OXiS4BTXNQ";ice_PID=$!;sleep 20;kill $ice_PID)
-
+path2firefox=$(which firefox 2>/dev/null)
+if [ ! -z "$path2firefox" ]
+then
+#dialog --title "Free IT Athens Quality Control Test" --msgbox "Shall I test shockwave flash in your browser - $path2firefox ?" 50 90
+Test_ff_msg=
+dialog --title "Free IT Athens Quality Control Test" --msgbox "Now testing shockwave flash in your browser - $path2firefox " 50 90
+$path2firefox -no-remote 'http://www.youtube.com/watch?v=7OXiS4BTXNQ' 2>/tmp/ff.err &
+ice_PID=$!;echo $ice_PID 'process # for ff'
+(sleep 20;kill $ice_PID) &
+fi
 # *--* sort to make problems more visible
 sort -r QC.log > QC.sorted.log
 if [ $CPU_ADDRESS -eq 32 ]
