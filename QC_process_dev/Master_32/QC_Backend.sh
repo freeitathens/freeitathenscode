@@ -1,10 +1,11 @@
 #/bin/bash
+cd ||exit 3
 # *--* Treat references to undeclared variables as an error
 set -u
 # *--* Ensure dialog program is installed.
 type dialog &>/dev/null || {
   echo "The 'dialog' program must be installed for the QC script to work: will attempt to install ...";
-    sudo apt-get update && sudo apt-get install dialog || exit 1
+  sudo apt-get update && sudo apt-get install dialog || exit 4
 }
 
 if test -z "$DISPLAY";then
@@ -16,19 +17,17 @@ CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 # *--* Create log file
 rm QC.log* 2> /dev/null
-touch QC.log || exit 2
-
+touch QC.log || exit 5
 # *--* Optical drive(s) QC_test
-#ls /sys/block/ | grep sr | wc -l)
 TARGET_OPTICAL=''
 for QCVAR in ls -d /sys/block/sr*
 do
-	if [ -z $TARGET_OPTICAL ]
-	then
-		echo "INFO : CD/DVD drive test. Too many optical drives exist!" >> QC.log
-		break
-	fi
-	[[ -z $TARGET_OPTICAL ]] && TARGET_OPTICAL=$QCVAR
+    if [ -z $TARGET_OPTICAL ]
+    then
+        echo "INFO : CD/DVD drive test. Too many optical drives exist!" >> QC.log
+        break
+    fi
+    [[ -z $TARGET_OPTICAL ]] && TARGET_OPTICAL=$QCVAR
 done
 if [ -z $TARGET_OPTICAL ];then
     echo "PROBLEM : CD/DVD drive test. Add an optical drive!" >> QC.log
@@ -37,13 +36,14 @@ else
     TARGET_DEVICE="/dev/${TARGET_OPTICAL}"
     eject $TARGET_DEVICE;RC=$?
     if [ $RC -eq 0 ];then
-    	#TODO special handling for laptops
-        #$sleepeject_PID=$!
-        (sleep 8 && eject -t $TARGET_DEVICE;etRC=$?;\
-		if [ $etRC -gt 0 ];then
-			dialog --title "Uh Oh!" --pause "Please close the optical drive manually.Thanks."\
-	 		12 50 5
-		fi;clear)
+        #TODO special handling for laptops
+        (sleep 8 && eject -t $TARGET_DEVICE) &
+        dialog --title "Free IT Athens Quality Control Test"\
+            --pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 8;clear
+        if [ $etRC -gt 0 ];then
+            dialog --title "Uh Oh!" --pause "Please close the optical drive manually.Thanks."\
+             12 50 5
+        fi;clear)
 
         dialog --title "Free IT Athens Quality Control Test"\
             --pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 8;clear
@@ -51,16 +51,17 @@ else
         echo "PROBLEM: Cannot eject Optical Drive at $TARGET_DEVICE" >>QC.log
     fi
 fi
+    #$sleepeject_PID=$!
+    #(sleep 8 && eject -t /dev/sr0) &
 
 # *--* hdd
-#QCVAR=$(ls /sys/block/ | grep sd[a-z] | wc -l)
 QCVAR=$(ls -d /sys/block/sd[a-z] |wc -l)
 if test $QCVAR -eq 1;then
-	echo "PASSED  : Hard drive test." >> QC.log
+    echo "PASSED  : Hard drive test." >> QC.log
 elif test $QCVAR -gt 1;then
-	echo "WARNING : Hard drive test. Check that there is only one hard drive." >> QC.log
+    echo "WARNING : Hard drive test. Check that there is only one hard drive." >> QC.log
 elif test $QCVAR -lt 1;then
-	echo "PROBLEM : Hard drive test. Something went wrong with the test!" >> QC.log
+    echo "PROBLEM : Hard drive test. Something went wrong with the test!" >> QC.log
 fi
 
 # *--* network
@@ -181,8 +182,30 @@ fi
 Lock_file="$HOME/Desktop/3D_Test_Started"
 if [ -e $Lock_file ]
 then
-    echo "PROBLEM  : 3D stability test. Replace video card or disable 3D" >> QC.log
-else
+    echo "PROBLEM: 3D stability test. A previous test set a lock. Choose from:"
+    select lockchoice in Clear_lock_and_retest Replace_card Disable_3D
+    do break
+    done
+    case $lockchoice in
+        Clear_lock_and_retest)
+            rm -v $Lock_file ;;
+        Replace_card)
+            dialog --title "Free IT Athens Quality Control Test"\
+                --yesno 'Shutdown to replace video card?' 20 80
+            D_rc=$?
+            if [ $D_rc -eq 0 ];then
+                sudo /sbin/shutdown -h now
+            else
+                echo 'Not doing anything!';sleep 3
+            fi
+            ;;
+        Disable_3D)
+            dialog 'Click Disable 3D Icon';;
+            dialog --title "Free IT Athens Quality Control Test" --textbox 'Click Disable 3D Icon' 20 80
+    esac
+fi
+if [ ! -e $Lock_file ]
+then
     echo "10 second long 3D test started" | tee $Lock_file
     # run a 3D screensaver in a window for 10 seconds then stop it
     /usr/lib/xscreensaver/antspotlight -window &
@@ -207,9 +230,9 @@ fi
 #output log to dialog box for ease of reading
 dialog --title "Free IT Athens Quality Control Test Results" --textbox QC.sorted.log 20 80
 clear
-# Note to geekaholics: 
-#     existence of : /home/"Newuser"/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml:    <property name="SessionName" type="string" value="Default"/>
 #TODO (for build) include tty fonts on libreoffice (or instructions)
 #TODO Need test for flash content handling
 #TODO Need change build to make separate partition for /home
+# Note to geekaholics: 
+#     existence of : /home/"Newuser"/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml:    <property name="SessionName" type="string" value="Default"/>
 
