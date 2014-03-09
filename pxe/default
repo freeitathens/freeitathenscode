@@ -134,6 +134,12 @@ label DBAN_test
   kernel dban_test/dban.bzi
   append initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
 
+label test-lubuntu32-oem-config
+  menu label beta test Lubuntu 32 bit oem-config
+  kernel c/v32
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Lubuntu32-oem-config.img sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+#
+
 label clonezilla32-test-mint
   menu label beta test Mint13 XFCE (32 bit PAE)
   kernel c/v32
