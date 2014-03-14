@@ -8,6 +8,6 @@ then
 	echo -e "\n\e[5;33;40mProblem creating swap, y'all...\e[0m <ENTER>"
 	read xU
 else
-	echo -e "\n\e[1;32;40mSwap created successfully.\e[0m <ENTER>"
-	read xU
+	echo -e "\n\e[1;32;40mSwap created successfully.\e[0m"
+	sleep 3
 fi

@@ -20,14 +20,22 @@ LABEL local
 
 # *--* Symlinks set up to shorten path, fails to work otherwise
 # *--* See end of file for debugging tips
-label clone-mint32pae
+
+LABEL lubuntu32-oem-config
+  menu label Install Lubuntu 32 bit oem-config
+  kernel c/v32
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Lubuntu32-oem-config.img sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+
+MENU BEGIN Install Mint 32-bit (deprecated)
+LABEL mint32-pae-legacy
   menu label Install Mint13 XFCE (32 bit PAE)
   kernel c/v32
   append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 12" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
-label clonezilla32-live-ubuntu
+LABEL mint32-legacy
   menu label Install Mint13 XFCE (32 bit, emergency only)
   kernel c/v32
   append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 12" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+MENU END
 #                                                                                     un="/sbin/dhclient -v"  ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag"                        ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh;sleep 2" 
 
 label clonezilla64-live-ubuntu
@@ -119,6 +127,12 @@ label clonezilla_32
 MENU END
 
 MENU BEGIN Beta Testing  
+
+LABEL Install Emmabuntus 32-bit oem-config
+  KERNEL c/v32
+  APPEND initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part_boot_home_32.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts emmabuntus_32.img sda1 sda2 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+  #Lubuntu32-oem-config.img 
+
 label clonezilla64-test-mint
   menu label beta test Mint13 MATE (64 bit) oem-config
   kernel c/v64
