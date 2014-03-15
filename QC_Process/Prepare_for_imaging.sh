@@ -69,11 +69,12 @@ if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'otto-kesselgulasch*' |
 	esac
 fi
 for Pkg in lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl\
-    chromium-browser libreoffice gnash vlc aptitude lubuntu-restricted-extras\
-    vim
+    chromium-browser libreoffice gnash vlc aptitude vim
 do
     sudo apt-get install $Pkg
 done
+#if lubuntu (32-bit)
+#lubuntu-restricted-extras
 
 if [ $CPU_ADDRESS -eq 32 ]
 then
