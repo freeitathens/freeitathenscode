@@ -1,19 +1,42 @@
+#!/bin/bash +x
+set -u
 # " get FreeIT.png, move to common image dir ",
 #sudo chown -c root:root FreeIT.png 
 # *--* Identify box as 32 or 64 bit capable.
 CPU_ADDRESS=32
 CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
-# *0000000000000000000000000000000000000000000000000000000000000*
+
+# *------------------------------------------------------------------*
 Pauze() {
-    msg=${@:-'<ENTER>'}
-    echo $msg
+    msg=$@
+    echo -n $msg
+	[[ $msg =~ '<ENTER>' ]] || echo -n '<ENTER>'
     read xU
 }
+Contact_server() {
+    if [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]
+    then
+	Pauze 'Server is valid <ENTER>'
+	scp -P8222 frita@192.168.1.9:~/freeitathenscode/image_scripts/FreeIT.png ~/
+    fi
+}
 
-FIT='FreeIT.png'
-locate $FIT |xargs ls -l
-Pauze 'Look for' $FIT 'listed above.'
+FreeIT_Background='FreeIT.png'
+#locate -i frita |grep -i 'frita.\+\.png'
+#ls -l /usr/share/backgrounds/frita/FreeIT.png 
+Pauze 'Checking for' $FreeIT_Background 'background file <ENTER>'
+Have_BG=$(find /usr/share -name "$FreeIT_Background")
+if [ -z "$Have_BG" ]
+then
+	echo -n 'Shall I try to retrieve' $FreeIT_Background '(Y|N)?' 
+	read xR
+	case $xR in
+	y|Y)
+	Contact_server
+	;;
+	esac
+fi
 
 echo 'look for (absence of) local UUID reference for swap in fstab'
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
@@ -23,12 +46,31 @@ Pauze
 egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
 
 if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'mozillateam*' |wc -l) ];then
-    sudo add-apt-repository ppa:mozillateam/firefox-next
+	echo -n 'PPA: for firefox?'
+	read Xr
+	case $Xr in
+	y|Y)
+	sudo add-apt-repository ppa:mozillateam/firefox-next
+	;;
+	*)
+	echo 'ok moving on...'
+	;;
+	esac
 fi
 if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'otto-kesselgulasch*' |wc -l) ];then
-    sudo add-apt-repository ppa:otto-kesselgulasch/gimp
+	echo -n 'PPA: for gimp?'
+	read Xr
+	case $Xr in
+	y|Y)
+	sudo add-apt-repository ppa:otto-kesselgulasch/gimp
+	;;
+	*)
+	echo 'ok moving on...'
+	;;
+	esac
 fi
-for Pkg in lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl
+for Pkg in lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl\
+    chromium-browser libreoffice gnash vlc
 do
     sudo apt-get install $Pkg
 done

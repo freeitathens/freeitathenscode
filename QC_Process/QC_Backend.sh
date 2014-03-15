@@ -109,7 +109,7 @@ else
 fi
 
 # *--* users
-user_count=$(ls /home | wc -l)
+user_count=$(ls /home |grep -v 'lost+found' | wc -l)
 if   test $user_count -lt 1;then
     echo "PROBLEM : User count. Something is wrong with this test!" >> QC.log
 elif test $user_count -gt 1;then
@@ -117,6 +117,7 @@ elif test $user_count -gt 1;then
 else
     echo "PASSED  : User count test." >> QC.log
 fi
+# Should also count uid's > 999 (minus nobody)
 
 # *--* CPU speed
 QCVAR=$(awk '/MHz/ {print $4; exit}' /proc/cpuinfo)
