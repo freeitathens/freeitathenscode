@@ -38,12 +38,11 @@ then
 	esac
 fi
 
-echo 'look for (absence of) local UUID reference for swap in fstab'
-egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
-Pauze
-
 # "Remove reference to medibuntu":
 egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
+egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
+Pauze 'look for (absence of) local UUID reference for swap in fstab (above).'
+
 
 if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'mozillateam*' |wc -l) ];then
 	echo -n 'PPA: for firefox?'
@@ -70,7 +69,8 @@ if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'otto-kesselgulasch*' |
 	esac
 fi
 for Pkg in lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl\
-    chromium-browser libreoffice gnash vlc
+    chromium-browser libreoffice gnash vlc aptitude lubuntu-restricted-extras\
+    vim
 do
     sudo apt-get install $Pkg
 done
@@ -105,15 +105,20 @@ Pauze '** -- ****** Nothing above *******I** -- **'
 
 # Additional options
 #swapoff --all --verbose
-echo 'Composition of fstab:'
 grep -E -v '^\s*(#|$)' /etc/fstab
+Pauze 'Composition of fstab:'
 #swapon --all --verbose
 swapon --summary --verbose
 #udevadm info --query=env --name=/dev/sda1 |grep UUID
 #udevadm info --query=env --name=/dev/sda2 |grep UUID
 free
-locate iguazu
 lsb_release -a
-locate xorg.conf
+Pauze 'Free memory, swap, and version <ENTER>'
+
+sudo apt-get dist-upgrade
+sudo apt-get autoremove
+sudo aptitude autoclean
+#sudo find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -nouser -exec chown -c root {} \; &
+#sudo find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -nogroup -exec chgrp -c root {} \; &
 set +x
 
