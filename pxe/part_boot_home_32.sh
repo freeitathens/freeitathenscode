@@ -1,10 +1,10 @@
 #!/bin/bash
 parted -s /dev/sda mklabel msdos
-parted -s -a optimal /dev/sda mkpart primary ext2 0 513
-parted -s -a optimal /dev/sda mkpart primary ext2 514 14000 
-parted -s -a optimal /dev/sda mkpart primary linux-swap 14001 15000
-parted -s -a optimal /dev/sda mkpart extended 15001 100%
-parted -s -a optimal /dev/sda mkpart logical ext2 15002 100%
+parted -s -a optimal /dev/sda mkpart primary ext2 3 520
+parted -s -a optimal /dev/sda mkpart primary ext2 521 15000 
+parted -s -a optimal /dev/sda mkpart primary linux-swap 15001 16000
+parted -s -a optimal /dev/sda mkpart extended 16001 100%
+parted -s -a optimal /dev/sda mkpart logical ext2 16002 100%
 mkswap /dev/sda3 
 if [ $? -ne 0 ]
 then
