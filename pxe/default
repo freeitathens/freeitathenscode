@@ -100,11 +100,10 @@ LABEL Kiosk Boot
     INITRD systemrescuecd/isolinux/initram.igz
     APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us dostartx
 
-# Following from http://www.dslreports.com/forum/r24834879-How-To-PXE-Boot-DBAN
-label DBAN_2
-  menu label DBAN version 2.2.7
-  kernel dban2/dban.bzi
-  append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+label DBAN
+  menu label DBAN 2.2.8
+  kernel dban_test/dban.bzi
+  append initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
 
 MENU BEGIN Utilities
 LABEL memtest
@@ -138,7 +137,7 @@ LABEL Test-mint64
     APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
 LABEL Test-lubuntu32-oem
-    MENU LABEL Install (Beta Test) Lubuntu 13.10 32-bit oem-config (15-Mar Build)
+    MENU LABEL Install (Beta Test) Lubuntu 13.10 32-bit oem-config (17-Mar Build)
     KERNEL c/v32
     APPEND initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 
@@ -147,22 +146,23 @@ LABEL Kiosk Boot (text environment)
     INITRD systemrescuecd/isolinux/initram.igz
     APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us
 
-label DBAN_test
-  menu label DBAN version 2.2.8
-  kernel dban_test/dban.bzi
-  append initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
-
 label clonezilla32-test-mint
   menu label Install (beta test) Mint13 XFCE (32 bit PAE)
   kernel c/v32
   append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 MENU END
 
-MENU BEGIN Script Graveyard (Enter at your own risk...)
-label dban
-  menu label (DEPRECATED, OLD DBAN) Wipe hard drive
-  kernel memdisk
-  append initrd=dban_OLD/dban.img floppy
+MENU BEGIN Ye Olde Legacie Scriptes (not much use)
+# Following from http://www.dslreports.com/forum/r24834879-How-To-PXE-Boot-DBAN
+label DBAN_2
+  menu label DBAN version 2.2.7
+  kernel dban2/dban.bzi
+  append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+MENU END
+#label dban
+# menu label (DEPRECATED, OLD DBAN) Wipe hard drive
+#  kernel memdisk
+#  append initrd=dban_OLD/dban.img floppy
 
 # *buntu debugging tips
 #
@@ -185,12 +185,11 @@ label dban
 #  append initrd=clonezilla-live-1.2.6-40/initrd1.img boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun1="sudo mount -t nfs 192.168.1.9:/home/partimag /home/partimag" ocs_live_run="/opt/drbl/sbin/ocs-sr -g auto -e1 auto -e2 -c -r -j2 -k1 -r -p true restoredisk latest-ubuntu sda" ocs_live_extra_param="" ocs_live_keymap="NONE" ocs_live_batch="yes" ocs_lang="en_US.UTF-8" vga=788 nosplash fetch=tftp://192.168.1.9/clonezilla-live-1.2.6-40/filesystem.squashfs
 
 # does not work, says invalid ar_source.  possibly problem with sysrcd.  also sysrcd takes a long time to get to this point, is there any faster option?
-label sysrcd-wipe
-menu LABEL Wipe Hard Drive (needs re-testing)
+#label sysrcd-wipe
+#menu LABEL Wipe Hard Drive (needs re-testing)
 #kernel sysrcd/rescuecd
-kernel systemrescuecd/isolinux/rescue32
-append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 nfsboot=192.168.1.9:/tftpboot/systemrescuecd/ ar_nowait ar_source=192.168.1.2:/tftpboot/systemrescuecd/
-MENU END
+#kernel systemrescuecd/isolinux/rescue32
+#append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 nfsboot=192.168.1.9:/tftpboot/systemrescuecd/ ar_nowait ar_source=192.168.1.2:/tftpboot/systemrescuecd/
 
 # -p reboot -l en_US.UTF-8
 #systemrescuecd/isolinux/rescue64
@@ -205,5 +204,4 @@ MENU END
 #TODO Following allegedly will build a usb stick with the named image:
 #ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
 #"-g auto -e1 auto -e2 -c -r -j2 -srel -k -p true restoreparts 2013-10-09-20-fritagonal-img sda1 sda3" 2013-10-09-20-fritagonal-img
-
 
