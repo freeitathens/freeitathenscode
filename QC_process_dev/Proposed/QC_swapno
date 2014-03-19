@@ -1,1 +1,0 @@
-sudo swapon -sv |perl -ne 'chomp;if (m{/dev/sd.+?(\d{4,})}) {my $sw_sz=$1;if (($sw_sz) and ($sw_sz gt 998000)) {print "Active swap size $sw_sz.\n";} else {system( '\''dialog --title "Free IT Athens Quality Control Test" --msgbox "ERROR: swap is not active" 15 60'\'');}}' 
