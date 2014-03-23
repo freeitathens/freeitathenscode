@@ -161,8 +161,8 @@ then
     FS_LOW_VALUE=76000
     FS_HIGH_VALUE=1000000
     FS_TEXT="80GB to 1TB"
-    # up to 128MB of shared memory for video
-    RAM_LOW_VALUE=$(expr 1920 \* 1024)
+    # Allow up to 256MB of shared memory for video (thus low value)
+    RAM_LOW_VALUE=$(expr 1792 \* 1024)
     RAM_HIGH_VALUE=$(expr 2048 \* 1024)
     RAM_TEXT="2GB"
 else
@@ -171,10 +171,18 @@ else
     FS_HIGH_VALUE=80000
     FS_TEXT="40 to 80GB"
     # up to 32MB of shared memory for video
-    RAM_LOW_VALUE=$(expr 480 \* 1024)
-    RAM_HIGH_VALUE=$(expr 1024 \* 1024)
-    RAM_TEXT="1GB"
+    #RAM_LOW_VALUE=$(expr 480 \* 1024)
+    #RAM_HIGH_VALUE=$(expr 1024 \* 1024)
+    #RAM_TEXT="1GB"
 fi
+# *--* 20140323 jxi : Single and dual core same lower limit for RAM.
+# *--* ------------ : Exception is some older single-core laptops which wouldn't
+# typically be being checked out for general sale...
+RAM_LOW_VALUE=$(expr 1792 \* 1024)
+RAM_HIGH_VALUE=$(expr 2048 \* 1024)
+RAM_TEXT="2GB"
+#ram_hi=$((2048*1024))
+#ram_lo=$(($new_ram_hi-(256*1024)))
 
 # *--* filesystem size
 #   160041885696 is 160GB in bytes at least for some drives
