@@ -1,0 +1,14 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+#Icon[en_US]=/usr/share/icons/elementary/stock/16/stock_person.svg
+Exec=/etc/alternatives/x-terminal-emulator -e /home/oem/freeitathenscode/QC_Process/QC.sh
+Name=Quality Control
+Comment=Ensure machine is within FreeIT guidelines
+Icon=/usr/share/pixmaps/nyan-cat.gif
+GenericName=
+#/usr/share/icons/elementary/stock/32/stock_person.svg
+#/usr/share/icons/Humanity/stock/48/stock_person.svg
