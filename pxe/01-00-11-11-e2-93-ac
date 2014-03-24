@@ -1,0 +1,172 @@
+default vesamenu.c32
+#default menu.c32
+prompt 0
+MENU MARGIN 2
+ MENU BACKGROUND clonezilla/syslinux/Blender.png
+ MENU COLOR UNSEL 1;32;40 #c0000090 #00000000
+ MENU COLOR TIMEOUT_MSG 1;33;47 #c0000090 #00000000
+ MENU COLOR TIMEOUT 1;34;47 #c0000090 #00000000
+ MENU COLOR HELP 1;36;40 #c0000090 #00000000
+
+MENU TITLE This is a Special Test Menu
+menu color title        * #d8d8d8ff *
+menu color border       * #d8d8d8ff #00000000 none
+menu color sel          * #00000000 #d8d8d8ff *
+menu color unsel        * #d8d8d8ff #00000000 *
+menu color hotsel       1;7;37;40 #ffffffff #76a1d0ff *
+menu color tabmsg       * #ffffffff #00000000 *
+menu color help         37;40 #ffdddd00 #00000000 none
+menu vshift 14
+menu rows 6
+menu helpmsgrow 15
+menu cmdlinerow 16
+menu timeoutrow 16
+menu tabmsgrow 18
+menu tabmsg Press ENTER to boot or TAB to edit a menu entry
+
+#MENU AUTOBOOT Starting Local System in (timeout #) seconds
+LABEL local
+  MENU default
+  MENU LABEL Boot from Local Disk
+  localboot 0x80
+  timeout 0
+
+# *--* Symlinks set up to shorten path, fails to work otherwise
+# *--* See end of file for debugging tips
+
+#DEFAULT crunchbang/isolinux/vesamenu.c32
+#PROMPT 0
+#MENU TITLE PXE Boot
+#TIMEOUT 100
+LABEL crunchbang
+        menu LABEL Crunchbang 11 Installation
+        kernel cb32pae_curr/vmlinuz
+        append initrd=cb32pae_curr/hackedinitrd.gz netboot=nfs nfsroot=192.168.1.9:/tftpboot/cb32pae_full video=vesa:ywrap,mtrr vga=788 quiet splash file=/cdrom/install/crunchbang.cfg --
+
+LABEL crunchbanglive
+        menu label Crunchbang 11 Live
+        kernel cb32pae_curr/vmlinuz
+        append initrd=cb32pae_curr/liveinitrd.img netboot=nfs nfsroot=192.168.1.9:/tftpboot/cb32pae_curr boot=live config quiet
+#ip=dhcp root=/dev/nfs 
+
+MENU BEGIN Select & Run Mint OR '*buntu' Live CD 
+label live-u1204
+  menu label Run Ubuntu 12.04
+  kernel u-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=u-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-k1204
+  menu label Run Kubuntu 12.04
+  kernel k-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=k-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/k-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-x1204
+  menu label Run Xubuntu 12.04
+  kernel x-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=x-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/x-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-l1204
+  menu label Run Lubuntu 12.04
+  kernel l-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=l-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/l-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-mm-13
+  menu label Run Mint 13 with Mate
+  kernel mm-13/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mm-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mm-13 file=/cdrom/preseed/mint.seed
+
+label live-mm-64-oem-config-13
+  menu label Run Mint 13 64-bit with Mate (oem-config version)
+  kernel mm64_oemconfig/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mm64_oemconfig/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mm64_oemconfig file=/cdrom/preseed/mint.seed
+
+label live-mc-13
+  menu label Run Mint 13 with Cinnamon
+  kernel mc-13/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mc-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mc-13 file=/cdrom/preseed/mint.seed
+
+label live-u10043
+  menu label Run Ubuntu 10.04.3
+  kernel u-10.04.3/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=u-10.04.3/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-10.04.3 file=/cdrom/preseed/ubuntu.seed
+MENU END
+
+LABEL INSTALL Emmabuntus 32-bit oem-config
+  KERNEL c/v32
+  APPEND initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part_boot_home_32.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_emmabuntus sda1 sda2 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+
+LABEL lubuntu32-oem-config
+  menu label INSTALL Lubuntu 13.10 32-bit oem-config (7-Mar Build)
+  kernel c/v32
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+
+label clonezilla64-live-ubuntu
+ menu label INSTALL Mint13 Mate (64 bit) oem-config (24-Feb Build)
+ kernel c/v64
+ append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+# append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 20" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-mint64 sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+
+MENU BEGIN Install Mint 32-bit
+LABEL mint32-pae-legacy
+  menu label Install Mint13 XFCE (32 bit PAE)
+  kernel c/v32
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 12" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+
+LABEL mint32-legacy
+  menu label Install Mint13 XFCE (32 bit, emergency only)
+  kernel c/v32
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 12" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+MENU END
+
+label hdt
+  menu label Identify Hardware
+  kernel memdisk
+  append initrd=hdt/hdt.img floppy
+
+label DBAN
+  menu label DBAN 2.2.8
+  kernel dban_test/dban.bzi
+  append initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+
+MENU BEGIN Utilities
+LABEL memtest
+  menu label Test RAM
+  kernel memtest/memtestp
+  append -
+
+LABEL System Rescue CD "Live Image"
+kernel systemrescuecd/isolinux/rescue32
+# some machines need acpi=off no-hlt edd=off
+# can have it autorun a script ar_nowait ar_source=http://server/autorun
+# can load entire filesystem in ram isntead of as needed boottftp=tftp://server/sysrcd/sysrcd.dat
+append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 dostartx
+
+label clonezilla_64
+  menu label Clonezilla live (64 bit)
+  kernel clonezilla/live/vmlinuz
+  append initrd=clonezilla/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla/live/filesystem.squashfs
+
+label clonezilla_32
+  menu label Clonezilla live (32 bit)
+  kernel clonezilla-live-2.1.2-43-i486/live/vmlinuz
+  append initrd=clonezilla-live-2.1.2-43-i486/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-live-2.1.2-43-i486/live/filesystem.squashfs
+MENU END
+
+MENU BEGIN Beta Testing  
+
+LABEL Test-mint64
+    MENU label Install (Beta Test) Mint13 MATE 64-bit oem-config (15-Mar Build)
+    KERNEL c/v64
+    APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+
+LABEL Test-lubuntu32-oem
+    MENU LABEL Install (Beta Test) Lubuntu 13.10 32-bit oem-config (17-Mar Build)
+    KERNEL c/v32
+    APPEND initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+
+label clonezilla32-test-mint
+  menu label Install (beta test) Mint13 XFCE (32 bit PAE)
+  kernel c/v32
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+MENU END
+
