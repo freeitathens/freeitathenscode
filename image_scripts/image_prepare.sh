@@ -1,12 +1,17 @@
 #!/bin/bash
+if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
+then
+	echo 'Hello User: Please rerun with sudo or root'
+	exit 4
+fi
 
 # Script for running when creating an image from scratch
 
-export http_proxy=http://server:3142
+#export http_proxy=http://server:3142
 
 # install packages that download other files
-# don't run these through proxy because of that
-http_proxy='' apt-get -y install b43-fwcutter ttf-mscorefonts-installer
+# bypass proxy because of that
+#http_proxy='' apt-get -y install b43-fwcutter ttf-mscorefonts-installer
 
 # install spanish language support
 apt-get -y install language-support-es language-pack-es language-pack-gnome-es openoffice.org-l10n-es

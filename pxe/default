@@ -18,8 +18,13 @@ LABEL local
   localboot 0x80
   timeout 0
 
-# *--* Symlinks set up to shorten path, fails to work otherwise
-# *--* See end of file for debugging tips
+#label clonezilla64-live-ubuntu
+LABEL Mint64_mate_oem_config
+    MENU label INSTALL Mint13 MATE 64-bit oem-config (15-Mar Build)
+    KERNEL c/v64
+    APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+#   append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot                restoreparts latest-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+    #menu label INSTALL Mint13 Mate (64 bit) oem-config (24-Feb Build)
 
 LABEL INSTALL Emmabuntus 32-bit oem-config
   KERNEL c/v32
@@ -29,12 +34,6 @@ LABEL lubuntu32-oem-config
   menu label INSTALL Lubuntu 13.10 32-bit oem-config (7-Mar Build)
   kernel c/v32
   append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
-
-label clonezilla64-live-ubuntu
- menu label INSTALL Mint13 Mate (64 bit) oem-config (24-Feb Build)
- kernel c/v64
- append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
-# append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 20" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-mint64 sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
 MENU BEGIN Install Mint 32-bit (deprecated, lacks oem-config ability)
 LABEL mint32-pae-legacy
@@ -95,11 +94,6 @@ label live-u10043
   append boot=casper netboot=nfs initrd=u-10.04.3/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-10.04.3 file=/cdrom/preseed/ubuntu.seed
 MENU END
 
-LABEL Kiosk Boot
-    LINUX systemrescuecd/isolinux/rescue32
-    INITRD systemrescuecd/isolinux/initram.igz
-    APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us dostartx
-
 label DBAN
   menu label DBAN 2.2.8
   kernel dban_test/dban.bzi
@@ -131,17 +125,22 @@ MENU END
 
 MENU BEGIN Beta Testing  
 
-LABEL Test-mint64
-    MENU label Install (Beta Test) Mint13 MATE 64-bit oem-config (15-Mar Build)
-    KERNEL c/v64
-    APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+#LABEL Test-mint64
+#    MENU label Install (Beta Test) Mint13 MATE 64-bit oem-config (15-Mar Build)
+#    KERNEL c/v64
+#    APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
 LABEL Test-lubuntu32-oem
     MENU LABEL Install (Beta Test) Lubuntu 13.10 32-bit oem-config (17-Mar Build)
     KERNEL c/v32
     APPEND initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 
-LABEL Kiosk Boot (text environment)
+LABEL Kiosk Boot
+    LINUX systemrescuecd/isolinux/rescue32
+    INITRD systemrescuecd/isolinux/initram.igz
+    APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us dostartx
+
+LABEL Kiosk Boot (text only, no gui)
     LINUX systemrescuecd/isolinux/rescue32
     INITRD systemrescuecd/isolinux/initram.igz
     APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us
@@ -204,4 +203,7 @@ MENU END
 #TODO Following allegedly will build a usb stick with the named image:
 #ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
 #"-g auto -e1 auto -e2 -c -r -j2 -srel -k -p true restoreparts 2013-10-09-20-fritagonal-img sda1 sda3" 2013-10-09-20-fritagonal-img
+#append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/sbin/dhclient -v" ocs_prerun1="sleep 20" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts latest-mint64 sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+
+# *--* Symlinks set up to shorten path, fails to work otherwise
 

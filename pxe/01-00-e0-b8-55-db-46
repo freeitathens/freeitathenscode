@@ -126,11 +126,12 @@ LABEL memtest
   kernel memtest/memtestp
   append -
 
-LABEL System Rescue CD "Live Image"
+LABEL DAMANGED GOODS System Rescue CD "Live Image"
 kernel systemrescuecd/isolinux/rescue32
 # some machines need acpi=off no-hlt edd=off
 # can have it autorun a script ar_nowait ar_source=http://server/autorun
 # can load entire filesystem in ram isntead of as needed boottftp=tftp://server/sysrcd/sysrcd.dat
+#   DAMANGED "cannot find /sysrcd.dat on devices"
 append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 dostartx
 
 label clonezilla_64
