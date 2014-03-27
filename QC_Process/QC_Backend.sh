@@ -16,7 +16,7 @@ CPU_ADDRESS=32
 CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 # *--* Create log file
-rm QC.log* 2> /dev/null
+sudo rm QC.log* 2> /dev/null
 touch QC.log || exit 5
 
 # *--* Optical drive(s) QC_test
@@ -41,9 +41,9 @@ fi
 if [ ! -z $TARGET_OPTICAL ];then
     TARGET_DEVICE="/dev/${TARGET_OPTICAL}"
     SUBSH_SIG=$(mktemp -t "QC_B_subshell_msg.XXXXX" || /tmp/blah)
-    eject -T $TARGET_DEVICE;RC=$?
+    sudo eject -T $TARGET_DEVICE 2>/dev/null;RC=$?
     if [ $RC -eq 0 ];then
-        (sleep 8;eject -T $TARGET_DEVICE || echo '(Laptop??) Please close cd drive manually.'>$SUBSH_SIG) &
+        (sleep 8;sudo eject -T $TARGET_DEVICE || echo '(Laptop??) Please close cd drive manually.'>$SUBSH_SIG) &
         dialog --title "Free IT Athens Quality Control Test"\
             --pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 8;clear
     else
@@ -259,24 +259,34 @@ fi
 path2firefox=$(which firefox 2>/dev/null)
 if [ ! -z "$path2firefox" ]
 then
-#dialog --title "Free IT Athens Quality Control Test" --msgbox "Shall I test shockwave flash in your browser - $path2firefox ?" 50 90
+#
 Test_ff_msg=
-dialog --title "Free IT Athens Quality Control Test" --msgbox "Now testing shockwave flash in your browser - $path2firefox " 50 90
-$path2firefox -no-remote 'http://www.youtube.com/watch?v=7OXiS4BTXNQ' 2>/tmp/ff.err &
-ice_PID=$!;echo $ice_PID 'process # for ff'
-(sleep 20;kill $ice_PID) &
+dialog --title "Free IT Athens Quality Control Test"\
+    --yesno "Test Shockwave Flash in $path2firefox ?" 50 20
+d_RC=$?
+if [ $d_RC -eq 0 ]
+then
+    $path2firefox -no-remote 'http://www.youtube.com/watch?v=7OXiS4BTXNQ' 2>/tmp/ff.err &
+    ice_PID=$!
+    echo $ice_PID 'process # for ff' >&2
+    (sleep 25;kill $ice_PID) &
+fi
+else
+    echo 'WARNING: Not possible to test Flash in Firefox' >>QC.log
 fi
 # *--* sort to make problems more visible
 sort -r QC.log > QC.sorted.log
+# *--* 
+echo -e "\n" >>QC.sorted.log
 if [ $CPU_ADDRESS -eq 32 ]
 then
-    echo -e "This has a 32 bit CPU." |tee -a QC.sorted.log
-    echo 'Remember to save the first XFCE session for the new user!' >>QC.sorted.log
+    echo 'CPU is 32-bit.' >> QC.sorted.log
+    #echo '(IF XFCE) Remember to save a default session for the new user!' >>QC.sorted.log
 else
-    echo -e "CPU is 64-bit capable." |tee -a QC.sorted.log
+    echo 'CPU is 64-bit capable.' >> QC.sorted.log
     if [ 0 -eq $(uname -mpi |grep x86_64 |wc -l) ]
     then
-	echo "You MIGHT want to re-install using a 64-bit kernel." |tee -a QC.sorted.log
+        echo "You MIGHT want to re-install using a 64-bit kernel." >> QC.sorted.log
     fi
 fi
 # Check for manual optical drive close message (e.g., laptops)
