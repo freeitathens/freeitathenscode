@@ -84,11 +84,11 @@ Pauze 'CPU size specifice above <ENTER>'
 
 #Clean up root files that oem used.
 sudo find /root/.pulse /root/.dbus/session-bus -ls -delete
-sudo find /root/.pulse /root/.dbus/session-bus -ls
+sudo find /root/.pulse /root/.dbus/session-bus -ls 2>/dev/null
 sudo find /root/ -name ".pulse*" -ls -delete
-sudo find /root/ -name ".pulse*" -ls
+sudo find /root/ -name ".pulse*" -ls 2>/dev/null
 find ~/.ssh -not -type d -ls -delete
-find ~/.ssh -not -type d -ls
+find ~/.ssh -not -type d -ls 2>/dev/null
 
 Pauze 'Clearing cups settings (if any)'
 for CUPSDEF in /etc/cups/{classes,printers,subscriptions}.conf; do if [ -f ${CUPSDEF}.O ];then sudo cp -v ${CUPSDEF}.O $CUPSDEF;bn=$(basename $CUPSDEF);sudo find /etc/cups/ -name "${bn}*" -exec sudo md5sum {} \; -exec sudo ls -l {} \; ;else :;fi;done
