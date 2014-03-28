@@ -251,7 +251,7 @@ then
       rm -f $Lock_file
       echo "PASSED  : 3D stability test." >> QC.log
   else
-      echo "WARNING: 3D stability test is not possible" >>QC.log
+      echo "WARNING: 3D stability test NOT possible" >>QC.log
   fi
 fi
 
@@ -262,7 +262,7 @@ then
 #
 Test_ff_msg=
 dialog --title "Free IT Athens Quality Control Test"\
-    --yesno "Test Shockwave Flash in $path2firefox ?" 50 20
+    --yesno "Test Shockwave Flash in $path2firefox ?" 25 90
 d_RC=$?
 if [ $d_RC -eq 0 ]
 then
@@ -272,7 +272,7 @@ then
     (sleep 25;kill $ice_PID) &
 fi
 else
-    echo 'WARNING: Not possible to test Flash in Firefox' >>QC.log
+    echo 'WARNING: Flash Test (Firefox) NOT possible' >>QC.log
 fi
 # *--* sort to make problems more visible
 sort -r QC.log > QC.sorted.log
