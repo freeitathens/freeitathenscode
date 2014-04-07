@@ -18,7 +18,6 @@ LABEL local
   localboot 0x80
   timeout 0
 
-#label clonezilla64-live-ubuntu
 LABEL Mint64_mate_oem_config
     MENU LABEL Install Mint13 MATE 64-bit oem-config (15-Mar Build)
     KERNEL c/v64
@@ -95,7 +94,7 @@ MENU END
 label DBAN
   menu label DBAN 2.2.8
   kernel dban_test/dban.bzi
-  append initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+  append initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe --method zero --prng twister --verify last" nofloppy
 
 MENU BEGIN Utilities
 LABEL memtest
@@ -129,7 +128,7 @@ LABEL Test-mint64
     APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
 LABEL Test-lubuntu32-oem
-    MENU LABEL Install (Beta Test) Lubuntu 13.10 32-bit oem-config (17-Mar Build)
+    MENU LABEL Install (Beta Test) Lubuntu 13.10 32-bit oem-config (28-Mar Build)
     KERNEL c/v32
     APPEND initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 
@@ -204,5 +203,4 @@ MENU END
 #ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
 #"-g auto -e1 auto -e2 -c -r -j2 -srel -k -p true restoreparts 2013-10-09-20-fritagonal-img sda1 sda3" 2013-10-09-20-fritagonal-img
 
-# *--* Symlinks set up to shorten path, fails to work otherwise
 
