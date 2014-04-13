@@ -60,6 +60,8 @@ egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/source
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
 Pauze 'look for (absence of) local UUID reference for swap in fstab (above).'
 
+#TODO ensure 'backports' in /etc/apt/sources.list
+
 if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'mozillateam*' |wc -l) ];then
 	echo -n 'PPA: for firefox?'
 	read Xr
