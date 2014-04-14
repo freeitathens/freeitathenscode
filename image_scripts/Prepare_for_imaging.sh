@@ -87,7 +87,7 @@ if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'otto-kesselgulasch*' |
 	esac
 fi
 for Pkg in lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl\
-    chromium-browser libreoffice gnash vlc aptitude vim
+    chromium-browser libreoffice gnash vlc aptitude vim subversion
 do
     sudo apt-get install $Pkg
 done
