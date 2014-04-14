@@ -1,0 +1,16 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+#Terminal=true
+Icon[en_US]=/usr/share/icons/Humanity/apps/24/gdm-setup.svg
+Name[en_US]=Disable 3D
+Exec=/etc/alternatives/x-terminal-emulator -e /home/oem/freeitathenscode/QC_Process/disable_3d.sh
+#Exec=/home/oem/freeitathenscode/QC_Process/disable_3d.sh
+Comment[en_US]=Generate xorg.conf with DRI disabled
+Name=Disable 3D
+Comment=Generate xorg.conf with DRI disabled
+Icon=/usr/share/icons/elementary/apps/48/gdm-setup.svg
+#/usr/share/icons/Humanity/apps/22/gdm-setup.svg
