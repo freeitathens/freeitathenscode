@@ -77,7 +77,7 @@ dev_count=$(ls /sys/class/sound/ | grep card | wc -l)
 if   test $dev_count -lt 1;then
     echo "PROBLEM : Sound card test. There is no sound card!" >> QC.log
 elif test $dev_count -gt 1;then
-    echo "WARNING : Sound card test. Check that there is only one sound card." >> QC.log
+    echo "NOTICE : Sound card test. Check that there is only one sound card." >> QC.log
 else
     echo "PASSED  : Sound card test." >> QC.log
 fi
@@ -147,65 +147,70 @@ done
 if   test $sdx_count -eq 1;then
     echo "PASSED  : Hard drive test." >> QC.log
 elif test $sdx_count -gt 1;then
-    echo "WARNING : Hard drive test. Check that there is only one hard drive." >> QC.log
+    echo "NOTICE : Hard drive test. Check that there is only one hard drive." >> QC.log
 elif test $sdx_count -lt 1;then
     echo "PROBLEM : Hard drive test. Something went wrong with the test!" >> QC.log
 fi
-
+# Set up MAX and MIN for Memory
+RAM_VIDEO_MAX=256
+RAM_LOW_MULT=$((2048-${RAM_VIDEO_MAX}))
+RAM_HIGH_MULT=3182
+#
 PROCESSORS=$(grep 'physical id' /proc/cpuinfo | sort -u | wc -l)
 CORES=$(grep 'core id' /proc/cpuinfo | sort -u | wc -l)
-
 if test $PROCESSORS -gt 1 -o $CORES -gt 1
 then
     # Treat as Dual-core
-    FS_LOW_VALUE=76000
-    FS_HIGH_VALUE=1000000
-    FS_TEXT="80GB to 1TB"
-    # Allow up to 256MB of shared memory for video (thus low value)
-    RAM_LOW_VALUE=$(expr 1792 \* 1024)
-    RAM_HIGH_VALUE=$(expr 2048 \* 1024)
-    RAM_TEXT="2GB"
+    echo "Rockin' with a dual-core machine!"
+    #FS_LOW_VALUE=76000
+    #FS_HIGH_VALUE=1000000
 else
-    # Single-core
-    FS_LOW_VALUE=38000
-    FS_HIGH_VALUE=80000
-    FS_TEXT="40 to 80GB"
-    # up to 32MB of shared memory for video
-    #RAM_LOW_VALUE=$(expr 480 \* 1024)
-    #RAM_HIGH_VALUE=$(expr 1024 \* 1024)
-    #RAM_TEXT="1GB"
+    # Single-core, adjust MAX and MIN for memory test
+    RAM_VIDEO_MAX=128
+    RAM_LOW_MULT=$((1024-${RAM_VIDEO_MAX}))
+    RAM_HIGH_MULT=1536
 fi
-# *--* 20140323 jxi : Single and dual core same lower limit for RAM.
-# *--* ------------ : Exception is some older single-core laptops which wouldn't
-# typically be being checked out for general sale...
-RAM_LOW_VALUE=$(expr 1792 \* 1024)
-RAM_HIGH_VALUE=$(expr 2048 \* 1024)
-RAM_TEXT="2GB"
-#ram_hi=$((2048*1024))
-#ram_lo=$(($new_ram_hi-(256*1024)))
-
+RAM_LOW_TEXT=${RAM_LOW_MULT}'MiB'
+RAM_HIGH_TEXT=${RAM_HIGH_MULT}'MiB'
+RAM_LOW_VALUE=$((${RAM_LOW_MULT}*1024))
+RAM_HIGH_VALUE=$((${RAM_HIGH_MULT}*1024))
+# Set up MAX and MIN for Hard Drive
+FS_LOW_MULT=80
+FS_HIGH_MULT=1000
+if [ $CPU_ADDRESS -eq 32 ]
+then
+    FS_LOW_MULT=60
+    FS_HIGH_MULT=120
+fi
+FS_LOW_VALUE=$((${FS_LOW_MULT}*1000*1000*1000))
+FS_HIGH_VALUE=$((${FS_HIGH_MULT}*1000*1000*1000))
+FS_LOW_TEXT=${FS_LOW_MULT}'GB'
+FS_HIGH_TEXT=${FS_HIGH_MULT}'GB'
 # *--* filesystem size
 #   160041885696 is 160GB in bytes at least for some drives
 total_disk_bytes=$(echo "${prime_sectors}*$(cat $prime_disk/queue/hw_sector_size)" |bc)
 #TEST
-echo 'Disk Bytes' $total_disk_bytes >&2
+echo 'Total Disk (Bytes)='$total_disk_bytes >&2
 #ENDT
 QCVAR=$(echo "(($total_disk_bytes/1024)/1024)" |bc)
 #TEST
-echo 'Disk Megabytes' $QCVAR >&2
+echo 'Disk Mebibytes='$QCVAR >&2
 #ENDT
-if test $QCVAR -lt "$FS_LOW_VALUE" -o $QCVAR -gt "$FS_HIGH_VALUE";then
-    echo "PROBLEM : Free space test. Hard drive should be $FS_TEXT." >> QC.log
+if [ $QCVAR -lt $FS_LOW_VALUE ]
+then
+    echo "PROBLEM : Free space test. Hard drive should be at least ${FS_LOW_TEXT}." >> QC.log
+elif [ $QCVAR -gt $FS_HIGH_VALUE ]
+then
+    echo "NOTICE : Free space test. Hard drive should be not more than ${FS_HIGH_TEXT}." >> QC.log
 else
     echo "PASSED  : Free space test." >> QC.log
 fi
-
 # *--* RAM
 QCVAR=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 if test $QCVAR -lt $RAM_LOW_VALUE
-then echo "PROBLEM : Memory test. Add more so you have $RAM_TEXT." >> QC.log
+then echo "PROBLEM : Memory test. Add more so you have at least ${RAM_LOW_TEXT}." >> QC.log
 elif test $QCVAR -gt $RAM_HIGH_VALUE
-then echo "WARNING : Memory test. Remove some so you have $RAM_TEXT." >> QC.log
+then echo "NOTICE : Memory test. Remove some so you have not more than ${RAM_HIGH_TEXT}." >> QC.log
 else
 echo "PASSED  : Memory test." >> QC.log
 fi
@@ -251,7 +256,7 @@ then
       rm -f $Lock_file
       echo "PASSED  : 3D stability test." >> QC.log
   else
-      echo "WARNING: 3D stability test NOT possible" >>QC.log
+      echo "WARNING WARNING WILL ROBINSON: 3D stability test NOT possible" >>QC.log
   fi
 fi
 
@@ -272,7 +277,7 @@ then
     (sleep 25;kill $ice_PID) &
 fi
 else
-    echo 'WARNING: Flash Test (Firefox) NOT possible' >>QC.log
+    echo 'WARNING WARNING WILL ROBINSON: Flash Test (Firefox) NOT possible' >>QC.log
 fi
 # *--* sort to make problems more visible
 sort -r QC.log > QC.sorted.log
@@ -312,4 +317,8 @@ clear
 #elif test $QCVAR -lt 1
 #then echo "PROBLEM : CD/DVD drive test. Add an optical drive!" >> QC.log
 #QCVAR=$(df -m / | awk '/dev/ {print $4}')
+#ram_hi=$(((1024*3)*1024))
+#ram_lo=$(((1024*2)-256)*1024))
+#=$(expr 1792 \* 1024)
+#=$(expr 2048 \* 1024)
 

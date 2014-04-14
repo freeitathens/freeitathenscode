@@ -36,10 +36,15 @@ CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 # if [ 64 -eq $(lscpu |grep '^Arch' |head -n1 |grep -o '64$' ]
 
+Backgrounds_location='/usr/share/backgrounds'
+if [ $CPU_ADDRESS -eq 32 ]
+then
+    Backgrounds_location='/usr/share/lubuntu/wallpapers'
+fi
 FreeIT_Background='FreeIT.png'
 Pauze 'Checking for' $FreeIT_Background 'background file <ENTER>'
-Have_BG=$(ls -l /usr/share/backgrounds/$FreeIT_Background 2>/dev/null\
-		|| find /usr/share/backgrounds -name "$FreeIT_Background"\
+Have_BG=$(ls -l ${Backgrounds_location}/$FreeIT_Background 2>/dev/null\
+		|| find ${Backgrounds_location}/ -name "$FreeIT_Background"\
 		|| echo 'NADA')
 if [ "$Have_BG" == 'NADA' ]
 then
@@ -48,7 +53,7 @@ then
 	case $xR in
 	y|Y)
 	cp -iv ~oem/freeitathenscode/image_scripts/$FreeIT_Background\
-		/usr/share/backgrounds/ 2>/dev/null || exit 15
+		${Backgrounds_location}/ 2>/dev/null || exit 15
 	;;
 	*) echo "OK, Handle it later... Movin' on...";sleep 2
 	;;
@@ -129,7 +134,8 @@ sudo apt-get autoremove
 sudo aptitude autoclean
 # *--------------------*
 unset xR
-Pauze 'Run nouser and nogroup checks/fixes? ("Y"; default is "n")'
+echo 'Run nouser and nogroup checks/fixes? ("Y"; default is "n")'
+read xR
 if [ "${xR}." == 'Y.' ]
 then
 sudo find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -nouser -exec chown -c root {} \; &
@@ -142,5 +148,7 @@ fi
         #<property name="SessionName" type="string" value="Default"/>
 set +x
 
-for CD in $(find . -depth -type d -not -empty -iname '*cache*'); do rm -rv ${CD}/*; done
+for CD in $(find ${HOME}/ -depth -type d -not -empty -iname '*cache*'); do rm -rv ${CD}/*; done
+
+#/usr/share/lubuntu/wallpapers/: directory
 
