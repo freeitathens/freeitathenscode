@@ -12,5 +12,5 @@ Exec=/etc/alternatives/x-terminal-emulator -e /home/oem/freeitathenscode/QC_Proc
 Comment[en_US]=Generate xorg.conf with DRI disabled
 Name=Disable 3D
 Comment=Generate xorg.conf with DRI disabled
-Icon=/usr/share/pixmaps/display.xpm
+Icon=/usr/share/icons/Mint-X/actions/24/exit.png
 

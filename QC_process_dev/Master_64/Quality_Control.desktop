@@ -10,7 +10,7 @@ Exec=/etc/alternatives/x-terminal-emulator -e /home/oem/freeitathenscode/QC_Proc
 Comment[en_US]=Ensure machine is within FreeIT guidelines
 Name=Quality Control
 Comment=Ensure machine is within FreeIT guidelines
-Icon=/usr/share/pixmaps/nyan-cat.gif
+Icon=/usr/share/icons/Mint-X/apps/24/stock_task.png
 GenericName=
 
 
