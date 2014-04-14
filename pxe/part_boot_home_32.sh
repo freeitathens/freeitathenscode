@@ -14,3 +14,4 @@ else
 	echo -e "\n\e[1;32;40mSwap created successfully.\e[0m <ENTER>"
 	sleep 3
 fi
+
