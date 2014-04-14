@@ -192,14 +192,14 @@ total_disk_bytes=$(echo "${prime_sectors}*$(cat $prime_disk/queue/hw_sector_size
 #TEST
 echo 'Total Disk (Bytes)='$total_disk_bytes >&2
 #ENDT
-QCVAR=$(echo "(($total_disk_bytes/1024)/1024)" |bc)
+QCVAR=$(echo "((($total_disk_bytes/1024)/1024)/1024)" |bc)
 #TEST
-echo 'Disk Mebibytes='$QCVAR >&2
+echo 'Disk Gibibytes='$QCVAR >&2
 #ENDT
-if [ $QCVAR -lt $FS_LOW_VALUE ]
+if [ $total_disk_bytes -lt $FS_LOW_VALUE ]
 then
     echo "PROBLEM : Free space test. Hard drive should be at least ${FS_LOW_TEXT}." >> QC.log
-elif [ $QCVAR -gt $FS_HIGH_VALUE ]
+elif [ $total_disk_bytes -gt $FS_HIGH_VALUE ]
 then
     echo "NOTICE : Free space test. Hard drive should be not more than ${FS_HIGH_TEXT}." >> QC.log
 else
