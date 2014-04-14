@@ -28,7 +28,7 @@ LABEL INSTALL Emmabuntus 32-bit oem-config
   APPEND initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part_boot_home_32.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_emmabuntus sda1 sda2 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 
 LABEL lubuntu32-oem-config
-  MENU LABEL Install Lubuntu 13.10 32-bit oem-config (21-Mar Build)
+  MENU LABEL Install Lubuntu 13.10 32-bit oem-config (28-Mar Build)
   kernel c/v32
   append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 
@@ -128,7 +128,7 @@ LABEL Test-mint64
     APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
 LABEL Test-lubuntu32-oem
-    MENU LABEL Install (Beta Test) Lubuntu 13.10 32-bit oem-config (28-Mar Build)
+    MENU LABEL Install (Beta Test) Lubuntu 13.10 32-bit oem-config (10-Apr Build)
     KERNEL c/v32
     APPEND initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 
@@ -149,6 +149,11 @@ label clonezilla32-test-mint
 MENU END
 
 MENU BEGIN Ye Olde Legacie Scriptes (not much use)
+
+LABEL lubuntu32-oem-config
+  MENU LABEL Install Lubuntu 13.10 32-bit oem-config (07-Mar Build)
+  kernel c/v32
+  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Old_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 # Following from http://www.dslreports.com/forum/r24834879-How-To-PXE-Boot-DBAN
 label DBAN_2
   menu label DBAN version 2.2.7
@@ -182,22 +187,6 @@ MENU END
 #  kernel clonezilla-live-1.2.6-40/vmlinuz1
 #  append initrd=clonezilla-live-1.2.6-40/initrd1.img boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun1="sudo mount -t nfs 192.168.1.9:/home/partimag /home/partimag" ocs_live_run="/opt/drbl/sbin/ocs-sr -g auto -e1 auto -e2 -c -r -j2 -k1 -r -p true restoredisk latest-ubuntu sda" ocs_live_extra_param="" ocs_live_keymap="NONE" ocs_live_batch="yes" ocs_lang="en_US.UTF-8" vga=788 nosplash fetch=tftp://192.168.1.9/clonezilla-live-1.2.6-40/filesystem.squashfs
 
-# does not work, says invalid ar_source.  possibly problem with sysrcd.  also sysrcd takes a long time to get to this point, is there any faster option?
-#label sysrcd-wipe
-#menu LABEL Wipe Hard Drive (needs re-testing)
-#kernel sysrcd/rescuecd
-#kernel systemrescuecd/isolinux/rescue32
-#append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 nfsboot=192.168.1.9:/tftpboot/systemrescuecd/ ar_nowait ar_source=192.168.1.2:/tftpboot/systemrescuecd/
-
-# -p reboot -l en_US.UTF-8
-#systemrescuecd/isolinux/rescue64
-#
-#label install-1004
-#  menu label Auto install Ubuntu 10.04.1
-#  kernel 10.04.1/casper/vmlinuz
-## change "noscrub.seed" to "scrub.seed" to use a preseed file with scrubbing
-## add "noninteractive" to install on low ram
-#  append  boot=casper netboot=nfs initrd=10.04.1/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/10.04.1 automatic-ubiquity debug-ubiquity noprompt file=/cdrom/preseed/noscrub.seed
 
 #TODO Following allegedly will build a usb stick with the named image:
 #ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
