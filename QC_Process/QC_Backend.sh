@@ -1,11 +1,11 @@
 #/bin/bash
-cd ||exit 3
+cd || exit 3
 # *--* (set -u) = Treat references to undeclared variables as an error
 set -u
 # *--* Ensure dialog program is installed.
 type dialog &>/dev/null || {
-  echo "The 'dialog' program must be installed for the QC script to work: will attempt to install ...";
-  sudo apt-get update && sudo apt-get install dialog || exit 4
+    echo "The 'dialog' program must be installed for the QC script to work: will attempt to install ...";
+    sudo apt-get update && sudo apt-get install dialog || exit 4
 }
 
 if test -z "$DISPLAY";then
@@ -18,6 +18,10 @@ for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 # *--* Create log file
 sudo rm QC.log* 2> /dev/null
 touch QC.log || exit 5
+touch QC.logerrors
+set +o noclobber
+cat /dev/null >QC.logerrors
+set -o noclobber
 
 # *--* Optical drive(s) QC_test
 TARGET_OPTICAL=''
@@ -31,28 +35,38 @@ done
 if   [ $optical_drive_count -lt 1 ]
 then
     echo "PROBLEM : CD/DVD drive test. Add an optical drive!" >> QC.log
-else
-    if [ $optical_drive_count -gt 1 ]
-    then
-        echo "INFO : CD/DVD drive test. More than one optical drive!" >> QC.log
-    fi
-    echo "PASSED  : CD/DVD drive test (Have at least one drive)" >> QC.log
 fi
+sudo eject -a off -i off 2>>QC.logerrors
 if [ ! -z $TARGET_OPTICAL ];then
     TARGET_DEVICE="/dev/${TARGET_OPTICAL}"
-    SUBSH_SIG=$(mktemp -t "QC_B_subshell_msg.XXXXX" || /tmp/blah)
-    sudo eject -T $TARGET_DEVICE 2>/dev/null;RC=$?
+    #SUBSH_SIG=$(mktemp -t "QC_B_subshell_msg.XXXXX" || echo -n '/tmp/yo_mktemp_problem')
+    sudo eject $TARGET_DEVICE 2>>QC.logerrors;RC=$?
     if [ $RC -eq 0 ];then
-        (sleep 8;sudo eject -T $TARGET_DEVICE || echo '(Laptop??) Please close cd drive manually.'>$SUBSH_SIG) &
-        dialog --title "Free IT Athens Quality Control Test"\
-            --pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 8;clear
+        dialog --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
+            --pause "\Z1\Zu8 seconds\ZU\Z0 to remove any \Z1\ZuFrita CDs\Z0\ZU. (\Z4\ZrOK\ZR\Z0 closes drive quicker.)" 12 80 8
+	dcd_RC=$?
+	if [ $dcd_RC -eq 0 ]
+	then
+	    sudo eject -t $TARGET_DEVICE ||\
+	    dialog --clear --colors --timeout 9 --ok-label "We're good" \
+--title "\Z5\ZrSimon Says Free I.T. Rocks" \
+--msgbox "\Z4\ZrPlease ensure optical drive is closed (Laptop?)." 10 70
+	else
+	    dialog --clear --colors --timeout 8 --ok-label "Got it" \
+--title "\Z7\ZrFree IT Athens Quality Control Test" \
+--msgbox "\Z4\ZrPlease ensure optical drive is closed." 10 50
+	fi
+        if [ $optical_drive_count -gt 1 ]
+        then
+            echo "INFO : CD/DVD drive test. More than one optical drive!" >> QC.log
+        fi
+        echo "PASSED  : CD/DVD drive test (Have at least one drive)" >> QC.log
     else
         echo "PROBLEM: Cannot open Optical Drive at $TARGET_DEVICE" >>QC.log
     fi
 else
     echo "PROBLEM: Internal error identifying optical drive." >>QC.log
 fi
-#$sleepeject_PID=$!
 
 # *--* network
 dev_count=$(ls /sys/class/net | grep eth | wc -l)
@@ -212,7 +226,7 @@ then echo "PROBLEM : Memory test. Add more so you have at least ${RAM_LOW_TEXT}.
 elif test $QCVAR -gt $RAM_HIGH_VALUE
 then echo "NOTICE : Memory test. Remove some so you have not more than ${RAM_HIGH_TEXT}." >> QC.log
 else
-echo "PASSED  : Memory test." >> QC.log
+    echo "PASSED  : Memory test." >> QC.log
 fi
 
 # this file will exist if the user is running the QC script
@@ -228,7 +242,7 @@ then
         Clear_lock_and_retest)
             rm -v $Lock_file ;;
         Replace_card)
-            dialog --title "Free IT Athens Quality Control Test"\
+            dialog --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
                 --yesno 'Shutdown to replace video card?' 20 80
             D_rc=$?
             if [ $D_rc -eq 0 ];then
@@ -238,26 +252,52 @@ then
             fi
             ;;
         Disable_3D)
-            dialog 'Click Disable 3D Icon'
+            #dialog 'Click Disable 3D Icon'
             dialog --title "Free IT Athens Quality Control Test" --msgbox "Click Disable 3D Icon" 20 80
-        ;;
+            ;;
     esac
 fi
 if [ ! -e $Lock_file ]
 then
-  if [ -f /usr/lib/xscreensaver/antspotlight ];then
-      echo "10 second long 3D test started" | tee $Lock_file
+#    dialog --clear --colors --timeout 5\
+# --begin 4 8\
+# --title "\Z7\ZrFree IT Athens Quality Control Test"\
+# --msgbox "\Z1\ZrPlease maximize window for next test" 9 40
+    if [ -f /usr/lib/xscreensaver/antspotlight ];then
+	echo "10 second 3D test started" | tee $Lock_file
       # run a 3D screensaver in a window for 10 seconds then stop it
-      /usr/lib/xscreensaver/antspotlight -window 2>/tmp/xscreensaver_test &
-      PID=$!
-      sleep 10
-      kill $PID
+	/usr/lib/xscreensaver/antspotlight -window 2>>QC.logerrors &
+	PID=$!
+#	dialog --clear --colors --begin 15 40\
+# --title "\Z7\ZrFree IT Athens Quality Control Test"\
+# --pause "\Z4\ZrCancel\Z0 to stop 3d Test" 8 40 10
+#	if [ $? -eq 0 ]
+#	then
+#	fi
+	Sleep_counter=0
+	Sleep_max_secs=10
+	while [ $PID -gt 0 ]
+	do
+	    sleep 1
+	    ((Sleep_counter++))
+	    [[ $Sleep_counter -gt 100 ]] && break
+	    if [[ $Sleep_counter -gt $Sleep_max_secs ]]
+	    then
+		kill $PID
+		sleep 1
+		Sleep_counter=0
+	    else
+		ps -p $PID -o time= 2>/dev/null || PID=-1
+	    fi
+	done
+	
+	kill $PID 2>/dev/null
       # if the computer doesnt hang, it passes
-      rm -f $Lock_file
-      echo "PASSED  : 3D stability test." >> QC.log
-  else
-      echo "WARNING WARNING WILL ROBINSON: 3D stability test NOT possible" >>QC.log
-  fi
+	rm -f $Lock_file
+	echo "PASSED  : 3D stability test." >> QC.log
+    else
+	echo "WARNING WARNING WILL ROBINSON: 3D stability test NOT possible" >>QC.log
+    fi
 fi
 
 # *--* Test playing flash content
@@ -265,17 +305,17 @@ path2firefox=$(which firefox 2>/dev/null)
 if [ ! -z "$path2firefox" ]
 then
 #
-Test_ff_msg=
-dialog --title "Free IT Athens Quality Control Test"\
-    --yesno "Test Shockwave Flash in $path2firefox ?" 25 90
-d_RC=$?
-if [ $d_RC -eq 0 ]
-then
-    $path2firefox -no-remote 'http://www.youtube.com/watch?v=7OXiS4BTXNQ' 2>/tmp/ff.err &
-    ice_PID=$!
-    echo $ice_PID 'process # for ff' >&2
-    (sleep 25;kill $ice_PID) &
-fi
+    #Test_ff_msg=
+    dialog --clear --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
+    --yesno "Test \Z4\ZrShockwave Flash\ZR \Z0in $path2firefox ?" 9 60
+    d_RC=$?
+    if [ $d_RC -eq 0 ]
+    then
+	$path2firefox -no-remote 'http://www.youtube.com/watch?v=7OXiS4BTXNQ' 2>/tmp/ff.err &
+	ice_PID=$!
+	echo $ice_PID 'process # for ff' >&2
+	(sleep 25;kill $ice_PID) &
+    fi
 else
     echo 'WARNING WARNING WILL ROBINSON: Flash Test (Firefox) NOT possible' >>QC.log
 fi
@@ -295,20 +335,16 @@ else
     fi
 fi
 # Check for manual optical drive close message (e.g., laptops)
-[[ 0 -lt $(wc -l $SUBSH_SIG|cut -f1 -d' ') ]] && cat $SUBSH_SIG >>QC.sorted.log
+#[[ 0 -lt $(wc -l $SUBSH_SIG|cut -f1 -d' ') ]] && cat $SUBSH_SIG >>QC.sorted.log
 
 #output log to dialog box for ease of reading
-dialog --title "Free IT Athens Quality Control Test Results" --textbox QC.sorted.log 20 80
+dialog --colors --title "\Z7\ZrFree IT Athens Quality Control Test Results" --textbox QC.sorted.log 20 80
 clear
 
 # *--* QC_Backend.sh Finished *--*
-
 #TODO (for build) include tty fonts on libreoffice (or instructions)
 #TODO Need test for flash content handling
 #TODO Need change build to make separate partition for /home
-#QCVAR=$(ls /sys/block/ | grep sr | wc -l)
-    #dialog --title "Free IT Athens Quality Control Test"\
-    #--pause "remove any Frita CDs (I'll try to close the drive after ~8 seconds...)" 8 90 8;clear
 #ls /sys/block/ | grep sr | wc -l)
 #if test $QCVAR -eq 1
 #then echo "PASSED  : CD/DVD drive test" >> QC.log

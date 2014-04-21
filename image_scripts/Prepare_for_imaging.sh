@@ -8,9 +8,9 @@ fi
 # *------------------------------------------------------------------*
 Pauze() {
     msg=$@
-    echo -e "\n\n\t\e[5;31;47mThe Pause that Refreshes\e[00m\n"
     echo -n $msg
 #	[[ $msg =~ '<ENTER>' ]] || echo -n '<ENTER>'
+    echo -e "\n\n\t\e[5;31;47mEnter to Continue\e[00m\n"
     read xR
 }
 Contact_server() {
@@ -23,7 +23,7 @@ Contact_server() {
 
 Contact_server
 
-[[ -x ~oem/freeitathenscode/image_scripts/image_update.sh ]] && ~oem/freeitathenscode/image_scripts/image_update.sh
+[[ -x /home/oem/freeitathenscode/image_scripts/image_update.sh ]] && /home/oem/freeitathenscode/image_scripts/image_update.sh
 
 set -u
 
@@ -52,7 +52,7 @@ then
 	Pauze -n 'Shall I try to retrieve' $FreeIT_Background '(Y|N)?' 
 	case $xR in
 	y|Y)
-	cp -iv ~oem/freeitathenscode/image_scripts/$FreeIT_Background\
+	cp -iv /home/oem/freeitathenscode/image_scripts/$FreeIT_Background\
 		${Backgrounds_location}/ 2>/dev/null || exit 15
 	;;
 	*) echo "OK, Handle it later... Movin' on...";sleep 2
@@ -112,8 +112,8 @@ sudo find /root/.pulse /root/.dbus/session-bus -ls -delete
 sudo find /root/.pulse /root/.dbus/session-bus -ls
 sudo find /root/ -name ".pulse*" -ls -delete
 sudo find /root/ -name ".pulse*" -ls
-find ~/.ssh -not -type d -ls -delete
-find ~/.ssh -not -type d -ls
+find /home/oem/.ssh -not -type d -ls -delete
+find /home/oem/.ssh -not -type d -ls
 
 Pauze 'Clearing cups settings (if any)'
 for CUPSDEF in /etc/cups/{classes,printers,subscriptions}.conf; do if [ -f ${CUPSDEF}.O ];then sudo cp -v ${CUPSDEF}.O $CUPSDEF;bn=$(basename $CUPSDEF);sudo find /etc/cups/ -name "${bn}*" -exec sudo md5sum {} \; -exec sudo ls -l {} \; ;else :;fi;done
