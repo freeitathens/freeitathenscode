@@ -18,19 +18,23 @@ CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 
 # *--* Create log file(s)
-sudo rm QC.log* 2> /dev/null
+sudo rm QC.*.log 2>/dev/null
 touch QC.log || exit 5
-touch QC.logerrors
+touch QC.error.log
 set +o noclobber
-cat /dev/null >QC.logerrors
+cat /dev/null >QC.error.log
 set -o noclobber
 
 Append_to_log() {
-    MsgLvl=${1:-'ERROR'};shift
-    Typ=${1:-'none'};shift
-    Msg=${@:-'Hey, the message is missing!'}
+    MsgLvl=${1:-'ERROR'}
     Trans_MsgLvl=$(echo $MsgLvl |tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
     MsgLvl=$Trans_MsgLvl
+
+    Typ=${2:-'none'}
+    shift 2
+
+    MsgTxt=$@
+
     RC=0
     Message_level='UNDEFINED'
     case $MsgLvl in
@@ -54,11 +58,11 @@ Append_to_log() {
     ;;
     esac
     MsgTyp=''
-    if [ $Typ != 'none' ]
+    if [ "$Typ" != 'none' ]
     then
         MsgTyp=' ('$Typ')'
     fi
-    echo ${Message_level}${MsgTyp}':' $Msg >>QC.log 
+    echo ${Message_level}${MsgTyp}':' $MsgTxt >>QC.log 
     #"PROBLEM : CD/DVD drive test. Need to add an optical drive!" >> QC.log
     return $RC
 }
@@ -66,8 +70,8 @@ Append_to_log() {
 Work_on_Optical() {
     [[ -z $TARGET_OPTICAL ]] && return 4
     TARGET_DEVICE="/dev/${TARGET_OPTICAL}"
-    sudo eject -a off -i off $TARGET_DEVICE 2>>QC.logerrors
-    sudo eject $TARGET_DEVICE 2>>QC.logerrors;RC=$?
+    sudo eject -a off -i off $TARGET_DEVICE 2>>QC.error.log
+    sudo eject $TARGET_DEVICE 2>>QC.error.log;RC=$?
     if [ $RC -eq 0 ];then
         dialog --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
             --pause "\Z1\Zu8 seconds\ZU\Z0 to remove any \Z1\ZuFrita CDs\Z0\ZU. (\Z4\ZrOK\ZR\Z0 closes drive quicker.)" 12 80 8
@@ -245,11 +249,11 @@ FS_HIGH_TEXT=${FS_HIGH_MULT}'GB'
 #   160041885696 is 160GB in bytes at least for some drives
 total_disk_bytes=$(echo "${prime_sectors}*$(cat $prime_disk/queue/hw_sector_size)" |bc)
 #TEST
-echo 'Total Disk (Bytes)='$total_disk_bytes >&2
+echo 'Total Disk (Bytes)='$total_disk_bytes >>QC.error.log
 #ENDT
 QCVAR=$(echo "((($total_disk_bytes/1024)/1024)/1024)" |bc)
 #TEST
-echo 'Disk Gibibytes='$QCVAR >&2
+echo 'Disk Gibibytes='$QCVAR >>QC.error.log
 #ENDT
 if [ $total_disk_bytes -lt $FS_LOW_VALUE ]
 then
@@ -307,7 +311,7 @@ then
     if [ -f /usr/lib/xscreensaver/antspotlight ];then
     echo "10 second 3D test started" | tee $Lock_file
       # run a 3D screensaver in a window for 10 seconds then stop it
-    /usr/lib/xscreensaver/antspotlight -window 2>>QC.logerrors &
+    /usr/lib/xscreensaver/antspotlight -window 2>>QC.error.log &
     PID=$!
 #    dialog --clear --colors --begin 15 40\
 # --title "\Z7\ZrFree IT Athens Quality Control Test"\
@@ -353,14 +357,16 @@ then
     then
     $path2firefox -no-remote 'http://www.youtube.com/watch?v=7OXiS4BTXNQ' 2>/tmp/ff.err &
     ice_PID=$!
-    echo $ice_PID 'process # for ff' >&2
+    echo $ice_PID 'process # for ff' >>QC.error.log
     (sleep 25;kill $ice_PID) &
     fi
 else
     echo 'WARNING WARNING WILL ROBINSON: Flash Test (Firefox) NOT possible' >>QC.log
 fi
 # *--* sort to make problems more visible
+set +o noclobber
 sort -r QC.log > QC.sorted.log
+set -o noclobber
 # *--* 
 echo -e "\n" >>QC.sorted.log
 if [ $CPU_ADDRESS -eq 32 ]
