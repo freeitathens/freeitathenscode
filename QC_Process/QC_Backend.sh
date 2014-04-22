@@ -11,17 +11,87 @@ type dialog &>/dev/null || {
 if test -z "$DISPLAY";then
     export DISPLAY=:0
 fi
+
 # *--* Identify box as 32 or 64 bit capable.
 CPU_ADDRESS=32
 CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
-# *--* Create log file
+
+# *--* Create log file(s)
 sudo rm QC.log* 2> /dev/null
 touch QC.log || exit 5
 touch QC.logerrors
 set +o noclobber
 cat /dev/null >QC.logerrors
 set -o noclobber
+
+Append_to_log() {
+    MsgLvl=${1:-'ERROR'};shift
+    Typ=${1:-'none'};shift
+    Msg=${@:-'Hey, the message is missing!'}
+    Trans_MsgLvl=$(echo $MsgLvl |tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    MsgLvl=$Trans_MsgLvl
+    RC=0
+    Message_level='UNDEFINED'
+    case $MsgLvl in
+    PASS)
+    Message_level='PASSED'
+    ;;
+    INFO)
+    Message_level='INFORMATIONAL'
+    ;;
+    NOTE)
+    Message_level='NOTICE'
+    ;;
+    PROB)
+    Message_level='PROBLEM'
+    ;;
+    WARN)
+    Message_level='WARNING'
+    ;;
+    ERROR)
+    Message_level='A SYSTEM ERROR'
+    ;;
+    esac
+    MsgTyp=''
+    if [ $Typ != 'none' ]
+    then
+        MsgTyp=' ('$Typ')'
+    fi
+    echo ${Message_level}${MsgTyp}':' $Msg >>QC.log 
+    #"PROBLEM : CD/DVD drive test. Need to add an optical drive!" >> QC.log
+    return $RC
+}
+
+Work_on_Optical() {
+    [[ -z $TARGET_OPTICAL ]] && return 4
+    TARGET_DEVICE="/dev/${TARGET_OPTICAL}"
+    sudo eject -a off -i off $TARGET_DEVICE 2>>QC.logerrors
+    sudo eject $TARGET_DEVICE 2>>QC.logerrors;RC=$?
+    if [ $RC -eq 0 ];then
+        dialog --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
+            --pause "\Z1\Zu8 seconds\ZU\Z0 to remove any \Z1\ZuFrita CDs\Z0\ZU. (\Z4\ZrOK\ZR\Z0 closes drive quicker.)" 12 80 8
+        dcd_RC=$?
+        if [ $dcd_RC -eq 0 ]
+        then
+            sudo eject -t $TARGET_DEVICE ||\
+                dialog --clear --colors --timeout 9 --ok-label "We're good" \
+                --title "\Z5\ZrSimon Says Free I.T. Rocks" \
+                --msgbox "\Z4\ZrPlease ensure optical drive is closed (Laptop?)." 10 70
+        else
+            dialog --clear --colors --timeout 8 --ok-label "Got it" \
+                --title "\Z7\ZrFree IT Athens Quality Control Test" \
+                --msgbox "\Z4\ZrPlease ensure optical drive is closed." 10 50
+        fi
+        if [ $optical_drive_count -gt 1 ]
+        then
+            Append_to_log 'INFO' 'CD/DVD drive test' 'More than one optical drive!'
+        fi
+        Append_to_log 'PASS' 'CD/DVD drive test' 'Have at least one drive.'
+    else
+        Append_to_log 'PROB' 'CD/DVD drive test' 'Cannot open Optical Drive at' $TARGET_DEVICE'!'
+    fi
+}
 
 # *--* Optical drive(s) QC_test
 TARGET_OPTICAL=''
@@ -34,56 +104,27 @@ do
 done
 if   [ $optical_drive_count -lt 1 ]
 then
-    echo "PROBLEM : CD/DVD drive test. Add an optical drive!" >> QC.log
-fi
-sudo eject -a off -i off 2>>QC.logerrors
-if [ ! -z $TARGET_OPTICAL ];then
-    TARGET_DEVICE="/dev/${TARGET_OPTICAL}"
-    #SUBSH_SIG=$(mktemp -t "QC_B_subshell_msg.XXXXX" || echo -n '/tmp/yo_mktemp_problem')
-    sudo eject $TARGET_DEVICE 2>>QC.logerrors;RC=$?
-    if [ $RC -eq 0 ];then
-        dialog --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
-            --pause "\Z1\Zu8 seconds\ZU\Z0 to remove any \Z1\ZuFrita CDs\Z0\ZU. (\Z4\ZrOK\ZR\Z0 closes drive quicker.)" 12 80 8
-	dcd_RC=$?
-	if [ $dcd_RC -eq 0 ]
-	then
-	    sudo eject -t $TARGET_DEVICE ||\
-	    dialog --clear --colors --timeout 9 --ok-label "We're good" \
---title "\Z5\ZrSimon Says Free I.T. Rocks" \
---msgbox "\Z4\ZrPlease ensure optical drive is closed (Laptop?)." 10 70
-	else
-	    dialog --clear --colors --timeout 8 --ok-label "Got it" \
---title "\Z7\ZrFree IT Athens Quality Control Test" \
---msgbox "\Z4\ZrPlease ensure optical drive is closed." 10 50
-	fi
-        if [ $optical_drive_count -gt 1 ]
-        then
-            echo "INFO : CD/DVD drive test. More than one optical drive!" >> QC.log
-        fi
-        echo "PASSED  : CD/DVD drive test (Have at least one drive)" >> QC.log
-    else
-        echo "PROBLEM: Cannot open Optical Drive at $TARGET_DEVICE" >>QC.log
-    fi
+    Append_to_log 'PROB' 'CD/DVD drive test' 'Need to add an optical drive!'
 else
-    echo "PROBLEM: Internal error identifying optical drive." >>QC.log
+    Work_on_Optical || Append_to_log 'ERROR' 'CD/DVD drive test' 'Cannot ID Optical Drive!'
 fi
 
 # *--* network
 dev_count=$(ls /sys/class/net | grep eth | wc -l)
 if   test $dev_count -lt 1;then 
-    echo "PROBLEM : Network card test. There is no network card!" >> QC.log
+    Append_to_log 'PROB' 'Network card test' 'Network Card missing!'
 elif test $dev_count -gt 1;then
-    echo "PROBLEM : Network card test. There are too many network cards!" >> QC.log
+    Append_to_log 'INFO' 'Network card test' 'Too many network cards!'
 else
-    echo "PASSED  : Network card test." >> QC.log
+    Append_to_log 'PASS' 'Network card test' '!'
 fi
 
 # *--* modem detection
 dev_count=$(lspci | grep -i Modem | wc -l)
 if test $dev_count -ge 1;then
-    echo "PROBLEM : Modem test. Remove a modem from the computer!" >> QC.log
+    Append_to_log 'PROB' 'Modem test' 'Remove extra modem(s)!'
 else
-    echo "PASSED  : Modem test." >> QC.log
+    Append_to_log 'PASS' 'Modem test' '!'
 fi
 
 # *--* sound
@@ -264,39 +305,38 @@ then
 # --title "\Z7\ZrFree IT Athens Quality Control Test"\
 # --msgbox "\Z1\ZrPlease maximize window for next test" 9 40
     if [ -f /usr/lib/xscreensaver/antspotlight ];then
-	echo "10 second 3D test started" | tee $Lock_file
+    echo "10 second 3D test started" | tee $Lock_file
       # run a 3D screensaver in a window for 10 seconds then stop it
-	/usr/lib/xscreensaver/antspotlight -window 2>>QC.logerrors &
-	PID=$!
-#	dialog --clear --colors --begin 15 40\
+    /usr/lib/xscreensaver/antspotlight -window 2>>QC.logerrors &
+    PID=$!
+#    dialog --clear --colors --begin 15 40\
 # --title "\Z7\ZrFree IT Athens Quality Control Test"\
 # --pause "\Z4\ZrCancel\Z0 to stop 3d Test" 8 40 10
-#	if [ $? -eq 0 ]
-#	then
-#	fi
-	Sleep_counter=0
-	Sleep_max_secs=10
-	while [ $PID -gt 0 ]
-	do
-	    sleep 1
-	    ((Sleep_counter++))
-	    [[ $Sleep_counter -gt 100 ]] && break
-	    if [[ $Sleep_counter -gt $Sleep_max_secs ]]
-	    then
-		kill $PID
-		sleep 1
-		Sleep_counter=0
-	    else
-		ps -p $PID -o time= 2>/dev/null || PID=-1
-	    fi
-	done
-	
-	kill $PID 2>/dev/null
-      # if the computer doesnt hang, it passes
-	rm -f $Lock_file
-	echo "PASSED  : 3D stability test." >> QC.log
+#    if [ $? -eq 0 ]
+#    then
+#    fi
+    clear
+    Sleep_counter=0
+    Sleep_max_secs=10
+    while [ $PID -gt 0 ]
+    do
+        ((Sleep_counter++))
+        [[ $Sleep_counter -gt 100 ]] && break
+        if [[ $Sleep_counter -gt $Sleep_max_secs ]]
+        then
+            kill $PID
+            Sleep_counter=0
+        else
+            ps -p $PID -o time= 2>/dev/null || PID=-1
+        fi
+        sleep 1
+    done
+    
+    # if the computer doesnt hang, it passes
+    rm -f $Lock_file
+    echo "PASSED  : 3D stability test." >> QC.log
     else
-	echo "WARNING WARNING WILL ROBINSON: 3D stability test NOT possible" >>QC.log
+    echo "WARNING WARNING WILL ROBINSON: 3D stability test NOT possible" >>QC.log
     fi
 fi
 
@@ -311,10 +351,10 @@ then
     d_RC=$?
     if [ $d_RC -eq 0 ]
     then
-	$path2firefox -no-remote 'http://www.youtube.com/watch?v=7OXiS4BTXNQ' 2>/tmp/ff.err &
-	ice_PID=$!
-	echo $ice_PID 'process # for ff' >&2
-	(sleep 25;kill $ice_PID) &
+    $path2firefox -no-remote 'http://www.youtube.com/watch?v=7OXiS4BTXNQ' 2>/tmp/ff.err &
+    ice_PID=$!
+    echo $ice_PID 'process # for ff' >&2
+    (sleep 25;kill $ice_PID) &
     fi
 else
     echo 'WARNING WARNING WILL ROBINSON: Flash Test (Firefox) NOT possible' >>QC.log
