@@ -167,8 +167,8 @@ echo 'Run nouser and nogroup checks/fixes? ("Y"; default is "n")'
 read xR
 if [ "${xR}." == 'Y.' ]
 then
-find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -nouser -exec chown -c root {} \; &
-find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -nogroup -exec chgrp -c root {} \; &
+find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -uid 1000 -nouser -exec chown -c root {} \; &
+find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -gid 1000 -nogroup -exec chgrp -c root {} \; &
 fi
 
 #XFCE Only:
