@@ -6,11 +6,17 @@ then
 fi
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
+# *--* Identify box as 32 or 64 bit capable. *--*
+CPU_ADDRESS=32
+CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
+for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
+# if [ 64 -eq $(lscpu |grep '^Arch' |head -n1 |grep -o '64$' ]
+
+# *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 Pauze() {
     msg=$@
     echo -n $msg
-#	[[ $msg =~ '<ENTER>' ]] || echo -n '<ENTER>'
-    echo -e "\n\n\t\e[5;31;47mEnter to Continue\e[00m\n"
+    echo -e "\n\n\t\e[5;31;47mHit <Enter> to Continue\e[00m\n "
     read xR
 }
 
@@ -22,7 +28,14 @@ Contact_server() {
     fi
 }
 
-#scp -P8222 frita@192.168.1.9:~/freeitathenscode/image_scripts/FreeIT.png ~/
+# *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
+# Remove reference to medibuntu (if any):
+egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
+
+apt-get update || exit 4
+apt-get install subversion || exit 6
+
+for LOC in ${HOME} /etc;do SUBLOC="${LOC}/subversion";if [ -d ${SUBLOC} ];then SUBCONF="${SUBLOC}/config";if [ -f ${SUBCONF} ];then echo "Fixing $SUBCONF for Frita's ssh connection...";perl -pi'.bak' -e 's/#\s*ssh\s(.+?)ssh -q(.+)$/ssh ${1}ssh -p8222 -v${2}/' ${SUBCONF};break;fi;fi;done
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 Contact_server
@@ -35,7 +48,7 @@ do
         if [ -f ${SUBCONF} ]
         then
             echo "Fixing $SUBCONF for Frita's ssh connection..."
-            sudo perl -pi'.bak' -e 's/#\s*ssh\s(.+?)ssh -q(.+)$/ssh ${1}ssh -p8222 -v${2}/' ${SUBCONF}
+            perl -pi'.bak' -e 's/#\s*ssh\s(.+?)ssh -q(.+)$/ssh ${1}ssh -p8222 -v${2}/' ${SUBCONF}
             break
         fi
     fi
@@ -49,26 +62,21 @@ else
     svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
 fi
 
+PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice vlc aptitude vim flashplugin-installer'
+apt-get install $PKGS
+
 [[ -x /home/oem/freeitathenscode/image_scripts/image_update.sh ]] && /home/oem/freeitathenscode/image_scripts/image_update.sh
 
+# *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 set -u
 
-# " get FreeIT.png, move to common image dir ",
-#sudo chown -c root:root FreeIT.png 
-# *--* Identify box as 32 or 64 bit capable.
-
-CPU_ADDRESS=32
-CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
-for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
-# if [ 64 -eq $(lscpu |grep '^Arch' |head -n1 |grep -o '64$' ]
-
+FreeIT_Background='FreeIT.png'
 Backgrounds_location='/usr/share/backgrounds'
 if [ $CPU_ADDRESS -eq 32 ]
 then
     Backgrounds_location='/usr/share/lubuntu/wallpapers'
 fi
-FreeIT_Background='FreeIT.png'
-Pauze 'Checking for' $FreeIT_Background 'background file <ENTER>'
+Pauze 'Checking for' $FreeIT_Background 'background file'
 Have_BG=$(ls -l ${Backgrounds_location}/$FreeIT_Background 2>/dev/null\
 		|| find ${Backgrounds_location}/ -name "$FreeIT_Background"\
 		|| echo 'NADA')
@@ -86,25 +94,19 @@ then
 	esac
 fi
 
-# Remove reference to medibuntu (if any):
-egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
-
+# *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 # Notify if swap partition UUID is in /etc/fstab
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
 Pauze 'look for (absence of) local UUID reference for swap in fstab (above).'
 
 #TODO ensure 'backports' in /etc/apt/sources.list
 
-#for Pkg in 
-PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl chromium-browser libreoffice vlc aptitude vim subversion flashplugin-installer'
-sudo apt-get install $PKGS
-
 if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'mozillateam*' |wc -l) ];then
 	echo -n 'PPA: for firefox?'
 	read Xr
 	case $Xr in
 	y|Y)
-	sudo add-apt-repository ppa:mozillateam/firefox-next
+	add-apt-repository ppa:mozillateam/firefox-next
 	;;
 	*)
 	echo 'ok moving on...'
@@ -116,7 +118,7 @@ if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'otto-kesselgulasch*' |
 	read Xr
 	case $Xr in
 	y|Y)
-	sudo add-apt-repository ppa:otto-kesselgulasch/gimp
+	add-apt-repository ppa:otto-kesselgulasch/gimp
 	;;
 	*)
 	echo 'ok moving on...'
@@ -126,20 +128,23 @@ fi
 
 if [ $CPU_ADDRESS -eq 32 ]
 then
-    sudo apt-get install gnome-system-tools 
+    apt-get install gnome-system-tools 
     dpkg -l gnome-system-tools
     Pauze 'Have gnome-system-tools? <ENTER>'
 else
     grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 
     Pauze 'Mate Desktop able to access xscreensavers for ant spotlight? <ENTER>'
-    #TODO Might want to also remove mate-screensaver
 fi
 
+apt-get dist-upgrade
+apt-get autoremove
+aptitude autoclean
+
 #Clean up root files that oem used.
-sudo find /root/.pulse /root/.dbus/session-bus -ls -delete
-sudo find /root/.pulse /root/.dbus/session-bus -ls
-sudo find /root/ -name ".pulse*" -ls -delete
-sudo find /root/ -name ".pulse*" -ls
+find /root/.pulse /root/.dbus/session-bus -ls -delete
+find /root/.pulse /root/.dbus/session-bus -ls
+find /root/ -name ".pulse*" -ls -delete
+find /root/ -name ".pulse*" -ls
 find /home/oem/.ssh -not -type d -ls -delete
 find /home/oem/.ssh -not -type d -ls
 
@@ -156,18 +161,14 @@ swapon --summary --verbose
 free
 lsb_release -a
 Pauze 'Free memory, swap, and version <ENTER>'
-
-sudo apt-get dist-upgrade
-sudo apt-get autoremove
-sudo aptitude autoclean
 # *--------------------*
 unset xR
 echo 'Run nouser and nogroup checks/fixes? ("Y"; default is "n")'
 read xR
 if [ "${xR}." == 'Y.' ]
 then
-sudo find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -nouser -exec chown -c root {} \; &
-sudo find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -nogroup -exec chgrp -c root {} \; &
+find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -nouser -exec chown -c root {} \; &
+find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -nogroup -exec chgrp -c root {} \; &
 fi
 
 #XFCE Only:
