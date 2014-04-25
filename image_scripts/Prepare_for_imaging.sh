@@ -5,7 +5,7 @@ then
 	exit 4
 fi
 
-# *------------------------------------------------------------------*
+# *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 Pauze() {
     msg=$@
     echo -n $msg
@@ -13,15 +13,41 @@ Pauze() {
     echo -e "\n\n\t\e[5;31;47mEnter to Continue\e[00m\n"
     read xR
 }
+
+# *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 Contact_server() {
     if [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]
     then
 	Pauze 'Server is valid <ENTER>'
-	#scp -P8222 frita@192.168.1.9:~/freeitathenscode/image_scripts/FreeIT.png ~/
     fi
 }
 
+#scp -P8222 frita@192.168.1.9:~/freeitathenscode/image_scripts/FreeIT.png ~/
+
+# *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 Contact_server
+for LOC in ${HOME} /etc
+do
+    SUBLOC="${LOC}/subversion"
+    if [ -d ${SUBLOC} ]
+    then
+        SUBCONF="${SUBLOC}/config"
+        if [ -f ${SUBCONF} ]
+        then
+            echo "Fixing $SUBCONF for Frita's ssh connection..."
+            sudo perl -pi'.bak' -e 's/#\s*ssh\s(.+?)ssh -q(.+)$/ssh ${1}ssh -p8222 -v${2}/' ${SUBCONF}
+            break
+        fi
+    fi
+done
+if [ -d ${HOME}/freeitathenscode/.svn ]
+then
+    cd ${HOME}/freeitathenscode/
+    svn update
+else
+    cd
+    svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
+fi
 
 [[ -x /home/oem/freeitathenscode/image_scripts/image_update.sh ]] && /home/oem/freeitathenscode/image_scripts/image_update.sh
 
@@ -60,12 +86,18 @@ then
 	esac
 fi
 
-# "Remove reference to medibuntu":
+# Remove reference to medibuntu (if any):
 egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
+
+# Notify if swap partition UUID is in /etc/fstab
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
 Pauze 'look for (absence of) local UUID reference for swap in fstab (above).'
 
 #TODO ensure 'backports' in /etc/apt/sources.list
+
+#for Pkg in 
+PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl chromium-browser libreoffice vlc aptitude vim subversion flashplugin-installer'
+sudo apt-get install $PKGS
 
 if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'mozillateam*' |wc -l) ];then
 	echo -n 'PPA: for firefox?'
@@ -91,15 +123,11 @@ if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'otto-kesselgulasch*' |
 	;;
 	esac
 fi
-for Pkg in lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl\
-    chromium-browser libreoffice gnash vlc aptitude vim subversion
-do
-    sudo apt-get install $Pkg
-done
 
 if [ $CPU_ADDRESS -eq 32 ]
 then
     sudo apt-get install gnome-system-tools 
+    dpkg -l gnome-system-tools
     Pauze 'Have gnome-system-tools? <ENTER>'
 else
     grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 

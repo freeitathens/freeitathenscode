@@ -4,7 +4,7 @@
 Version=1.0
 Type=Application
 Terminal=false
-Icon[en_US]=/usr/share/icons/elementary/stock/16/stock_person.svg
+Icon[en_US]=/usr/share/icons/Humanity/stock/32/stock_person.svg
 Name[en_US]=Quality Control
 Exec=/etc/alternatives/x-terminal-emulator -e /home/oem/freeitathenscode/QC_Process/QC.sh
 Comment[en_US]=Ensure machine is within FreeIT guidelines
