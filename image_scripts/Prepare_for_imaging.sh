@@ -12,6 +12,8 @@ CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 # if [ 64 -eq $(lscpu |grep '^Arch' |head -n1 |grep -o '64$' ]
 
+updatedb &
+
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 Pauze() {
     msg=$@

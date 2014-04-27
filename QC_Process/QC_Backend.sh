@@ -213,10 +213,10 @@ fi
 QCVAR=$(awk '/MHz/ {print $4; exit}' /proc/cpuinfo)
 LEN=$(expr match $QCVAR '[0-9]*')
 QCVAR=${QCVAR:0:$LEN}
-if test $QCVAR -lt 650;then
+if test $QCVAR -lt 1000;then
     Append_to_log 'PROB' 'CPU clockspeed test' 'Recycle this computer'
 else
-    Append_to_log 'PASS' 'CPU clockspeed test' 'Clockspeed 650 Mhz or greater'
+    Append_to_log 'PASS' 'CPU clockspeed test' 'Clockspeed 1 Ghz or greater'
 fi
 
 # *--* Hard Drive(s) *--*
@@ -258,7 +258,7 @@ else
     # Single-core, adjust MAX and MIN for memory test
     RAM_VIDEO_MAX=128
     RAM_LOW_MULT=$((1024-${RAM_VIDEO_MAX}))
-    RAM_HIGH_MULT=1536
+    RAM_HIGH_MULT=2048
 fi
 RAM_LOW_TEXT=${RAM_LOW_MULT}'MiB'
 RAM_HIGH_TEXT=${RAM_HIGH_MULT}'MiB'
