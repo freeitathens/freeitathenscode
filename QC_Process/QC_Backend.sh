@@ -2,6 +2,7 @@
 cd || exit 3
 # *--* (set -u) = Treat references to undeclared variables as an error
 set -u
+HOLD_IFS=$IFS
 # *--* Ensure dialog program is installed.
 type dialog &>/dev/null || {
     echo "The 'dialog' program must be installed for the QC script to work: will attempt to install ...";
@@ -20,9 +21,9 @@ for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 # *--* Create log file(s)
 sudo rm QC*.log
 touch QC.log || exit 5
-touch QC.error.log
+touch QC_error.log
 set +o noclobber
-cat /dev/null >QC.error.log
+cat /dev/null >QC_error.log
 set -o noclobber
 
 Append_to_log() {
@@ -88,7 +89,7 @@ Window_killa() {
         [[ $Sleep_counter -gt 100 ]] && return 2
         if [[ $Sleep_counter -gt $Sleep_max_secs ]]
         then
-            kill $PID
+            kill $PID 2>/dev/null
             Sleep_counter=0
         else
             ps -p $PID -o time= 2>/dev/null || PID=-1
@@ -100,8 +101,8 @@ Window_killa() {
 Work_on_Optical() {
     [[ -z $TARGET_OPTICAL ]] && return 4
     TARGET_DEVICE="/dev/${TARGET_OPTICAL}"
-    sudo eject -a off -i off $TARGET_DEVICE 2>>QC.error.log
-    sudo eject $TARGET_DEVICE 2>>QC.error.log;RC=$?
+    sudo eject -a off -i off $TARGET_DEVICE 2>>QC_error.log
+    sudo eject $TARGET_DEVICE 2>>QC_error.log;RC=$?
     if [ $RC -eq 0 ];then
         dialog --keep-tite --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
             --pause "\Z1\Zu8 seconds\ZU\Z0 to remove any \Z1\ZuFrita CDs\Z0\ZU. (\Z4\ZrOK\ZR\Z0 closes drive quicker.)" 12 80 8
@@ -125,6 +126,112 @@ Work_on_Optical() {
     else
         Append_to_log 'PROB' 'CD/DVD drive test' 'Cannot open Optical Drive at' $TARGET_DEVICE
     fi
+}
+
+Set_min_max_per_hardware_type() {
+    # Set up MAX and MIN for Memory
+
+    PROCESSORS=$(grep 'physical id' /proc/cpuinfo | sort -u | wc -l)
+    CORES=$(grep 'core id' /proc/cpuinfo | sort -u | wc -l)
+
+    RAM_VIDEO_MAX=0
+    RAM_LOW_MULT=0
+    RAM_HIGH_MULT=0
+
+    if test $PROCESSORS -gt 1 -o $CORES -gt 1
+    then
+        Set_RAM_max_min_dual_core
+    else
+        Set_RAM_max_min_single_core
+    fi
+
+    RAM_LOW_TEXT=${RAM_LOW_MULT}'MiB'
+    RAM_HIGH_TEXT=${RAM_HIGH_MULT}'MiB'
+    RAM_LOW_VALUE=$((${RAM_LOW_MULT}*1024))
+    RAM_HIGH_VALUE=$((${RAM_HIGH_MULT}*1024))
+
+    # Set up MAX and MIN for Hard Drive
+    FS_LOW_MULT=80
+    FS_HIGH_MULT=1000
+    if [ $CPU_ADDRESS -eq 32 ]
+    then
+        FS_LOW_MULT=60
+        FS_HIGH_MULT=120
+    fi
+
+    FS_LOW_VALUE=$((${FS_LOW_MULT}*1000*1000*1000))
+    FS_HIGH_VALUE=$((${FS_HIGH_MULT}*1000*1000*1000))
+    FS_LOW_TEXT=${FS_LOW_MULT}'GB'
+    FS_HIGH_TEXT=${FS_HIGH_MULT}'GB'
+
+    #   160041885696 is 160GB in bytes at least for some drives
+
+    return 0
+}
+
+Set_RAM_max_min_dual_core() {
+
+    RAM_VIDEO_MAX=256
+    RAM_LOW_MULT=$((2048-${RAM_VIDEO_MAX}))
+    RAM_HIGH_MULT=3182
+    #FS_LOW_VALUE=76000
+    #FS_HIGH_VALUE=1000000
+
+}
+
+Set_RAM_max_min_single_core() {
+
+    RAM_VIDEO_MAX=128
+    RAM_LOW_MULT=$((1024-${RAM_VIDEO_MAX}))
+    RAM_HIGH_MULT=2048
+    IFS=$'\n';
+    for Memtype in $(sudo dmidecode --type 17 |egrep -i '^\s*Type:' |sort --uniq |cut -f2 -d: |tr -s ' '|cut -f2 -d' ') 
+    do
+        case $Memtype in
+            DDR2)
+                echo 'have ddr2' >>QC_error.log
+                RAM_HIGH_MULT=1024
+		;;
+            SDRAM)
+                echo 'have sdram' >>QC_error.log
+                ;;
+            *)
+                echo 'have RAM type' $Memtype
+                ;;
+        esac
+    done
+    return 0
+}
+
+# *--* Hard Drive Count *--*
+Get_harddrive_count() {
+    prime_disk=''
+    prime_sectors=0
+    sdx_sectors=0
+    sdx_count=0
+    for sdx in $(ls -d /sys/block/sd[a-w])
+    do
+        sdx_sectors=$(cat ${sdx}/size)
+        if [ $sdx_sectors -gt 0 ]
+        then
+            [[ -z "$prime_disk" ]] && prime_disk=$sdx
+            [[ $prime_sectors -eq 0 ]] && prime_sectors=$sdx_sectors
+            ((sdx_count++))
+        fi
+    done
+    if   test $sdx_count -eq 1
+    then
+        Append_to_log 'PASS' 'Hard drive count' 'Exactly one hard drive found'
+    elif test $sdx_count -gt 1
+    then
+        Append_to_log 'NOTE' 'Hard drive count' 'Multiple Hard drives found'
+    elif test $sdx_count -lt 1
+    then
+        Append_to_log 'PROB' 'Hard drive count' 'Huh? No Hard drives'
+    fi
+    total_bytes=$(echo "${prime_sectors}*$(cat $prime_disk/queue/hw_sector_size)" |bc)
+    echo $total_bytes
+    return 0
 }
 
 # *--* Optical drive(s) QC_test
@@ -219,72 +326,15 @@ else
     Append_to_log 'PASS' 'CPU clockspeed test' 'Clockspeed 1 Ghz or greater'
 fi
 
-# *--* Hard Drive(s) *--*
-prime_disk=''
-prime_sectors=0
-sdx_sectors=0
-sdx_count=0
-for sdx in $(ls -d /sys/block/sd[a-w])
-do
-    sdx_sectors=$(cat ${sdx}/size)
-    if [ $sdx_sectors -gt 0 ]
-    then
-        [[ -z "$prime_disk" ]] && prime_disk=$sdx
-        [[ $prime_sectors -eq 0 ]] && prime_sectors=$sdx_sectors
-        ((sdx_count++))
-    fi
-done
-if   test $sdx_count -eq 1;then
-    Append_to_log 'PASS' 'Hard drive count' 'Exactly one hard drive found'
-elif test $sdx_count -gt 1;then
-    Append_to_log 'NOTE' 'Hard drive count' 'Multiple Hard drives found'
-elif test $sdx_count -lt 1;then
-    Append_to_log 'PROB' 'Hard drive count' 'Huh? No Hard drives'
-fi
-# Set up MAX and MIN for Memory
-RAM_VIDEO_MAX=256
-RAM_LOW_MULT=$((2048-${RAM_VIDEO_MAX}))
-RAM_HIGH_MULT=3182
-#
-PROCESSORS=$(grep 'physical id' /proc/cpuinfo | sort -u | wc -l)
-CORES=$(grep 'core id' /proc/cpuinfo | sort -u | wc -l)
-if test $PROCESSORS -gt 1 -o $CORES -gt 1
-then
-    # Treat as Dual-core
-    echo "Rockin' with a dual-core machine!"
-    #FS_LOW_VALUE=76000
-    #FS_HIGH_VALUE=1000000
-else
-    # Single-core, adjust MAX and MIN for memory test
-    RAM_VIDEO_MAX=128
-    RAM_LOW_MULT=$((1024-${RAM_VIDEO_MAX}))
-    RAM_HIGH_MULT=2048
-fi
-RAM_LOW_TEXT=${RAM_LOW_MULT}'MiB'
-RAM_HIGH_TEXT=${RAM_HIGH_MULT}'MiB'
-RAM_LOW_VALUE=$((${RAM_LOW_MULT}*1024))
-RAM_HIGH_VALUE=$((${RAM_HIGH_MULT}*1024))
-# Set up MAX and MIN for Hard Drive
-FS_LOW_MULT=80
-FS_HIGH_MULT=1000
-if [ $CPU_ADDRESS -eq 32 ]
-then
-    FS_LOW_MULT=60
-    FS_HIGH_MULT=120
-fi
-FS_LOW_VALUE=$((${FS_LOW_MULT}*1000*1000*1000))
-FS_HIGH_VALUE=$((${FS_HIGH_MULT}*1000*1000*1000))
-FS_LOW_TEXT=${FS_LOW_MULT}'GB'
-FS_HIGH_TEXT=${FS_HIGH_MULT}'GB'
-# *--* filesystem size
-#   160041885696 is 160GB in bytes at least for some drives
-total_disk_bytes=$(echo "${prime_sectors}*$(cat $prime_disk/queue/hw_sector_size)" |bc)
+Set_min_max_per_hardware_type
+total_disk_bytes=$(Get_harddrive_count)
+
 #TEST
-echo 'Total Disk (Bytes)='$total_disk_bytes >>QC.error.log
+echo 'Total Disk (Bytes)='$total_disk_bytes >>QC_error.log
 #ENDT
 QCVAR=$(echo "((($total_disk_bytes/1024)/1024)/1024)" |bc)
 #TEST
-echo 'Disk Gibibytes='$QCVAR >>QC.error.log
+echo 'Disk Gibibytes='$QCVAR >>QC_error.log
 #ENDT
 if [ $total_disk_bytes -lt $FS_LOW_VALUE ]
 then
@@ -292,7 +342,7 @@ then
 elif [ $total_disk_bytes -gt $FS_HIGH_VALUE ]
 then
     Append_to_log 'NOTE' 'Hard drive size test'\
-	    'Hard drive should be not more than' ${FS_HIGH_TEXT}
+        'Hard drive should be not more than' ${FS_HIGH_TEXT}
 else
     Append_to_log 'PASS' 'Hard drive size test' 'Within bounds'
 fi
@@ -340,7 +390,7 @@ then
     if [ -f /usr/lib/xscreensaver/antspotlight ];then
     echo "10 second 3D test started" | tee $Lock_file
       # run a 3D screensaver in a window for 10 seconds then stop it
-    /usr/lib/xscreensaver/antspotlight -window 2>>QC.error.log &
+    /usr/lib/xscreensaver/antspotlight -window 2>>QC_error.log &
     PID=$!
     clear
     Window_killa $PID 9
@@ -364,12 +414,12 @@ then
     d_RC=$?
     if [ $d_RC -eq 0 ]
     then
-        $path2firefox -no-remote http://www.youtube.com/watch?v=mwbgwZxodKE 2>>QC.error.log &
+        $path2firefox -no-remote http://www.youtube.com/watch?v=mwbgwZxodKE 2>>QC_error.log &
         ice_PID=$!
-        echo $ice_PID 'process # for ff' >>QC.error.log
+        echo $ice_PID 'process # for ff' >>QC_error.log
         Window_killa $ice_PID 40
-	Append_to_log 'INFO' 'Flash plugin test' 'Test was run'
-        #(sleep 40;ps -p $ice_PID -o time= 2>/dev/null && kill $ice_PID) &
+        Append_to_log 'INFO' 'Flash plugin test' 'Test was run'
+        #(sleep 40;ps -p $ice_PID -o time= 2>/dev/null && Kill $ice_PID) &
         #'http://www.youtube.com/watch?v=7OXiS4BTXNQ' craxy cd-rom
     fi
 else
@@ -377,28 +427,28 @@ else
 fi
 # *--* sort to make problems more visible
 set +o noclobber
-sort -r QC.log > QC.sorted.log
+sort -r QC.log > QC_sorted.log
 set -o noclobber
 # *--* 
-echo -e "\n" >>QC.sorted.log
+echo -e "\n" >>QC_sorted.log
 if [ $CPU_ADDRESS -eq 32 ]
 then
-    echo 'CPU is 32-bit.' >> QC.sorted.log
-    #echo '(IF XFCE) Remember to save a default session for the new user!' >>QC.sorted.log
+    echo 'CPU is 32-bit.' >> QC_sorted.log
+    #echo '(IF XFCE) Remember to save a default session for the new user!' >>QC_sorted.log
 else
-    echo 'CPU is 64-bit capable.' >> QC.sorted.log
+    echo 'CPU is 64-bit capable.' >> QC_sorted.log
     if [ 0 -eq $(uname -mpi |grep x86_64 |wc -l) ]
     then
-        echo "You MIGHT want to re-install using a 64-bit kernel." >> QC.sorted.log
+        echo "You MIGHT want to re-install using a 64-bit kernel." >> QC_sorted.log
     fi
 fi
-# Check for manual optical drive close message (e.g., laptops)
-#[[ 0 -lt $(wc -l $SUBSH_SIG|cut -f1 -d' ') ]] && cat $SUBSH_SIG >>QC.sorted.log
 
 summary_title="\Z7\ZrFree IT Athens Quality Control Test Results\Z0\ZR"
-egrep '^(PROB|SYSTEM)' QC.sorted.log &>/dev/null;RC=$?
+
+egrep '^(PROB|SYSTEM)' QC_sorted.log &>/dev/null;RC=$?
 [[ $RC -gt 0 ]] || summary_title="\Z1Free IT Athens Quality Control Test Results\Z0"
-dialog --keep-tite --colors --title "$summary_title" --textbox QC.sorted.log 25 80
+
+dialog --keep-tite --colors --title "$summary_title" --textbox QC_sorted.log 25 80
 clear
 
 # *--* QC_Backend.sh Finished *--*
