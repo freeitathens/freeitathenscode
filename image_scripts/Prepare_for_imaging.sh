@@ -1,9 +1,13 @@
 #!/bin/bash +x
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
-	echo 'Hello User: Please rerun with sudo or root'
-	exit 4
+    echo 'Hello User: Please rerun with sudo or root'
+    exit 4
 fi
+
+updatedb &
+
+DISTRO=${1:-'unknown'}
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 # *--* Identify box as 32 or 64 bit capable. *--*
@@ -12,7 +16,66 @@ CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 # if [ 64 -eq $(lscpu |grep '^Arch' |head -n1 |grep -o '64$' ]
 
-updatedb &
+# *--* Prepare for Distro-specific mods *--*
+if [ $DISTRO == 'unknown' ]
+then
+    if [ "${SESSION}." == 'Lubuntu.' ]
+    then
+        DISTRO='lubuntu'
+    elif [ $CPU_ADDRESS -eq 32 ]
+    then
+        DISTRO='lubuntu'
+    fi
+fi
+
+# *--* Confirm Distro name with user *--*
+echo "You're on a "$CPU_ADDRESS"-bit box running" $DISTRO'.'
+case $DISTRO in
+    lubuntu)
+        echo -n 'Valid. <ENTER> to continue...'
+        ;;
+    mint)
+        echo -n 'Valid. <ENTER> to continue...'
+        ;;
+    *)
+        echo 'Invalid. Note, run this as' $0 'distroname'
+    echo -e "\e[1;31;47mexiting\n\e[0m\n"
+        ;;
+esac
+read Xu
+
+# *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
+Contact_server() {
+    if [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]
+    then
+        Pauze 'Server is valid <ENTER>'
+    fi
+}
+
+Correct_subversion_ssh() {
+    for LOC in ${HOME} /etc
+    do
+        SUBLOC="${LOC}/subversion"
+        if [ -d ${SUBLOC} ]
+        then 
+            SUBCONF="${SUBLOC}/config"
+            if [ -f ${SUBCONF} ]
+            then
+                echo "Fix $SUBCONF for Frita's ssh connection?..."
+                read Xr
+                case $Xr in
+                Y|y)
+                perl -pi'.bak' -e 's/#\s*ssh\s(.+?)ssh -q(.+)$/ssh ${1}ssh -p8222 -v${2}/' ${SUBCONF}
+                ;;
+                *)
+                echo 'No changes made...'
+                ;;
+                esac
+                break
+            fi
+        fi
+    done
+}
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 Pauze() {
@@ -23,44 +86,21 @@ Pauze() {
 }
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
-Contact_server() {
-    if [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]
-    then
-	Pauze 'Server is valid <ENTER>'
-    fi
-}
-
-# *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 # Remove reference to medibuntu (if any):
 egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
 
 apt-get update || exit 4
 apt-get install subversion || exit 6
 
-for LOC in ${HOME} /etc;do SUBLOC="${LOC}/subversion";if [ -d ${SUBLOC} ];then SUBCONF="${SUBLOC}/config";if [ -f ${SUBCONF} ];then echo "Fixing $SUBCONF for Frita's ssh connection...";perl -pi'.bak' -e 's/#\s*ssh\s(.+?)ssh -q(.+)$/ssh ${1}ssh -p8222 -v${2}/' ${SUBCONF};break;fi;fi;done
-
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 Contact_server
-for LOC in ${HOME} /etc
-do
-    SUBLOC="${LOC}/subversion"
-    if [ -d ${SUBLOC} ]
-    then
-        SUBCONF="${SUBLOC}/config"
-        if [ -f ${SUBCONF} ]
-        then
-            echo "Fixing $SUBCONF for Frita's ssh connection..."
-            perl -pi'.bak' -e 's/#\s*ssh\s(.+?)ssh -q(.+)$/ssh ${1}ssh -p8222 -v${2}/' ${SUBCONF}
-            break
-        fi
-    fi
-done
 if [ -d ${HOME}/freeitathenscode/.svn ]
 then
     cd ${HOME}/freeitathenscode/
     svn update
 else
     cd
+    Correct_subversion_ssh
     svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
 fi
 
@@ -74,26 +114,26 @@ set -u
 
 FreeIT_Background='FreeIT.png'
 Backgrounds_location='/usr/share/backgrounds'
-if [ $CPU_ADDRESS -eq 32 ]
+if [ $DISTRO == 'lubuntu' ]
 then
     Backgrounds_location='/usr/share/lubuntu/wallpapers'
 fi
 Pauze 'Checking for' $FreeIT_Background 'background file'
 Have_BG=$(ls -l ${Backgrounds_location}/$FreeIT_Background 2>/dev/null\
-		|| find ${Backgrounds_location}/ -name "$FreeIT_Background"\
-		|| echo 'NADA')
+        || find ${Backgrounds_location}/ -name "$FreeIT_Background"\
+        || echo 'NADA')
 if [ "$Have_BG" == 'NADA' ]
 then
-	unset xR
-	Pauze -n 'Shall I try to retrieve' $FreeIT_Background '(Y|N)?' 
-	case $xR in
-	y|Y)
-	cp -iv /home/oem/freeitathenscode/image_scripts/$FreeIT_Background\
-		${Backgrounds_location}/ 2>/dev/null || exit 15
-	;;
-	*) echo "OK, Handle it later... Movin' on...";sleep 2
-	;;
-	esac
+    unset xR
+    Pauze -n 'Shall I try to retrieve' $FreeIT_Background '(Y|N)?' 
+    case $xR in
+    y|Y)
+    cp -iv /home/oem/freeitathenscode/image_scripts/$FreeIT_Background\
+        ${Backgrounds_location}/ 2>/dev/null || exit 15
+    ;;
+    *) echo "OK, Handle it later... Movin' on...";sleep 2
+    ;;
+    esac
 fi
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
@@ -104,35 +144,39 @@ Pauze 'look for (absence of) local UUID reference for swap in fstab (above).'
 #TODO ensure 'backports' in /etc/apt/sources.list
 
 if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'mozillateam*' |wc -l) ];then
-	echo -n 'PPA: for firefox?'
-	read Xr
-	case $Xr in
-	y|Y)
-	add-apt-repository ppa:mozillateam/firefox-next
-	;;
-	*)
-	echo 'ok moving on...'
-	;;
-	esac
+    echo -n 'PPA: for firefox?'
+    read Xr
+    case $Xr in
+    y|Y)
+    add-apt-repository ppa:mozillateam/firefox-next
+    ;;
+    *)
+    echo 'ok moving on...'
+    ;;
+    esac
 fi
 if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'otto-kesselgulasch*' |wc -l) ];then
-	echo -n 'PPA: for gimp?'
-	read Xr
-	case $Xr in
-	y|Y)
-	add-apt-repository ppa:otto-kesselgulasch/gimp
-	;;
-	*)
-	echo 'ok moving on...'
-	;;
-	esac
+    echo -n 'PPA: for gimp?'
+    read Xr
+    case $Xr in
+    y|Y)
+    add-apt-repository ppa:otto-kesselgulasch/gimp
+    ;;
+    *)
+    echo 'ok moving on...'
+    ;;
+    esac
 fi
 
 if [ $CPU_ADDRESS -eq 32 ]
 then
-    apt-get install gnome-system-tools 
-    dpkg -l gnome-system-tools
-    Pauze 'Have gnome-system-tools? <ENTER>'
+    if [ $DISTRO == 'mint' ]
+    # This is actually specific to xfce: mint (32?).
+    then
+        apt-get install gnome-system-tools 
+        dpkg -l gnome-system-tools
+        Pauze 'Have gnome-system-tools? <ENTER>'
+    fi
 else
     grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 
     Pauze 'Mate Desktop able to access xscreensavers for ant spotlight? <ENTER>'
