@@ -1,9 +1,9 @@
 #!/bin/bash
 parted -s /dev/sda mklabel msdos
-parted -s -a optimal /dev/sda mkpart primary ext3 1 10001
-parted -s -a optimal /dev/sda mkpart primary linux-swap 10001 11026
-parted -s -a optimal /dev/sda mkpart extended 11026 100%
-parted -s -a optimal /dev/sda mkpart logical ext3 11027 100%
+parted -s -a minimal /dev/sda mkpart primary ext3 1 10513
+parted -s -a minimal /dev/sda mkpart primary linux-swap 10513 11538
+parted -s -a minimal /dev/sda mkpart extended 11538 100%
+parted -s -a minimal /dev/sda mkpart logical ext3 11540 100%
 fdisk -l /dev/sda
 
 mkswap /dev/sda2 

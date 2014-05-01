@@ -13,17 +13,17 @@ MENU TITLE Free I.T. Athens : Master Build 64-bit
 menu color title        * #d8d8d8ff *
 menu color border       * #d8d8d8ff #00000000 none
 menu color sel          * #00000000 #d8d8d8ff *
-#menu color unsel        * #d8d8d8ff #00000000 *
-#menu color hotsel       1;7;37;40 #ffffffff #76a1d0ff *
-#menu color tabmsg       * #ffffffff #00000000 *
-#menu color help         37;40 #ffdddd00 #00000000 none
-#menu vshift 14
-#menu rows 6
-#menu helpmsgrow 15
-#menu cmdlinerow 16
-#menu timeoutrow 16
-#menu tabmsgrow 18
-#menu tabmsg Press ENTER to boot or TAB to edit a menu entry
+menu color unsel        * #d8d8d8ff #00000000 *
+menu color hotsel       1;7;37;40 #ffffffff #76a1d0ff *
+menu color tabmsg       * #ffffffff #00000000 *
+menu color help         37;40 #ffdddd00 #00000000 none
+menu vshift 14
+menu rows 18
+menu helpmsgrow 15
+menu cmdlinerow 16
+menu timeoutrow 16
+menu tabmsgrow 18
+menu tabmsg Press ENTER to boot or TAB to edit a menu entry
 
 #MENU AUTOBOOT Starting Local System in (timeout #) seconds
 LABEL local
@@ -35,10 +35,10 @@ LABEL local
 LABEL Mint64_mate_oem_config
     MENU LABEL Install Mint13 MATE 64-bit oem-config (14-Apr Build)
     KERNEL c/v64
-    APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_mint64 sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+    APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Mint64 sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
 LABEL lubuntu32-oem-config
-  MENU LABEL Install Lubuntu 13.10 32-bit oem-config (28-Mar Build)
+  MENU LABEL Install Lubuntu 14.04 32-bit oem-config (25-Apr Build)
   kernel c/v32
   append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 
@@ -68,6 +68,15 @@ LABEL live-L1404S
   INITRD Lub_14_04_std/casper/initrd.lz
   APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/Lub_14_04_std file=/cdrom/preseed/lubuntu.seed
 
+label live-u1204
+  menu label Run Ubuntu 12.04
+  kernel u-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=u-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-k1204
+  menu label Run Kubuntu 12.04
+  kernel k-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=k-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/k-12.04 file=/cdrom/preseed/ubuntu.seed
 LABEL live-L1404A
   MENU LABEL Run "Live CD" Lubuntu 14.04 (alternate)
   LINUX Lub_14_04_alt/install/vmlinuz
@@ -140,7 +149,7 @@ LABEL Test-mint64
     APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Mint64 sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
 LABEL Test-lubuntu32-oem
-    MENU LABEL Install (Beta Test) Lubuntu 13.10 32-bit oem-config (10-Apr Build)
+    MENU LABEL Install (Beta Test) Lubuntu 14.04 32-bit oem-config (28-Apr Build)
     KERNEL c/v32
     APPEND initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 
@@ -160,17 +169,7 @@ label clonezilla32-test-mint
   append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 MENU END
 
-MENU BEGIN Script Graveyard (Enter at your own risk...)
-
-label live-u1204
-  menu label Run Ubuntu 12.04
-  kernel u-12.04/casper/vmlinuz
-  append boot=casper netboot=nfs initrd=u-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-12.04 file=/cdrom/preseed/ubuntu.seed
-
-label live-k1204
-  menu label Run Kubuntu 12.04
-  kernel k-12.04/casper/vmlinuz
-  append boot=casper netboot=nfs initrd=k-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/k-12.04 file=/cdrom/preseed/ubuntu.seed
+MENU BEGIN Ye Olde Legacie Scriptes (not much use)
 
 label live-u10043
   menu label Run Ubuntu 10.04.3
