@@ -8,7 +8,7 @@ fi
 source /home/oem/freeitathenscode/image_scripts/Common_functions || exit 12
 Get_CPU_ADDRESS
 Get_DISTRO $1
-Confirm_DISTRO_CPU
+Confirm_DISTRO_CPU || exit $?
 
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
 Pauze 'look for (absence of) local UUID reference for swap in fstab (above).'

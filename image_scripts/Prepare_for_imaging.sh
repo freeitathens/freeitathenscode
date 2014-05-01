@@ -10,7 +10,7 @@ updatedb &
 source /home/oem/freeitathenscode/image_scripts/Common_functions || exit 12
 Get_CPU_ADDRESS
 Get_DISTRO $1
-Confirm_DISTRO_CPU
+Confirm_DISTRO_CPU || exit $?
 
 FreeIT_image=${2:-'FreeIT.png'}
 
