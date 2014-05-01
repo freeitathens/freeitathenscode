@@ -14,7 +14,8 @@ fi
 #http_proxy='' apt-get -y install b43-fwcutter ttf-mscorefonts-installer
 
 # install spanish language support
-apt-get -y install language-support-es language-pack-es language-pack-gnome-es openoffice.org-l10n-es
+apt-get -y install language-support-es language-pack-es language-pack-gnome-es 
+#libreoffice.org-l10n-es
 
 # install misc packages
 # dialog is needed for qc process
