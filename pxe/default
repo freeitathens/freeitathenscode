@@ -128,10 +128,10 @@ MENU END
 
 MENU BEGIN Beta Testing  
 
-#LABEL Test-mint64
-#    MENU LABEL Install (Beta Test) Mint13 MATE 64-bit oem-config (14-Apr Build)
-#    KERNEL c/v64
-#    APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Mint64 sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+LABEL Test-mint64
+    MENU LABEL Install (Beta Test) Mint13 MATE 64-bit oem-config (01-May Build)
+    KERNEL c/v64
+    APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Test_Mint64 sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 
 LABEL Test-lubuntu32-oem
     MENU LABEL Install (Beta Test) Lubuntu 14.04 32-bit oem-config (28-Apr Build)
@@ -148,10 +148,6 @@ LABEL Kiosk Boot (text only, no gui)
     INITRD systemrescuecd/isolinux/initram.igz
     APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us
 
-label clonezilla32-test-mint
-  menu label Install (beta test) Mint13 XFCE (32 bit PAE)
-  kernel c/v32
-  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts test-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
 MENU END
 
 MENU BEGIN Ye Olde Legacie Scriptes (not much use)
