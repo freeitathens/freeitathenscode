@@ -105,6 +105,7 @@ if [ $DISTRO == 'lubuntu' ]
 then
     [[ -f ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh ]] &&\
         source ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh
+fi
 
 apt-get update
 apt-get dist-upgrade
