@@ -7,7 +7,7 @@ fi
 
 updatedb &
 
-source /home/oem/freeitathenscode/image_scripts/Common_functions || exit 12
+source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
 Get_CPU_ADDRESS
 Get_DISTRO $1
 Confirm_DISTRO_CPU || exit $?
@@ -17,6 +17,8 @@ FreeIT_image=${2:-'FreeIT.png'}
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
 Pauze 'look for (absence of) local UUID reference for swap in fstab (above).'
 
+swapoff --all --verbose
+swapon --all --verbose
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
@@ -99,11 +101,13 @@ else
     Pauze 'Mate Desktop able to access xscreensavers for ant spotlight? <ENTER>'
 fi
 
+if [ $DISTRO == 'lubuntu' ]
+then
+    [[ -f ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh ]] &&\
+        source ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh
+
 apt-get update
 apt-get dist-upgrade
-
-swapoff --all --verbose
-swapon --all --verbose
 
 unset xR
 echo 'Run nouser and nogroup checks/fixes? ("Y"; default is "n")'
