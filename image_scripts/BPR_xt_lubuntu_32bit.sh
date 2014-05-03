@@ -42,6 +42,7 @@ Chromium_stuff() {
 }
 
 Apt_stuff() {
+    local RC=0
     #Auto security upgrades
     sudo dpkg-reconfigure -plow unattended-upgrades
     #Remove unnecessary programs
@@ -60,8 +61,8 @@ Apt_stuff() {
     #udo apt-get install wine winetricks
     #Upgrade to Trusty
     #sudo do-release-upgrade
-    #Remove Ibus
-    sudo apt-get purge --auto-remove ibus
+    # NOT! Messes with keyboard! Remove Ibus
+    #sudo apt-get purge --auto-remove ibus
 
     return $RC
 }
