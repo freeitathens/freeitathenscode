@@ -1,5 +1,6 @@
 #/bin/bash
 cd || exit 3
+
 # *--* (set -u) = Treat references to undeclared variables as an error
 set -u
 HOLD_IFS=$IFS
@@ -18,39 +19,50 @@ CPU_ADDRESS=32
 CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 
-# *--* Create log file(s)
-sudo rm QC*.log
-touch QC.log || exit 5
-touch QC_error.log
+# *--* Create log and error text destination files *--*
+declare -r LOGFILE=${HOME}/QC.log
+declare -r ERRFILE=${HOME}/QC_errors.log
+
 set +o noclobber
-cat /dev/null >QC_error.log
+sudo rm ${HOME}/QC*.log
+for Output_file in $LOGFILE $ERRFILE
+do
+    set -x
+    cat /dev/null >$Output_file || exit 5
+    set +x
+done
 set -o noclobber
 
 Append_to_log() {
     MsgLvl=${1:-'ERROR'}
+
+    Test_type=${2:-'none'}
+    shift 2
+    MsgTxt=$@
+
+    local RC=0
     Trans_MsgLvl=$(echo $MsgLvl |tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
     MsgLvl=$Trans_MsgLvl
 
+    MsgTyp=''
+    if [ "$Test_type" != 'none' ]
+    then
+        MsgTyp=' ('$Test_type')'
+    fi
 
-    Typ=${2:-'none'}
-    shift 2
-
-    MsgTxt=$@
-
-
-    RC=0
-    Message_level='UNDEFINED'
+    Message_level='UNDEF??'
     Punct='.'
     case $MsgLvl in
     PASS)
-    Message_level='PASSED'
+    Message_level='PASSED!'
     ;;
     INFO)
-    Message_level='INFORMATIONAL'
+    #Message_level='INFORMATIONAL'
+    Message_level='NOTICE>'
     Punct='...'
     ;;
     NOTE)
-    Message_level='NOTICE'
+    Message_level='NOTICE.'
     ;;
     PROB)
     Message_level='PROBLEM'
@@ -61,17 +73,11 @@ Append_to_log() {
     Punct='!?'
     ;;
     ERROR)
-    Message_level='SYSTEM ERROR'
+    Message_level='ERROR SYSTEM ERROR SYSTEM ERROR'
     Punct='!!??'
     ;;
     esac
-
-    MsgTyp=''
-    if [ "$Typ" != 'none' ]
-    then
-        MsgTyp=' ('$Typ')'
-    fi
-    echo ${Message_level}${MsgTyp}':' ${MsgTxt}$Punct >>QC.log 
+    echo ${Message_level}${MsgTyp}':' ${MsgTxt}$Punct >>$LOGFILE 
 
     return $RC
 }
@@ -101,8 +107,9 @@ Window_killa() {
 Work_on_Optical() {
     [[ -z $TARGET_OPTICAL ]] && return 4
     TARGET_DEVICE="/dev/${TARGET_OPTICAL}"
-    sudo eject -a off -i off $TARGET_DEVICE 2>>QC_error.log
-    sudo eject $TARGET_DEVICE 2>>QC_error.log;RC=$?
+    sudo eject -a off -i off $TARGET_DEVICE 2>>$ERRFILE
+    sudo eject $TARGET_DEVICE 2>>$ERRFILE
+    RC=$?
     if [ $RC -eq 0 ];then
         dialog --keep-tite --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
             --pause "\Z1\Zu8 seconds\ZU\Z0 to remove any \Z1\ZuFrita CDs\Z0\ZU. (\Z4\ZrOK\ZR\Z0 closes drive quicker.)" 12 80 8
@@ -189,11 +196,11 @@ Set_RAM_max_min_single_core() {
     do
         case $Memtype in
             DDR2)
-                echo 'have ddr2' >>QC_error.log
+                echo 'have ddr2' >>$ERRFILE
                 RAM_HIGH_MULT=1024
-		;;
+        ;;
             SDRAM)
-                echo 'have sdram' >>QC_error.log
+                echo 'have sdram' >>$ERRFILE
                 ;;
             *)
                 echo 'have RAM type' $Memtype
@@ -234,7 +241,90 @@ Get_harddrive_count() {
     return 0
 }
 
-# *--* Optical drive(s) QC_test
+Wrapup_report() {
+    report_style=${1:-'2'}
+    local logfile=${2:-"$LOGFILE"}
+    shift 2
+    local RC=0
+
+    summary_title="\Z7\ZrFree IT Athens Quality Control Test Results\Z0\ZR"
+    egrep '^(PROB|ERROR|WARN)' $logfile &>/dev/null\
+        && summary_title="\Z1Free IT Athens Quality Control Test Results\Z0"
+
+    if [ $CPU_ADDRESS -eq 64 ]
+    then
+        echo '    CPU is 64-bit capable.' >> $logfile
+        if [ 0 -eq $(uname -mpi |grep x86_64 |wc -l) ]
+        then
+            echo "        You MIGHT want to re-install using a 64-bit kernel." >> $logfile
+        fi
+    else
+        echo '    CPU is 32-bit.' >>$logfile
+        #echo '(IF XFCE) Remember to save a default session for the new user!'
+    fi
+
+    case $report_style in
+        2)
+            Summary_report_color $logfile
+            ;;
+        *)
+            Summary_report_legacy $logfile
+            ;;
+    esac
+
+    return $RC
+}
+
+Summary_report_legacy() {
+    local logfile=${1:-"$LOGFILE"}
+    local RC=0
+
+    # *--* sort to make problems more visible
+    declare -r LOGFILE_SORTED=${HOME}/QC_sorted.log 
+    set +o noclobber
+    sort -r $logfile > $LOGFILE_SORTED
+    set -o noclobber
+    # *--* 
+    dialog --keep-tite --colors --title "$summary_title" --textbox $LOGFILE_SORTED 25 80
+
+    return $RC
+}
+
+Summary_report_color() {
+    local logfile=${1:-"$LOGFILE"}
+    local RC=0
+
+    text_string=''
+    IFS='
+'
+    for text_line in $(<$logfile)
+    do
+echo -e "$text_line"
+read Xu
+        text_init=$(echo $text_line |cut -b1-4)
+        case $text_init in
+            PROB)
+               text_string="${text_string}\Z1$(echo ${text_line})\Z0" 
+            ;;
+            ERRO)
+               text_string="${text_string}\Z1\Zu$(echo ${text_line})\ZU\Z0" 
+            ;;
+            WARN)
+               text_string="${text_string}\Z1\Zr$(echo ${text_line})\ZR\Z0" 
+            ;;
+            *)
+               text_string="${text_string}\Z2$(echo ${text_line})\Z0" 
+            ;;
+        esac
+    done
+
+    dialog --keep-tite --colors --title "$summary_title" --msgbox $text_string 25 80
+
+IFS=$' \t\n'
+    return $RC
+}
+
+# *--* Optical drive(s) QC test
 TARGET_OPTICAL=''
 optical_drive_count=0
 for dev_path in $(ls -d /sys/block/sr*)
@@ -330,11 +420,11 @@ Set_min_max_per_hardware_type
 total_disk_bytes=$(Get_harddrive_count)
 
 #TEST
-echo 'Total Disk (Bytes)='$total_disk_bytes >>QC_error.log
+echo 'Total Disk (Bytes)='$total_disk_bytes >>$ERRFILE
 #ENDT
 QCVAR=$(echo "((($total_disk_bytes/1024)/1024)/1024)" |bc)
 #TEST
-echo 'Disk Gibibytes='$QCVAR >>QC_error.log
+echo 'Disk Gibibytes='$QCVAR >>$ERRFILE
 #ENDT
 if [ $total_disk_bytes -lt $FS_LOW_VALUE ]
 then
@@ -390,7 +480,7 @@ then
     if [ -f /usr/lib/xscreensaver/antspotlight ];then
     echo "10 second 3D test started" | tee $Lock_file
       # run a 3D screensaver in a window for 10 seconds then stop it
-    /usr/lib/xscreensaver/antspotlight -window 2>>QC_error.log &
+    /usr/lib/xscreensaver/antspotlight -window 2>>$ERRFILE &
     PID=$!
     clear
     Window_killa $PID 9
@@ -414,9 +504,9 @@ then
     d_RC=$?
     if [ $d_RC -eq 0 ]
     then
-        $path2firefox -no-remote http://www.youtube.com/watch?v=mwbgwZxodKE 2>>QC_error.log &
+        $path2firefox -no-remote http://www.youtube.com/watch?v=mwbgwZxodKE 2>>$ERRFILE &
         ice_PID=$!
-        echo $ice_PID 'process # for ff' >>QC_error.log
+        echo $ice_PID 'process # for ff' >>$ERRFILE
         Window_killa $ice_PID 40
         Append_to_log 'INFO' 'Flash plugin test' 'Test was run'
         #(sleep 40;ps -p $ice_PID -o time= 2>/dev/null && Kill $ice_PID) &
@@ -425,33 +515,13 @@ then
 else
     Append_to_log 'PROB' 'Flash plugin test' 'This test is NOT possible'
 fi
-# *--* sort to make problems more visible
-set +o noclobber
-sort -r QC.log > QC_sorted.log
-set -o noclobber
-# *--* 
-echo -e "\n" >>QC_sorted.log
-if [ $CPU_ADDRESS -eq 32 ]
-then
-    echo 'CPU is 32-bit.' >> QC_sorted.log
-    #echo '(IF XFCE) Remember to save a default session for the new user!' >>QC_sorted.log
-else
-    echo 'CPU is 64-bit capable.' >> QC_sorted.log
-    if [ 0 -eq $(uname -mpi |grep x86_64 |wc -l) ]
-    then
-        echo "You MIGHT want to re-install using a 64-bit kernel." >> QC_sorted.log
-    fi
-fi
 
-summary_title="\Z7\ZrFree IT Athens Quality Control Test Results\Z0\ZR"
+Wrapup_report 1 $LOGFILE
 
-egrep '^(PROB|SYSTEM)' QC_sorted.log &>/dev/null;RC=$?
-[[ $RC -gt 0 ]] || summary_title="\Z1Free IT Athens Quality Control Test Results\Z0"
-
-dialog --keep-tite --colors --title "$summary_title" --textbox QC_sorted.log 25 80
 clear
 
 # *--* QC_Backend.sh Finished *--*
+
 #TODO (for build) include tty fonts on libreoffice (or instructions)
 #TODO Need test for flash content handling
 #TODO Need change build to make separate partition for /home
