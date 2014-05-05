@@ -134,10 +134,10 @@ prettyprint() {
         token=${Attr_a[$idx]}
         case $token in
             n)
-                echo ''
+                echo -ne "\n"
                 ;;
             t)
-                echo -en "\n"
+                echo -ne "\t"
                 ;;
             M) 
                 echo -n $Message
@@ -161,7 +161,6 @@ prettyprint() {
                 ;;
         esac
     done
-    #echo -e "\e[00m"
 
     return 0
     #Attr=${1:-'n[7,30,47]..[0]n'}
@@ -173,10 +172,10 @@ Pauze() {
     shift 2
     Add_mess=$@
     
-    [[ "${Just_ran}." == 'NOT.' ]] || prettyprint 'n,n,0,34,47,M,0,n' 'COMPLETED:' $Just_ran
-    [[ -z "$Add_mess" ]] || prettyprint 'n,n,7,33,47,M,0,n' '*--*' $Add_mess '*--*'
-    [[ "${Will_run}." == 'NOT.' ]] || prettyprint 'n,n,1,34,47,M,0,n' 'NEXT UP  :' $Will_run
-    prettyprint 'n,n,t,5,31,47' 'Hit <Enter> to Continue'
+    [[ "${Just_ran}." == 'NOT.' ]] || prettyprint 'n,0,34,47,M,0,n' 'COMPLETED:' $Just_ran
+    [[ -z "$Add_mess" ]] || prettyprint 'n,7,33,47,M,0,n' '*--*' $Add_mess '*--*'
+    [[ "${Will_run}." == 'NOT.' ]] || prettyprint 'n,1,34,47,M,0,n' 'NEXT UP  :' $Will_run
+    prettyprint 'n,t,5,31,47' 'Hit <Enter> to Continue'
     #echo -e "\n\n\t\e[5;31;47mHit <Enter> to Continue\e[00m\n"
     read xR
 
