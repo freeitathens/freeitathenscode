@@ -15,18 +15,28 @@ Confirm_DISTRO_CPU || exit $?
 FreeIT_image=${2:-'FreeIT.png'}
 
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
-Pauze 'look for (absence of) local UUID reference for swap in fstab (above).'
+
+Pauze '(absence of) local UUID reference for swap in fstab.' 'Checking swap'
 
 swapoff --all --verbose
 swapon --all --verbose
 
+Pauze 'Checked swap' 'Confirm no medibuntu in apt sources'
+
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
+
+Pauze 'Confirmed no medibuntu in apt sources' 'apt update AND install subversion'
 
 apt-get update || exit 4
 apt-get install subversion || exit 6
 
+Pauze 'apt update AND install subversion' 'Check that server address is correct and is contactable'
+
 Contact_server
+
+Pauze 'Checked that server address is correct and is contactable' 'Check on subversion status'
+
 if [ -d ${HOME}/freeitathenscode/.svn ]
 then
     cd ${HOME}/freeitathenscode/
@@ -37,8 +47,12 @@ else
     svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
 fi
 
-PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice vlc aptitude vim flashplugin-installer'
+Pauze 'Checked on subversion status' 'install necessary packages'
+
+PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice vlc aptitude vim flashplugin-installer htop'
 apt-get install $PKGS
+
+Pauze 'install necessary packages' 'Try to set Frita Backgrounds'
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 set -u
@@ -60,7 +74,11 @@ case $bg_RC in
     ;;
 esac
 
+Pauze 'Tried to set Frita Backgrounds' 'NOTE to ensure backports in list'
+
 #TODO ensure 'backports' in /etc/apt/sources.list
+
+Pauze 'NOTE to ensure backports in list' 'PPAs for firefox and gimp'
 
 if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'mozillateam*' |wc -l) ];then
     echo -n 'PPA: for firefox?'
@@ -87,6 +105,8 @@ if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'otto-kesselgulasch*' |
     esac
 fi
 
+Pauze 'PPAs for firefox and gimp' 'mint and mate specials'
+
 if [ $CPU_ADDRESS -eq 32 ]
 then
     if [ $DISTRO == 'mint' ]
@@ -94,12 +114,14 @@ then
     then
         apt-get install gnome-system-tools 
         dpkg -l gnome-system-tools
-        Pauze 'Have gnome-system-tools? <ENTER>'
+        Pauze 'Have gnome-system-tools?'
     fi
 else
     grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 
-    Pauze 'Mate Desktop able to access xscreensavers for ant spotlight? <ENTER>'
+    Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
 fi
+
+Pauze 'gnome-system tools or mate can use xscreensaver' '(Lubuntu only) Run Ben Code'
 
 if [ $DISTRO == 'lubuntu' ]
 then
@@ -107,8 +129,12 @@ then
         source ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh
 fi
 
+Pauze '(Lubuntu only) run Ben code' 'apt upgrade'
+
 apt-get update
 apt-get dist-upgrade
+
+Pauze 'apt upgrade' 'No user / no group checks'
 
 unset xR
 echo 'Run nouser and nogroup checks/fixes? ("Y"; default is "n")'
@@ -119,3 +145,4 @@ then
     find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -gid 1000 -nogroup -exec chgrp -c root {} \; &
 fi
 
+#Pauze '' ''

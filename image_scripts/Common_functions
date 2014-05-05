@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 
 # *--* Identify box as 32 or 64 bit capable. *--*
 Get_CPU_ADDRESS() {
@@ -22,7 +22,7 @@ Get_DISTRO() {
         if [ "${SESSION}." == 'Lubuntu.' ]
         then
             DISTRO='lubuntu'
-        elif [ ! -z "${Told_distro} ]
+        elif [ ! -z "${Told_distro}" ]
         then
             DISTRO=$Told_distro
         elif [ $CPU_ADDRESS -eq 32 ]
@@ -35,21 +35,24 @@ Get_DISTRO() {
 # *--* Confirm Distro name with user *--*
 Confirm_DISTRO_CPU() {
     return_value=0
-    echo "You're on a "$CPU_ADDRESS"-bit box running" $DISTRO'.'
+
+    prettyprint 'n,t,5,30,45,M,0,n' "You're on a "$CPU_ADDRESS"-bit box running" $DISTRO'.'
     case $DISTRO in
         lubuntu)
-            echo -n 'Valid. <ENTER> to continue...'
+            prettyprint '1,32,47,M,0' 'Valid'
             ;;
         LinuxMint|mint)
-            echo -n 'Valid. <ENTER> to continue...'
+            prettyprint '1,32,47,M,0' 'Valid'
             ;;
         *)
-            echo 'Invalid. Note, run this as' $0 'distroname'
-            echo -e "\e[1;31;47mexiting\n\e[0m\n"
-        return_value=16
+            prettyprint '1,31,47,M,0,n' 'Invalid. ( Note, you can run this as' $0 'distroname )'
+            prettyprint '5,31,47,M,n,0' 'Exiting'
+            return_value=16
             ;;
     esac
+    prettyprint '1,34,47,M,0' '<ENTER> to continue...'
     read Xu
+
     return $return_value
 }
 
@@ -69,14 +72,14 @@ Correct_subversion_ssh() {
             SUBCONF="${SUBLOC}/config"
             if [ -f ${SUBCONF} ]
             then
-                echo "Fix $SUBCONF for Frita's ssh connection?..."
+                prettyprint 'n,t,31,47,M,0' "Fix $SUBCONF for Frita's ssh connection?..."
                 read Xr
                 case $Xr in
                 Y|y)
                 perl -pi'.bak' -e 's/#\s*ssh\s(.+?)ssh -q(.+)$/ssh ${1}ssh -p8222 -v${2}/' ${SUBCONF}
                 ;;
                 *)
-                echo 'No changes made...'
+                prettyprint 'n,t,34,47,M,0' 'No changes made...'
                 ;;
                 esac
                 break
@@ -104,18 +107,79 @@ Set_background() {
                 ${Backgrounds_location}/ 2>/dev/null || exit 15
                 ;;
             *)
-                echo "OK, Handle it later... Movin' on...";sleep 2
+                prettyprint '1,34,47,M,0,n' "OK, Handle it later... Movin' on...";sleep 2
                 ;;
         esac
     fi
 }
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
+prettyprint() {
+    Attribute=${1:-'n,7,30,47,M,n,0'}
+    shift
+    Message=$@
+    [[ -z "$Message" ]] && Message='*--------------------------------------------------------*'
+
+    OLDIFS=$IFS;IFS=','
+    declare Attr_a=($Attribute)
+    IFS=$OLDIFS
+    declare -r Attr_len=${#Attr_a[*]}
+    Attr_hiidx=$(($Attr_len-1))
+    colorattr_pre="\e["
+    colorattr_post='m'
+    COLORATTR=''
+
+    for idx in $(seq 0 $Attr_hiidx)
+    do
+        token=${Attr_a[$idx]}
+        case $token in
+            n)
+                echo ''
+                ;;
+            t)
+                echo -en "\n"
+                ;;
+            M) 
+                echo -n $Message
+                ;;
+            *)
+                is_num='N'
+                [[ -z $(echo $token |tr -d [0-9]) ]] && is_num='Y'
+                if [ $is_num == 'Y' ]
+                then
+                    if [ $token -lt 8 ]
+                    then COLORATTR=${COLORATTR}';'${token}
+                    elif [ $token -ge 30 ]
+                    then
+                        if [ $token -lt 38 ];then COLORATTR=${COLORATTR}';'${token};fi
+                    elif [ $token -ge 40 ]
+                    then
+                        if [ $token -lt 48 ];then COLORATTR=${COLORATTR}';'${token};fi
+                    fi 
+                    [[ -z ${COLORATTR} ]] || echo -ne "${colorattr_pre}${COLORATTR}${colorattr_post}"   
+                fi
+                ;;
+        esac
+    done
+    #echo -e "\e[00m"
+
+    return 0
+    #Attr=${1:-'n[7,30,47]..[0]n'}
+}
+
 Pauze() {
-    msg=$@
-    echo -n $msg
-    echo -e "\n\n\t\e[5;31;47mHit <Enter> to Continue\e[00m\n "
+    Just_ran=${1:-'NOT'}
+    Will_run=${2:-'NOT'}
+    shift 2
+    Add_mess=$@
+    
+    [[ "${Just_ran}." == 'NOT.' ]] || prettyprint 'n,n,0,34,47,M,0,n' 'COMPLETED:' $Just_ran
+    [[ -z "$Add_mess" ]] || prettyprint 'n,n,7,33,47,M,0,n' '*--*' $Add_mess '*--*'
+    [[ "${Will_run}." == 'NOT.' ]] || prettyprint 'n,n,1,34,47,M,0,n' 'NEXT UP  :' $Will_run
+    prettyprint 'n,n,t,5,31,47' 'Hit <Enter> to Continue'
+    #echo -e "\n\n\t\e[5;31;47mHit <Enter> to Continue\e[00m\n"
     read xR
+
 }
 
 #/usr/share/lubuntu/wallpapers/: directory
@@ -127,3 +191,4 @@ Pauze() {
         #xfce-perchannel-xml/xfce4-session.xml: 
         #<property name="SessionName" type="string" value="Default"/>
 
+        #prettyprint '1,32,47,M,0' 'Valid'
