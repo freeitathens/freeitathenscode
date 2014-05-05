@@ -1,17 +1,23 @@
 #!/bin/bash
 #Start BPR Configs
+Refresh_Apt=${1:-'Y'}
+shift
+
+DOWNLOADS=${HOME}/Downloads
+[[ -d ${DOWNLOADS} ]] || DOWNLOADS=/tmp
 
 Appearance_stuff() {
-    local RC=0
-    cd Downloads || return 4
-    sudo apt-get install git
-    git clone https://github.com/bpr97050/FRITAdot.git
-    cd ./FRITAdot
-    rm -rf .git
+
     shopt -s dotglob nullglob
-    sudo mv * /etc/skel
+    local RC=0
+    cd $DOWNLOADS
+    git clone https://github.com/bpr97050/FRITAdot.git
+    Frita_download=${DOWNLOADS}/FRITAdot
+    rm -rf ${Frita_download}/.git
+    cd $Frita_download || return 8
+    sudo rsync -aRv . /etc/skel
     cd
-    rm -rf Downloads/FRITAdot
+    rm -rf $Frita_download
     #Set LightDM wallpaper
     sudo sed -i 's/background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
     sudo echo "background=#FFFFFF" >> /etc/lightdm/lightdm-gtk-greeter.conf
@@ -20,13 +26,14 @@ Appearance_stuff() {
 }
 
 Chromium_stuff() {
+
     local RC=0
+    sudo apt-get install chromium-browser
     #Pepperflash/Multimedia codecs installer
     #   wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw
     #   sudo mv check /usr/local/bin/
     #   sudo chmod +x /usr/local/bin/check
     #   sudo add-apt-repository ppa:skunk/pepper-flash
-    #   sudo apt-get update
     #/etc/chromium-browser/master_preferences
     wget -O master_preferences\
         https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
@@ -42,7 +49,10 @@ Chromium_stuff() {
 }
 
 Apt_stuff() {
+
     local RC=0
+    [[ "${Refresh_Apt}" == 'Y.' ]] && sudo apt-get update
+    sudo apt-get install git
     #Auto security upgrades
     sudo dpkg-reconfigure -plow unattended-upgrades
     #Remove unnecessary programs
@@ -67,10 +77,10 @@ Apt_stuff() {
     return $RC
 }
 
+Apt_stuff $@ || echo 'Apt?'
 Appearance_stuff || echo 'Appearance?'
 Chromium_stuff || echo 'Chromium Config?'
 
-Apt_stuff || echo 'Apt?'
 sudo apt-get --purge autoremove
 sudo apt-get autoclean
 

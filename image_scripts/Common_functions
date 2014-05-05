@@ -15,15 +15,19 @@ Get_CPU_ADDRESS() {
 
 Get_DISTRO() {
     DISTRO=${1:-'unknown'}
+    Told_distro=$(lsb_release -a 2>/dev/null|grep '^Distributor ID:' |cut -f2 -d: |sed -e 's/^[ \t]*//')
     # *--* Prepare for Distro-specific mods *--*
     if [ $DISTRO == 'unknown' ]
     then
         if [ "${SESSION}." == 'Lubuntu.' ]
         then
-        DISTRO='lubuntu'
+            DISTRO='lubuntu'
+        elif [ ! -z "${Told_distro} ]
+        then
+            DISTRO=$Told_distro
         elif [ $CPU_ADDRESS -eq 32 ]
         then
-        DISTRO='lubuntu'
+            DISTRO='lubuntu'
         fi
     fi
 }
@@ -36,13 +40,13 @@ Confirm_DISTRO_CPU() {
         lubuntu)
             echo -n 'Valid. <ENTER> to continue...'
             ;;
-        mint)
+        LinuxMint|mint)
             echo -n 'Valid. <ENTER> to continue...'
             ;;
         *)
             echo 'Invalid. Note, run this as' $0 'distroname'
             echo -e "\e[1;31;47mexiting\n\e[0m\n"
-	    return_value=16
+        return_value=16
             ;;
     esac
     read Xu
