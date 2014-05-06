@@ -1,4 +1,4 @@
-#!/bin/bash
+# #!/bin/bash
 
 # *--* Identify box as 32 or 64 bit capable. *--*
 Get_CPU_ADDRESS() {
@@ -12,10 +12,12 @@ Get_CPU_ADDRESS() {
         fi
     done
 }
+# if [ 64 -eq $(lscpu |grep '^Arch' |head -n1 |grep -o '64$' ]
 
 Get_DISTRO() {
     DISTRO=${1:-'unknown'}
     Told_distro=$(lsb_release -a 2>/dev/null|grep '^Distributor ID:' |cut -f2 -d: |sed -e 's/^[ \t]*//')
+    Pauze 'Looked up <<distro>>. You gave me ((name)):' '*-------------*' '<<'$Told_distro'>>(('$DISTRO'))'
     # *--* Prepare for Distro-specific mods *--*
     if [ $DISTRO == 'unknown' ]
     then
@@ -36,7 +38,9 @@ Get_DISTRO() {
 Confirm_DISTRO_CPU() {
     return_value=0
 
-    prettyprint 'n,t,5,30,45,M,0,n' "You're on a "$CPU_ADDRESS"-bit box running" $DISTRO'.'
+    prettyprint 'n,t,5,30,45,M,0,n' "A "$CPU_ADDRESS"-bit box running" $DISTRO'.'
+    read Xu
+
     case $DISTRO in
         lubuntu)
             prettyprint '1,32,47,M,0' 'Valid'
@@ -45,13 +49,13 @@ Confirm_DISTRO_CPU() {
             prettyprint '1,32,47,M,0' 'Valid'
             ;;
         *)
-            prettyprint '1,31,47,M,0,n' 'Invalid. ( Note, you can run this as' $0 'distroname )'
+            prettyprint '1,31,47,M,0,n' 'Invalid.'
+            prettyprint 't,7,31,47,M,0,n' '(Note, you can run this as' $0 'distro)'
             prettyprint '5,31,47,M,n,0' 'Exiting'
             return_value=16
             ;;
     esac
-    prettyprint '1,34,47,M,0' '<ENTER> to continue...'
-    read Xu
+    Pauze 'Confirmed Distro' 'Next' $return_value
 
     return $return_value
 }
@@ -59,7 +63,7 @@ Confirm_DISTRO_CPU() {
 Contact_server() {
     if [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]
     then
-        Pauze 'Server is valid <ENTER>'
+        Pauze 'Checked Server is valid' 'Finished with Contact_server()' '192.168.1.9'
     fi
 }
 
@@ -89,22 +93,24 @@ Correct_subversion_ssh() {
 }
 
 Set_background() {
-    [[ -z "$Backgrounds_location" ]] || return 9
-    [[ -d "$Backgrounds_location" ]] || return 5
-    [[ -z "$FreeIT_image" ]] || return 6
 
-    Pauze 'Checking for' $FreeIT_image 'background file'
+    [[ -z "$Backgrounds_location" ]] && return 9
+    [[ -d "$Backgrounds_location" ]] || return 5
+    [[ -z "$FreeIT_image" ]] && return 6
+
+    Pauze 'Started Set_background()' 'Looking for background file location' $FreeIT_image $Backgrounds_location
     Have_BG=$(ls -l ${Backgrounds_location}/$FreeIT_image 2>/dev/null\
                 || find ${Backgrounds_location}/ -name "$FreeIT_image"\
                 || echo 'NADA')
     if [ "$Have_BG" == 'NADA' ]
     then
         unset xR
-        Pauze -n 'Shall I try to retrieve' $FreeIT_image '(Y|N)?' 
+        echo 'Shall I try to retrieve' $FreeIT_image '(Y|N)?' 
+        read xR
         case $xR in
             y|Y)
                 cp -iv /home/oem/freeitathenscode/image_scripts/$FreeIT_image\
-                ${Backgrounds_location}/ 2>/dev/null || exit 15
+                ${Backgrounds_location}/ 2>/dev/null || return 15
                 ;;
             *)
                 prettyprint '1,34,47,M,0,n' "OK, Handle it later... Movin' on...";sleep 2
@@ -114,56 +120,144 @@ Set_background() {
 }
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
+
+print_presets() {
+    #  Preset Info: Bold Blue on Black, NO BleedOver, Newline
+    export PP_info='1,34,40,M,0,n'
+    #  Preset Additional Info: Blue on Black, NO BleedOver, Newline
+    export PP_add_info='0,34,40,M,0,n'
+    #  Preset Warning: Bold Yellow on Black, NO BleedOver, Newline
+    export PP_warn='1,33,40,M,0,n'
+    #  Preset Error: Bold Red on Black, NO BleedOver, Newline
+    export PP_err='1,31,40,M,0,n'
+}
+
 prettyprint() {
     Attribute=${1:-'n,7,30,47,M,n,0'}
     shift
     Message=$@
-    [[ -z "$Message" ]] && Message='*--------------------------------------------------------*'
 
-    OLDIFS=$IFS;IFS=','
+    OLDIFS=$IFS;IFS=$','
     declare Attr_a=($Attribute)
-    IFS=$OLDIFS
+    IFS=$' \t\n'
     declare -r Attr_len=${#Attr_a[*]}
     Attr_hiidx=$(($Attr_len-1))
-    colorattr_pre="\e["
+    #echo $Attr_hiidx' '${Attr_a[@]}' '$Attr_len
+    shopt -u nullglob
+
+    declare -r colorattr_pre="\e["
+    #declare -r colorattr_pre=$'\e['
+    COLORATTR=$colorattr_pre
     colorattr_post='m'
-    COLORATTR=''
 
     for idx in $(seq 0 $Attr_hiidx)
     do
         token=${Attr_a[$idx]}
-        case $token in
-            n)
-                echo -ne "\n"
-                ;;
-            t)
-                echo -ne "\t"
-                ;;
-            M) 
-                echo -n $Message
-                ;;
-            *)
-                is_num='N'
-                [[ -z $(echo $token |tr -d [0-9]) ]] && is_num='Y'
-                if [ $is_num == 'Y' ]
-                then
-                    if [ $token -lt 8 ]
-                    then COLORATTR=${COLORATTR}';'${token}
-                    elif [ $token -ge 30 ]
-                    then
-                        if [ $token -lt 38 ];then COLORATTR=${COLORATTR}';'${token};fi
-                    elif [ $token -ge 40 ]
-                    then
-                        if [ $token -lt 48 ];then COLORATTR=${COLORATTR}';'${token};fi
-                    fi 
-                    [[ -z ${COLORATTR} ]] || echo -ne "${colorattr_pre}${COLORATTR}${colorattr_post}"   
-                fi
-                ;;
-        esac
+        [[ -z "${token}" ]] && break
+        [[ "${token}" == '' ]] && break
+        repo $token
     done
+    if [ "${COLORATTR}" != "$colorattr_pre" ]
+    then
+        echo -ne "${COLORATTR}${colorattr_post}"
+    fi
 
     return 0
     #Attr=${1:-'n[7,30,47]..[0]n'}
+}
+
+repo() {
+    local token=$1
+    case $token in
+        c)
+            clear
+            ;;
+        n)
+            echo -ne "\n"
+            ;;
+        t)
+            echo -ne "\t"
+            ;;
+        M) 
+            echo -ne "${COLORATTR}${colorattr_post}"$Message
+            COLORATTR=$colorattr_pre
+            ;;
+        B) 
+            echo -ne "${COLORATTR}${colorattr_post} "
+            ;;
+        #'')
+        #    COLORATTR=${COLORATTR}';'
+        #    ;;
+        *)
+            #Is_numeric_tr $token && Twenty_grand $token
+            Is_numeric_tr $token && Is_numeric_re $token && Twenty_grand $token
+            ;;
+    esac
+}
+#[[ -z "$Message" ]] && Message='*-----------*'
+
+Is_numeric_tr() {
+    local testchar=$1
+    shopt -u nullglob
+
+    nondigits=$(echo -n $testchar |tr -d [:digit:] |wc --bytes)
+
+    return $nondigits
+}
+
+Is_numeric_re() {
+    local testchar=$1
+    #echo $testchar ' MADE IT TO Is_numeric_re' >&2
+
+    [[ $testchar =~ [^[:digit:]] ]] && return 1
+
+    return 0
+}
+
+Twenty_grand() {
+    local Digit=$1
+
+    case $Digit in
+        [0-7])
+            COLORATTR=${COLORATTR}';'${Digit}
+            ;;
+        [[:digit:]])
+            echo 'Character class digit' $Digit 'NOT VALID ATTR. Resetting to 1' >&2
+            COLORATTR=${COLORATTR}';1'
+            ;;
+        3[0-7])
+            COLORATTR=${COLORATTR}';'${Digit}
+            ;;
+        4[0-7])
+            COLORATTR=${COLORATTR}';'${Digit}
+            ;;
+        [:digit:])
+            echo $Digit' NOT VALID ATTR. Resetting to 0' >&2
+            COLORATTR=${COLORATTR}';0'
+            ;;
+        *)
+            echo 'Unknown Attribute Code' $Digit '. Discarding' >&2
+            ;;
+    esac
+
+    return $?
+}
+
+twenty_grand() {
+    local Digit=$1
+    #echo $Digit ' MADE IT TO twenty_grand' >&2
+
+    if [ $Digit -lt 8 ]
+    then COLORATTR=${COLORATTR}';'${Digit}
+    elif [ $Digit -ge 30 ]
+    then
+        if [ $Digit -lt 38 ];then COLORATTR=${COLORATTR}';'${Digit};fi
+    elif [ $Digit -ge 40 ]
+    then
+        if [ $Digit -lt 48 ];then COLORATTR=${COLORATTR}';'${Digit};fi
+    fi
+
+    return $?
 }
 
 Pauze() {
@@ -171,19 +265,18 @@ Pauze() {
     Will_run=${2:-'NOT'}
     shift 2
     Add_mess=$@
-    
+
     [[ "${Just_ran}." == 'NOT.' ]] || prettyprint 'n,0,34,47,M,0,n' 'COMPLETED:' $Just_ran
-    [[ -z "$Add_mess" ]] || prettyprint 'n,7,33,47,M,0,n' '*--*' $Add_mess '*--*'
-    [[ "${Will_run}." == 'NOT.' ]] || prettyprint 'n,1,34,47,M,0,n' 'NEXT UP  :' $Will_run
-    prettyprint 'n,t,5,31,47' 'Hit <Enter> to Continue'
-    #echo -e "\n\n\t\e[5;31;47mHit <Enter> to Continue\e[00m\n"
+    [[ "${Will_run}." == 'NOT.' ]] || prettyprint '7,34,47,M,0,n'   '-NEXT UP-:' $Will_run
+    [[ -z "$Add_mess" ]] || prettyprint '1,34,47,M,0,n' "$Add_mess"
+    prettyprint 'n,1,31,40,M' '<Enter>'
+    prettyprint '1,34,47,M,0' ' to Continue'
     read xR
 
 }
 
 #/usr/share/lubuntu/wallpapers/: directory
 #udevadm info --query=env --name=/dev/sda1 |grep UUID
-# if [ 64 -eq $(lscpu |grep '^Arch' |head -n1 |grep -o '64$' ]
 
 #XFCE Only:
     #ensure existence of : /home/*/.config/xfce4/xfconf/
@@ -191,3 +284,15 @@ Pauze() {
         #<property name="SessionName" type="string" value="Default"/>
 
         #prettyprint '1,32,47,M,0' 'Valid'
+#echo -e "\n\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+#echo -n 'token='$token |od -Ax -taz
+#echo 'Msg='$Message
+#echo -n $token |tr -d [:digit:]
+#echo ' Pipestatus1 = '${PIPESTATUS[1]}
+#Digit=aa
+#  [[ $Digit =~ [^[:digit:]] ]] && echo 'yes'
+#    yes
+#Digit=11111122222
+#  [[ $Digit =~ [^[:digit:]] ]] && echo 'yes'
+#  (rc1)
+
