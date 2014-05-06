@@ -5,16 +5,50 @@ then
     exit 4
 fi
 
-updatedb &
-
 source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
+
+Distr0='bloatware'
+FreeIT_image='FreeIT.png'
+refresh_from_apt='Y'
+refresh_update='Y'
+refresh_git='Y'
+
+while getopts 'd:i:RUG' OPT
+do
+    case $OPT in
+        d)
+            Distr0=$OPTARG
+            ;;
+        i)
+            FreeIT_image=$OPTARG
+            ;;
+        R)
+            refresh_from_apt='N'
+            ;;
+        U)
+            refresh_update='N'
+            ;;
+        G)
+            refresh_git='N'
+            ;;
+        *)
+            Pauze "Unknown option: ${OPT}. Try: -d distro [ -R -U -G -i imagefile]"
+            ;;
+    esac
+done
+
+if [ "${refresh_update}." == 'Y.' ]
+then
+    updatedb &
+fi
+
 Get_CPU_ADDRESS
-Get_DISTRO $1
+Get_DISTRO $Distr0
 Confirm_DISTRO_CPU || exit $?
 
-FreeIT_image=${2:-'FreeIT.png'}
-
-egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
+egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
+    prettyprint 'n,1,31,47,M,0,n'\
+    'fstab cannot go on image with local UUID referencer'
 
 Pauze '(absence of) local UUID reference for swap in fstab.' 'Checking swap'
 
@@ -23,34 +57,42 @@ swapon --all --verbose
 
 Pauze 'Checked swap' 'Confirm no medibuntu in apt sources'
 
-# *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
 
 Pauze 'Confirmed no medibuntu in apt sources' 'apt update AND install subversion'
 
-apt-get update || exit 4
-apt-get install subversion || exit 6
+if [ $refresh_from_apt == 'Y' ]
+then
+    apt-get update || exit 4
+    apt-get install subversion || exit 6
+fi
 
-Pauze 'apt update AND install subversion' 'Check that server address is correct and is contactable'
+Pauze 'apt update AND install subversion' 'Check that server address is correct and is contactable (cond)'
 
-Contact_server
+if [ "${refresh_update}." == 'Y.' ]
+then Contact_server
+fi
 
 Pauze 'Checked that server address is correct and is contactable' 'Check on subversion status'
 
 if [ -d ${HOME}/freeitathenscode/.svn ]
 then
     cd ${HOME}/freeitathenscode/
-    svn update
+    [[ "${refresh_update}." == 'Y.' ]] && svn update
 else
     cd
     Correct_subversion_ssh
     svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
 fi
+cd
 
 Pauze 'Checked on subversion status' 'install necessary packages'
 
-PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice vlc aptitude vim flashplugin-installer htop'
-apt-get install $PKGS
+if [ $refresh_from_apt == 'Y' ]
+then
+    PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice vlc aptitude vim flashplugin-installer htop'
+    apt-get install $PKGS
+fi
 
 Pauze 'install necessary packages' 'Try to set Frita Backgrounds'
 
@@ -62,19 +104,21 @@ if [ $DISTRO == 'lubuntu' ]
 then
     Backgrounds_location='/usr/share/lubuntu/wallpapers'
 fi
+backmess='Background Set?'
+
 Set_background $FreeIT_image;bg_RC=$?
 case $bg_RC in
-    0) echo 'background setting ok'
+    0) backmess='Background setting ok'
     ;;
-    5) echo 'Invalid backgrounds directory' ${Backgrounds_location}'. Set background manually'
+    5) backmess="Invalid backgrounds directory ${Backgrounds_location}. Set background manually"
     ;;
-    6) echo 'Invalid background filename'
+    6) backmess='Invalid background filename'
     ;;
-    *) echo 'Serious problems with setting background. RC='$bg_RC
+    *) backmess="Serious problems with setting background. RC=${bg_RC}"
     ;;
 esac
 
-Pauze 'Tried to set Frita Backgrounds' 'NOTE to ensure backports in list'
+Pauze 'Set Frita Backgrounds' 'NOTE to ensure backports in list' $backmess
 
 #TODO ensure 'backports' in /etc/apt/sources.list
 
@@ -126,13 +170,16 @@ Pauze 'gnome-system tools or mate can use xscreensaver' '(Lubuntu only) Run Ben 
 if [ $DISTRO == 'lubuntu' ]
 then
     [[ -f ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh ]] &&\
-        source ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh
+        ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh $refresh_from_apt $refresh_git
 fi
 
-Pauze '(Lubuntu only) run Ben code' 'apt upgrade'
+Pauze '(Lubuntu only) run Ben code' 'apt upgrade' 'Last return code:' $?
 
-apt-get update
-apt-get dist-upgrade
+if [ $refresh_from_apt == 'Y' ]
+then
+    apt-get update
+    apt-get dist-upgrade
+fi
 
 Pauze 'apt upgrade' 'No user / no group checks'
 
@@ -145,4 +192,3 @@ then
     find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -gid 1000 -nogroup -exec chgrp -c root {} \; &
 fi
 
-#Pauze '' ''

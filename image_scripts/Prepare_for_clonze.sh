@@ -5,19 +5,42 @@ then
     exit 4
 fi
 
-source /home/oem/freeitathenscode/image_scripts/Common_functions || exit 12
+source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
+
+Distr0='bloatware'
+refresh_from_apt='Y'
+while getopts 'd:R' OPT
+do
+    case $OPT in
+        d)
+        Distr0=$OPTARG
+        ;;
+        R)
+	refresh_from_apt='N'
+        ;;
+        *)
+	Pauze 'Unknown option:' 'Try -d distro -R' $OPT
+        ;;
+    esac
+done
+
 Get_CPU_ADDRESS
-Get_DISTRO $1
+Get_DISTRO $Distr0
 Confirm_DISTRO_CPU || exit $?
 
-egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID && echo -e "\n\e[1;31;47mfstab cannot go on image with local UUID reference\e[0m\n"
+egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
+    prettyprint 'n,1,31,47,M,0,n'\
+    'fstab cannot go on image with local UUID referencer'
 
-Pauze 'Checking/Confirming removal of UUID reference in fstab' 'Launching apt upgrades'
+Pauze 'Checking/Confirming removal of UUID reference in fstab' 'Launching apt upgrades(cond)'
 
-apt-get update
-apt-get dist-upgrade
-apt-get autoremove
-apt-get clean
+if [ "${refresh_from_apt}." == 'Y.' ]
+then
+    apt-get update
+    apt-get dist-upgrade
+    apt-get autoremove
+    apt-get clean
+fi
 
 find /root/.pulse /root/.dbus/session-bus -ls -delete
 find /root/.pulse /root/.dbus/session-bus -ls
@@ -52,6 +75,10 @@ Pauze 'Checked swap area, memory available, and distro release' 'Remove Cache fi
         #<property name="SessionName" type="string" value="Default"/>
 for CD in $(find ${HOME}/ -depth -type d -not -empty -iname '*cache*'); do rm -rv ${CD}/*; done
 
+#Bilt-images reminders (Cust_srt)
+#- 32-bit
+#  * Desktop Icon settings; remove File System (but useful on new-user?)
+
 #/usr/share/lubuntu/wallpapers/: directory
 #udevadm info --query=env --name=/dev/sda1 |grep UUID
-#Pauze '?' '?'
+
