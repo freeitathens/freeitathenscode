@@ -190,15 +190,16 @@ Apt_action_replace() {
 
 Pauze "BPR code apt-get update. Renew apt is $Refresh_apt"
 
-sudo apt-get update >>${Messages_O} 2>&1 &
+sudo apt-get update &>>${Messages_O} &
 up_PID=$!
 process_ended='N'
 echo -n 'Running apt repolist update'
-while [ $process_ended -eq 'N' ]
+while [ $process_ended == 'N' ]
 do
-    echo -n '...'
-    sleep 0.5
-    ps -p $PID -o time= &>/dev/null ||process_ended='Y'
+    #introduce 9 for random foreground color
+    prettyprint '1,35,47,M,0' '...'
+    sleep 0.8
+    ps -p $up_PID -o time= &>/dev/null ||process_ended='Y'
 done
 echo -e "\n...DONE! Details in $Messages_O\n\n"
 
