@@ -17,7 +17,8 @@ Get_CPU_ADDRESS() {
 Get_DISTRO() {
     DISTRO=${1:-'unknown'}
     Told_distro=$(lsb_release -a 2>/dev/null|grep '^Distributor ID:' |cut -f2 -d: |sed -e 's/^[ \t]*//')
-    Pauze 'Looked up <<distro>>. You gave me ((name)):' '*-------------*' '<<'$Told_distro'>>(('$DISTRO'))'
+    Pauze 'You gave me distro name' $DISTRO
+    Pauze 'System reports distro as' $Told_distro
     # *--* Prepare for Distro-specific mods *--*
     if [ $DISTRO == 'unknown' ]
     then
@@ -55,7 +56,7 @@ Confirm_DISTRO_CPU() {
             return_value=16
             ;;
     esac
-    Pauze 'Confirmed Distro' 'Next' $return_value
+    Pauze "Confirmed Distro. Return value is $return_value"
 
     return $return_value
 }
@@ -63,7 +64,7 @@ Confirm_DISTRO_CPU() {
 Contact_server() {
     if [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]
     then
-        Pauze 'Checked Server is valid' 'Finished with Contact_server()' '192.168.1.9'
+        Pauze 'Checked Server is valid: 192.168.1.9'
     fi
 }
 
@@ -98,7 +99,7 @@ Set_background() {
     [[ -d "$Backgrounds_location" ]] || return 5
     [[ -z "$FreeIT_image" ]] && return 6
 
-    Pauze 'Started Set_background()' 'Looking for background file location' $FreeIT_image $Backgrounds_location
+    Pauze "Checking background file location: $Backgrounds_location / $FreeIT_image"
     Have_BG=$(ls -l ${Backgrounds_location}/$FreeIT_image 2>/dev/null\
                 || find ${Backgrounds_location}/ -name "$FreeIT_image"\
                 || echo 'NADA')
@@ -133,6 +134,7 @@ print_presets() {
 }
 
 prettyprint() {
+    set +x
     Attribute=${1:-'n,7,30,47,M,n,0'}
     shift
     Message=$@
@@ -261,20 +263,76 @@ twenty_grand() {
 }
 
 Pauze() {
-    Just_ran=${1:-'NOT'}
-    Will_run=${2:-'NOT'}
-    shift 2
-    Add_mess=$@
+    IFS=$' \t\n'
+    local RC=0
 
-    [[ "${Just_ran}." == 'NOT.' ]] || prettyprint 'n,0,34,47,M,0,n' 'COMPLETED:' $Just_ran
-    [[ "${Will_run}." == 'NOT.' ]] || prettyprint '7,34,47,M,0,n'   '-NEXT UP-:' $Will_run
-    [[ -z "$Add_mess" ]] || prettyprint '1,34,47,M,0,n' "$Add_mess"
-    prettyprint 'n,1,31,40,M' '<Enter>'
-    prettyprint '1,34,47,M,0' ' to Continue'
-    read xR
+    while [ -n "$1" ]
+    do
+        Zanned_response $1 || ((RC+=$?))
+        shift 1
+    done
 
+    read -p '<ENTER>' -t10
+
+    return $RC
 }
 
+Pause_n_Answer() {
+    IFS=$' \t\n'
+    Prompt2U=$1
+    shift
+    local RC=0
+
+    while [ -n "$1" ]
+    do
+        Zanned_response $1 || ((RC+=$?))
+        shift 1
+    done
+
+    #[[ $Prompt2U =~ [Y|y|N|n] ]] Prompt2U='Y|N' RC=1
+    Prompt2U='====> Your response {'${Prompt2U}'}? '
+    echo ''
+    read -a User_resp -p "$Prompt2U"
+    echo ${User_resp[0]}
+
+    return $RC
+}
+
+Zanned_response() {
+    mess=${@:-'ERROR,No Input'}
+    local RC=0
+
+    basic_emph=34
+    if [[ $mess =~ ',' ]]
+    then
+        Try_level=$(echo $mess |cut -f1 -d,)
+        Try_mess=$(echo $mess |cut -f2- -d,)
+        Try_swap='Y'
+        case $Try_level in
+        ERR*)
+            basic_emph=31
+            ;;
+        WARN*)
+            basic_emph=35
+            ;;
+        INFO*)
+            basic_emph=36
+            ;;
+        *)
+            Try_swap='N'
+            ;;
+        esac
+        [[ $Try_swap == 'Y' ]] && mess=Try_mess
+    fi
+
+    prettyprint "n,1,${basic_emph},47,M,0,n" $mess || RC=$?
+
+    return $RC
+}
+
+    #prettyprint n,1,31,40,M <Enter>
+    #prettyprint 1,34,47,M,0  to Continue
+ 
 #/usr/share/lubuntu/wallpapers/: directory
 #udevadm info --query=env --name=/dev/sda1 |grep UUID
 
@@ -283,16 +341,16 @@ Pauze() {
         #xfce-perchannel-xml/xfce4-session.xml: 
         #<property name="SessionName" type="string" value="Default"/>
 
-        #prettyprint '1,32,47,M,0' 'Valid'
+        #prettyprint 1,32,47,M,0 Valid
 #echo -e "\n\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-#echo -n 'token='$token |od -Ax -taz
-#echo 'Msg='$Message
+#echo -n token=$token |od -Ax -taz
+#echo Msg=$Message
 #echo -n $token |tr -d [:digit:]
-#echo ' Pipestatus1 = '${PIPESTATUS[1]}
+#echo  Pipestatus1 = ${PIPESTATUS[1]}
 #Digit=aa
-#  [[ $Digit =~ [^[:digit:]] ]] && echo 'yes'
+#  [[ $Digit =~ [^[:digit:]] ]] && echo yes
 #    yes
 #Digit=11111122222
-#  [[ $Digit =~ [^[:digit:]] ]] && echo 'yes'
+#  [[ $Digit =~ [^[:digit:]] ]] && echo yes
 #  (rc1)
 

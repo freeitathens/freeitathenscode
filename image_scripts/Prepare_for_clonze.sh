@@ -16,10 +16,10 @@ do
         Distr0=$OPTARG
         ;;
         R)
-	refresh_from_apt='N'
+   	    refresh_from_apt='N'
         ;;
         *)
-	Pauze 'Unknown option:' 'Try -d distro -R' $OPT
+	    Pauze "Unknown option: $OPT . Try -d distro -R"
         ;;
     esac
 done
