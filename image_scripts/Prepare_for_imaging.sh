@@ -1,19 +1,20 @@
 #!/bin/bash +x
+source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
+
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
-    echo 'Hello User: Please rerun with sudo or root'
+    Pauze 'ERROR,Please rerun with sudo or as root'
     exit 4
 fi
 
-source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
-
+Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX")
 Distr0='bloatware'
 FreeIT_image='FreeIT.png'
 refresh_from_apt='Y'
-refresh_update='Y'
+refresh_update='N'
 refresh_git='Y'
 
-while getopts 'd:i:RUG' OPT
+while getopts 'd:i:RuG' OPT
 do
     case $OPT in
         d)
@@ -25,14 +26,14 @@ do
         R)
             refresh_from_apt='N'
             ;;
-        U)
-            refresh_update='N'
+        u)
+            refresh_update='Y'
             ;;
         G)
             refresh_git='N'
             ;;
         *)
-            Pauze "Unknown option: ${OPT}. Try: -d distro [ -R -U -G -i imagefile]"
+            Pauze "Unknown option: ${OPT}. Try: -d distro [ -R -u -G -i imagefile]"
             ;;
     esac
 done
@@ -61,7 +62,7 @@ egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/source
 Pauze "apt update AND install subversion ( COND: $refresh_from_apt )"
 if [ $refresh_from_apt == 'Y' ]
 then
-    apt-get update || exit 4
+    apt-get update &>>${Messages_O} || exit 4
     apt-get install subversion || exit 6
 fi
 
@@ -160,26 +161,27 @@ else
     Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
 fi
 
-
 if [ $DISTRO == 'lubuntu' ]
 then
     Pauze 'Run BPR Code'
     [[ -f ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh ]] &&\
-        ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh $refresh_from_apt $refresh_git
+        ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh $refresh_from_apt $refresh_git $Messages_O
     Pauze "Run BPR: Last return code: $?"
 fi
 
-Pauze "apt upgrade ( COND: $refresh_from_apt )"
+Pauze "apt dist-upgrade ( COND: $refresh_from_apt )"
 if [ $refresh_from_apt == 'Y' ]
 then
-    apt-get update
+    #apt-get update
     apt-get dist-upgrade
 fi
 
-xR=$(Pause_n_Answer 'Y|N' 'INFO,Run nouser and nogroup checks/fixes?')
-if [ "${xR}." == 'Y.' ]
+Answer='N'
+Pause_n_Answer 'Y|N' 'INFO,Run nouser and nogroup checks/fixes?'
+if [ "${Answer}." == 'Y.' ]
 then
     find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -uid 1000 -nouser -exec chown -c root {} \; &
     find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -gid 1000 -nogroup -exec chgrp -c root {} \; &
 fi
+set +x
 

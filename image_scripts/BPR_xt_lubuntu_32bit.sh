@@ -2,8 +2,10 @@
 Refresh_apt=${1:-'N'}
 Refresh_git=${2:-'N'}
 shift 2
+Messages_O=$@
+( [[ -z "$Messages_O" ]] && [[ -f "$Messages_O" ]] ) || Messages_O='/tmp/BPR_messages'
+
 source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
-Messages_O=$(mktemp -t "$0_report.XXXXX")
 
 DOWNLOADS=${HOME}/Downloads
 [[ -d ${DOWNLOADS} ]] || DOWNLOADS=/tmp
@@ -98,7 +100,7 @@ Chromium_stuff() {
     then
         sudo apt-get install chromium-browser
         sudo add-apt-repository ppa:skunk/pepper-flash
-        sudo apt-get update >${Messages_O} 2>&1
+        sudo apt-get update >>${Messages_O} 2>&1
     fi
     #Chromium Flags
     sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
@@ -188,7 +190,7 @@ Apt_action_replace() {
 
 Pauze "BPR code apt-get update. Renew apt is $Refresh_apt"
 
-sudo apt-get update >${Messages_O} 2>&1 &
+sudo apt-get update >>${Messages_O} 2>&1 &
 up_PID=$!
 process_ended='N'
 echo -n 'Running apt repolist update'
