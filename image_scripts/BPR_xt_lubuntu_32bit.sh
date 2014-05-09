@@ -101,7 +101,9 @@ Chromium_stuff() {
 
         sudo apt-get update &>>${Messages_O} &
         Time_to_kill $! "Running apt-get update. Details in $Messages_O"
-        sudo apt-get install pepflashplugin-installer
+        sudo apt-get install pepflashplugin-installer\
+            && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
+            |sudo tee -a /etc/chromium-browser/default
     fi
     #Chromium Flags
     sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
