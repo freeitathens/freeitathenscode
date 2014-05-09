@@ -63,16 +63,7 @@ egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/source
 if [ $refresh_from_apt == 'Y' ]
 then
     apt-get update &>>${Messages_O} &
-    up_PID=$!
-    process_ended='N'
-    echo -n 'Running apt-get update'
-    while [ $process_ended == 'N' ]
-    do
-        prettyprint '1,31,47,M,0' '...'
-        sleep 1
-        ps -p $up_PID -o time= &>/dev/null ||process_ended='Y'
-    done
-    echo -e "\n...DONE! Details in $Messages_O\n\n"
+    time_to_kill $! "Running apt-get update Details in $Messages_O"
     apt-get install subversion || exit 6
 fi
 

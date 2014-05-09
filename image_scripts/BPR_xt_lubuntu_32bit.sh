@@ -2,10 +2,8 @@
 Refresh_apt=${1:-'N'}
 Refresh_git=${2:-'N'}
 shift 2
-Messages_O=$@
-( [[ -z "$Messages_O" ]] && [[ -f "$Messages_O" ]] ) || Messages_O='/tmp/BPR_messages'
-
 source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
+Messages_O=$(mktemp -t "$0_report.XXXXX")
 
 DOWNLOADS=${HOME}/Downloads
 [[ -d ${DOWNLOADS} ]] || DOWNLOADS=/tmp
@@ -100,7 +98,10 @@ Chromium_stuff() {
     then
         sudo apt-get install chromium-browser
         sudo add-apt-repository ppa:skunk/pepper-flash
-        sudo apt-get update >>${Messages_O} 2>&1
+
+        sudo apt-get update &>>${Messages_O} &
+        Time_to_kill $! "Running apt-get update. Details in $Messages_O"
+        sudo apt-get install pepflashplugin-installer
     fi
     #Chromium Flags
     sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
@@ -191,17 +192,7 @@ Apt_action_replace() {
 Pauze "BPR code apt-get update. Renew apt is $Refresh_apt"
 
 sudo apt-get update &>>${Messages_O} &
-up_PID=$!
-process_ended='N'
-echo -n 'Running apt repolist update'
-while [ $process_ended == 'N' ]
-do
-    #introduce 9 for random foreground color
-    prettyprint '1,35,47,M,0' '...'
-    sleep 0.8
-    ps -p $up_PID -o time= &>/dev/null ||process_ended='Y'
-done
-echo -e "\n...DONE! Details in $Messages_O\n\n"
+Time_to_kill $! "Running apt-get update. Details in $Messages_O"
 
 if [ "${Refresh_apt}." == 'Y.' ]
 then
