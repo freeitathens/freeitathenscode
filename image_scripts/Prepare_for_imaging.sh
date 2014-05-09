@@ -63,7 +63,7 @@ egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/source
 if [ $refresh_from_apt == 'Y' ]
 then
     apt-get update &>>${Messages_O} &
-    time_to_kill $! "Running apt-get update Details in $Messages_O"
+    Time_to_kill $! "Running apt-get update Details in $Messages_O"
     apt-get install subversion || exit 6
 fi
 
