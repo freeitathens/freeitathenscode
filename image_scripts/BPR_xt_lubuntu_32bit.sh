@@ -3,7 +3,7 @@ Refresh_apt=${1:-'N'}
 Refresh_git=${2:-'N'}
 shift 2
 source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
-Messages_O=$(mktemp -t "$0_report.XXXXX")
+Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX")
 
 DOWNLOADS=${HOME}/Downloads
 [[ -d ${DOWNLOADS} ]] || DOWNLOADS=/tmp
