@@ -15,23 +15,44 @@ Get_CPU_ADDRESS() {
 # if [ 64 -eq $(lscpu |grep '^Arch' |head -n1 |grep -o '64$' ]
 
 Get_DISTRO() {
-    DISTRO=${1:-'unknown'}
+    DISTRO=$1
+    local RC=0
+
     Told_distro=$(lsb_release -a 2>/dev/null|grep '^Distributor ID:' |cut -f2 -d: |sed -e 's/^[ \t]*//')
-    Pauze 'You gave me distro name' $DISTRO
-    Pauze 'System reports distro as' $Told_distro
-    # *--* Prepare for Distro-specific mods *--*
-    if [ $DISTRO == 'unknown' ]
+    Pauze "System reports distro as ${Told_distro}."
+    if [ $DISTRO == $Told_distro ]
     then
-        if [ "${SESSION}." == 'Lubuntu.' ]
-        then
-            DISTRO='lubuntu'
-        elif [ ! -z "${Told_distro}" ]
-        then
+        Pauze "Agrees with your input: $DISTRO"
+    elif [ "${DISTRO}." == '.' ]
+    then
+        Pauze "Supplying $DISTRO as distribution name."
+        DISTRO=$Told_distro
+    else
+        Answer='N'
+        Pause_n_Answer 'Y|N' "WARNING,You gave me ${DISTRO}. Replace? "
+        if [ "${Answer}." == 'Y.' ]
+        then 
             DISTRO=$Told_distro
-        elif [ $CPU_ADDRESS -eq 32 ]
+            Pauze "Ok, supplying $DISTRO as distribution name."
+        elif [ "${SESSION}." == 'Lubuntu.' ]
         then
             DISTRO='lubuntu'
+            Pauze "Using $DISTRO as distribution name."
         fi
+    fi
+
+    return $RC
+}
+
+# copied from /usr/bin/xdg-open
+detectDE()
+{
+    if [ x"$KDE_FULL_SESSION" = x"true" ]; then DE=kde;
+    elif [ x"$GNOME_DESKTOP_SESSION_ID" != x"" ]; then DE=gnome;
+    elif `dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.gnome.SessionManager > /dev/null 2>&1` ; then DE=gnome;
+    elif xprop -root _DT_SAVE_MODE 2> /dev/null | grep ' = \"xfce4\"$' >/dev/null 2>&1; then DE=xfce;
+    elif [ x"$DESKTOP_SESSION" = x"LXDE" ]; then DE=lxde;
+    else DE=""
     fi
 }
 
@@ -39,7 +60,7 @@ Get_DISTRO() {
 Confirm_DISTRO_CPU() {
     return_value=0
 
-    Pauze "INFO,You have a ${CPU_ADDRESS}-bit box running $DISTRO ."
+    Pauze "WARN,You have a ${CPU_ADDRESS}-bit box running $DISTRO ."
 
     case $DISTRO in
         lubuntu)
@@ -55,7 +76,6 @@ Confirm_DISTRO_CPU() {
             return_value=16
             ;;
     esac
-    Pauze "Confirmed Distro. Return value is $return_value"
 
     return $return_value
 }
@@ -267,13 +287,14 @@ Pauze() {
     IFS=$' \t\n'
     local RC=0
 
-    while [ -n "$1" ]
+    echo -e "\n\n"
+    #while [ -n "$1" ]
+    while [ $# -gt 0 ]
     do
         Zanned_response $1 || ((RC+=$?))
         shift 1
     done
 
-    echo ''
     read -p '<ENTER; timeout in 10 secs...>' -t10
 
     return $RC
@@ -329,7 +350,7 @@ Zanned_response() {
     fi
 
     [[ -z "$mess" ]] && mess='Unknown Message..????'
-    prettyprint "n,1,${basic_emph},47,M,0,n" $mess || RC=$?
+    prettyprint "n,1,${basic_emph},40,M,0,n" $mess || RC=$?
 
     return $RC
 }

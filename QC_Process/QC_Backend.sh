@@ -24,12 +24,10 @@ declare -r LOGFILE=${HOME}/QC.log
 declare -r ERRFILE=${HOME}/QC_errors.log
 
 set +o noclobber
-sudo rm ${HOME}/QC*.log
+sudo rm ${HOME}/QC*.log 2>/dev/null
 for Output_file in $LOGFILE $ERRFILE
 do
-    set -x
     cat /dev/null >$Output_file || exit 5
-    set +x
 done
 set -o noclobber
 
@@ -89,6 +87,7 @@ Window_killa() {
     Sleep_max_secs=${2:-10}
     Sleep_counter=0
 
+    ps -p $PID -o command= 2>/dev/null && echo '('$PID '): Tracking CPU time used...'
     while [ $PID -gt 0 ]
     do
         ((Sleep_counter++))

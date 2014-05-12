@@ -8,7 +8,7 @@ then
 fi
 
 Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX")
-Distr0='bloatware'
+fallback_distro='bloatware'
 FreeIT_image='FreeIT.png'
 refresh_from_apt='Y'
 refresh_update='N'
@@ -18,7 +18,7 @@ while getopts 'd:i:RuG' OPT
 do
     case $OPT in
         d)
-            Distr0=$OPTARG
+            fallback_distro=$OPTARG
             ;;
         i)
             FreeIT_image=$OPTARG
@@ -44,8 +44,14 @@ then
 fi
 
 Get_CPU_ADDRESS
-Get_DISTRO $Distr0
-Confirm_DISTRO_CPU || exit $?
+Get_DISTRO $fallback_distro
+CDC_RC=0
+Confirm_DISTRO_CPU || CDC_RC=$?
+if [ $CDC_RC -gt 0 ]
+then
+    Pauze "ERROR,Invalid Distro $DISTRO"
+    exit $CDC_RC
+fi
 
 Pauze 'Check (absence of) local UUID reference for swap in fstab.'
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
@@ -176,6 +182,16 @@ then
     #apt-get update
     apt-get dist-upgrade
 fi
+
+Pauze "Connecting Quality control stuff"\
+   "$(ls -ld ${HOME}/bin)"\
+   "$(diff --brief ${HOME}/freeitathenscode/QC_Process/Quality\ Control.desktop ~/Desktop/Quality\ Control.desktop\
+   && echo 'Quality Control Desktop is in sync')"
+[[ -d ${HOME}/bin ]] || mkdir ${HOME}/bin
+[[ -e $ ]] || ln -s ${HOME}/freeitathenscode/QC_Process/QC.sh ${HOME}/bin/QC.sh
+diff --brief ${HOME}/freeitathenscode/QC_Process/Quality\ Control.desktop ~/Desktop/Quality\ Control.desktop\
+   || cp -iv ${HOME}/freeitathenscode/QC_Process/Quality\ Control.desktop ~/Desktop/Quality\ Control.desktop
+#ln -s ${HOME}/freeitathenscode/QC_Process/Disable\ 3D.desktop ~/Desktop/Disable\ 3D.desktop
 
 Answer='N'
 Pause_n_Answer 'Y|N' 'INFO,Run nouser and nogroup checks/fixes?'
