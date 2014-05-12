@@ -10,31 +10,36 @@ fi
 # create X configuration with DRI disabled
 # JxI 2013-11-29: Following contains only what's needed to override
 # /etc/xorg.conf.d scripts...
-sudo updatedb
-X_Dest_Dir=''
+
 mult_chk=0
-for XDir in $(locate -r '/xorg\.conf$' |grep -v '/man' |xargs -r -I {} dirname {} |sort --uniq)
+#if [ ! -z $XORGCONFIG ]
+for Xdir in /{etc,usr/{etc,lib}}{/X11{,/xorg.conf.d}} /etc
 do
-    X_Dest_Dir=$XDir
-    ((mult_chk++))
+    echo -n 'Trying' $Xdir '...'
+    if [ -d $Xdir ]
+    then
+        echo ' ...Success...';ls -ld $Xdir |tr '\n' ' '
+        for Xconf in $(find ${Xdir} -name 'xorg.conf*' |egrep -v '\.bak')
+        do
+	    if [ -f $Xconf ]
+            then
+                echo '......... And found ' $Xconf
+	        #perl -pi'.bak' -e 's/DRI\s+True/DRI false/i' $Xconf
+                diff ~/freeitathenscode/QC_Process/xorg.conf.template $Xconf |less
+                ((mult_chk++))
+            fi
+        done
+    fi
 done
+
 if [ $mult_chk eq 1 ]
 then
-    perl -pi'.bak' -e 's/DRI\s+True/DRI false/i' $X_Dest_Dir/xorg.conf
-else
-    X_Dest_Dir=''
-    mult_chk=0
-    for XDir in $(locate -r '/xorg\.conf\.d' |grep -v '/man' |xargs -r -I {} dirname {} |sort --uniq)
-    do
-        X_Dest_Dir=$XDir
-        ((mult_chk++))
-    done
-    if [ $mult_chk eq 1 ]
-        sudo cp ~/freeitathenscode/QC_Process/xorg.conf.template $X_Dest_Dir/xorg.conf
-    fi
+    echo 'Had multiple xorg.conf files'
+    #    sudo cp ~/freeitathenscode/QC_Process/xorg.conf.template $Xconf
 fi
 
-dialog --title "Free IT Athens Quality Control Test" --msgbox 'Have completed copying an xorg.conf overlay to disable 3D' 20 80
-dialog --title "Free IT Athens Quality Control Test" --msgbox ' restart X to test new configuration' 49 39
+dialog --title "Free IT Athens Quality Control Test"\
+    --msgbox 'Have completed copying an xorg.conf overlay to disable 3D' 10 40
+dialog --title "Free IT Athens Quality Control Test" --msgbox ' restart X to test new configuration' 10 40
 #sudo service mdm restart
 

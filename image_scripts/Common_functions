@@ -337,15 +337,19 @@ Zanned_response() {
 Time_to_kill() {
     u_PID=$1
     [[ -z u_PID ]] && return 4
+    local RC=0
+
     Mess=$@
     prettyprint '1,34,40,M,0' "$Mess"
     while [ $u_PID -gt 1 ]
     do
         prettyprint '1,35,40,M,0' '...'
         sleep 0.8
-        ps -p $PID -o time= &>/dev/null ||u_PID=-1
+        ps -p $u_PID -o time= &>/dev/null ||u_PID=-1
     done
     prettyprint 'n,t,0,1,34,40,M,0,n' '...DONE!'
+
+    return $RC
 }
  
 #/usr/share/lubuntu/wallpapers/: directory

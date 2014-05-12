@@ -8,11 +8,33 @@ then
 fi
 
 # create X configuration with DRI disabled
-#TODO JHI 2013-11-xx: Following is out-of-date since mint uses xorg.conf.d/* scripts...
-#sudo cp ~/freeitathenscode/QC_Process/xorg.conf.template /etc/X11/xorg.conf
+# JxI 2013-11-29: Following contains only what's needed to override
+# /etc/xorg.conf.d scripts...
+sudo updatedb
+X_Dest_Dir=''
+mult_chk=0
+for XDir in $(locate -r '/xorg\.conf$' |grep -v '/man' |xargs -r -I {} dirname {} |sort --uniq)
+do
+    X_Dest_Dir=$XDir
+    ((mult_chk++))
+done
+if [ $mult_chk eq 1 ]
+then
+    perl -pi'.bak' -e 's/DRI\s+True/DRI false/i' $X_Dest_Dir/xorg.conf
+else
+    X_Dest_Dir=''
+    mult_chk=0
+    for XDir in $(locate -r '/xorg\.conf\.d' |grep -v '/man' |xargs -r -I {} dirname {} |sort --uniq)
+    do
+        X_Dest_Dir=$XDir
+        ((mult_chk++))
+    done
+    if [ $mult_chk eq 1 ]
+        sudo cp ~/freeitathenscode/QC_Process/xorg.conf.template $X_Dest_Dir/xorg.conf
+    fi
+fi
 
-dialog --title "Free IT Athens Quality Control Test" --msgbox 'make xorg.conf with:  Option     "DRI"     "False" ...THEN restart X' 20 80
-
-# restart X using new configuration
-#sudo service gdm restart
+dialog --title "Free IT Athens Quality Control Test" --msgbox 'ensure xorg.conf has:  Option     "DRI"     "False"' 10 40
+dialog --title "Free IT Athens Quality Control Test" --msgbox ' restart X to test new configuration' 10 40
+#sudo service mdm restart
 
