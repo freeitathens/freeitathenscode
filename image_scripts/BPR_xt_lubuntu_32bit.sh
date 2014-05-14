@@ -28,7 +28,7 @@ Configs_from_github() {
     cd $Git2Frita_DIR || return 13
     sudo rsync -aRv --exclude '.git' . /etc/skel
     cd
-    #rm -rf $Git2Frita_DIR
+    rm -rf $Git2Frita_DIR
 
     De_Activate_shopts $reset_shopts_list
     return $RC
@@ -96,35 +96,35 @@ Chromium_stuff() {
 
     if [ "${Refresh_apt}." == 'Y.' ]
     then
-        sudo apt-get install chromium-browser
-        sudo add-apt-repository ppa:skunk/pepper-flash
-
         sudo apt-get update &>>${Messages_O} &
         Time_to_kill $! "Running apt-get update. Details in $Messages_O"
-        sudo apt-get install pepflashplugin-installer\
-            && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
-            |sudo tee -a /etc/chromium-browser/default
     fi
+    sudo apt-get install chromium-browser
+    #sudo add-apt-repository ppa:skunk/pepper-flash
+    #sudo apt-get install pepflashplugin-installer\
+    #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
+    #   |sudo tee -a /etc/chromium-browser/default
+    cd $DOWNLOADS
+    #Pepperflash/Multimedia codecs installer
+    wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw\
+        && sudo mv check /usr/local/bin/ && sudo chmod +x /usr/local/bin/check
+    #if []
+    #    /usr/local/bin/check
+    #fi
+
+    wget -O master_preferences\
+        https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
+        && sudo mv master_preferences /etc/chromium-browser/
+
+    #Bookmarks
+    wget -O default_bookmarks.html https://gist.github.com/bpr97050/b6b5679f94d344879328/raw\
+        && sudo mv default_bookmarks.html /etc/chromium-browser
+    cd -
+
     #Chromium Flags
     sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
         --disable-new-tab-first-run --no-first-run\
         --disable-google-now-integration"/g' /etc/chromium-browser/default
-
-    if [ $Refresh_git == 'Y' ]
-    then
-        cd $DOWNLOADS
-        #Pepperflash/Multimedia codecs installer
-        wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw\
-            && sudo mv check /usr/local/bin/ && sudo chmod +x /usr/local/bin/check
-
-        wget -O master_preferences\
-            https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
-            && sudo mv master_preferences /etc/chromium-browser/
-        #Bookmarks
-        wget -O default_bookmarks.html https://gist.github.com/bpr97050/b6b5679f94d344879328/raw\
-            && sudo mv default_bookmarks.html /etc/chromium-browser
-        cd -
-    fi
 
     return $RC
 }
@@ -207,6 +207,7 @@ then
     Pauze 'BEN Configs_from_github (partly cond)'
     Configs_from_github || echo 'Configs_from_github?'
 fi
+
 #Set LightDM wallpaper
 sudo sed -i 's/background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
 sudo echo "background=#FFFFFF" >> /etc/lightdm/lightdm-gtk-greeter.conf
