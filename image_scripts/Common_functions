@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 
 # *--* Identify box as 32 or 64 bit capable. *--*
 Get_CPU_ADDRESS() {
@@ -69,6 +69,9 @@ Confirm_DISTRO_CPU() {
         LinuxMint|mint)
             prettyprint '1,32,47,M,0' 'Valid'
             ;;
+        Ubuntu)
+            prettyprint '1,32,47,M,0' 'Valid'
+            ;;
         *)
             prettyprint '1,31,47,M,0,n' 'Invalid.'
             prettyprint 't,7,31,47,M,0,n' '(Note, you can run this as' $0 'distro)'
@@ -76,6 +79,7 @@ Confirm_DISTRO_CPU() {
             return_value=16
             ;;
     esac
+    Pauze "Confirmed Distro. Return value is $return_value"
 
     return $return_value
 }
@@ -158,37 +162,35 @@ prettyprint() {
     shift
     Message=$@
 
+    shopt -u nullglob
+
+    declare -r colorattr_pre="\e["
+    COLORATTR=''
+    colorattr_post='m'
+
     OLDIFS=$IFS;IFS=$','
     declare Attr_a=($Attribute)
     IFS=$' \t\n'
     declare -r Attr_len=${#Attr_a[*]}
     Attr_hiidx=$(($Attr_len-1))
-    #echo $Attr_hiidx' '${Attr_a[@]}' '$Attr_len
-    shopt -u nullglob
 
-    declare -r colorattr_pre="\e["
-    #declare -r colorattr_pre=$'\e['
-    COLORATTR=$colorattr_pre
-    colorattr_post='m'
-
+    last_token=''
     for idx in $(seq 0 $Attr_hiidx)
     do
         token=${Attr_a[$idx]}
         [[ -z "${token}" ]] && break
         [[ "${token}" == '' ]] && break
-        repo $token
+        Ramp_up $token
     done
-    if [ "${COLORATTR}" != "$colorattr_pre" ]
-    then
-        echo -ne "${COLORATTR}${colorattr_post}"
-    fi
+    [[ ${last_token} == *[!0]* ]] && echo -ne "\e[00m"
 
     return 0
-    #Attr=${1:-'n[7,30,47]..[0]n'}
 }
 
-repo() {
+Ramp_up() {
     local token=$1
+    local RC=0
+
     case $token in
         c)
             clear
@@ -200,22 +202,33 @@ repo() {
             echo -ne "\t"
             ;;
         M) 
-            echo -ne "${COLORATTR}${colorattr_post}"$Message
-            COLORATTR=$colorattr_pre
+            echo -ne ${colorattr_pre}${COLORATTR}${colorattr_post}$Message
+            COLORATTR=''
+            ;;
+        A[[:digit:]]*)
+            declare -a mess_parts_a=($Message)
+            declare -i mess_ix=$(echo $token |tr -d 'A')
+            Is_numeric_tr $mess_ix &&\
+                test $mess_ix -lt ${#mess_parts_a[*]} &&\
+                echo -ne \
+                "${colorattr_pre}${COLORATTR}${colorattr_post}"${mess_parts_a[$mess_ix]} &&\
+                COLORATTR=''
             ;;
         B) 
-            echo -ne "${COLORATTR}${colorattr_post} "
+            echo -ne "${colorattr_pre}${COLORATTR}${colorattr_post} "
             ;;
-        #'')
-        #    COLORATTR=${COLORATTR}';'
-        #    ;;
         *)
-            #Is_numeric_tr $token && Twenty_grand $token
-            Is_numeric_tr $token && Is_numeric_re $token && Twenty_grand $token
+            Is_numeric_tr $token && Is_numeric_re $token && Yes_its_numeric $token
             ;;
     esac
+ 
+    last_token=$token
+    return $RC
 }
-#[[ -z "$Message" ]] && Message='*-----------*'
+     # [[ -z "$Message" ]] && Message='*-----------*'
+     # e) set_send_also_to_std_error_ON (E=ONLY_to_stderr)
+     # l) set_send_also_logger_ON (L ONLY_to)
+     # 9) random foreground color
 
 Is_numeric_tr() {
     local testchar=$1
@@ -228,46 +241,74 @@ Is_numeric_tr() {
 
 Is_numeric_re() {
     local testchar=$1
-    #echo $testchar ' MADE IT TO Is_numeric_re' >&2
 
     [[ $testchar =~ [^[:digit:]] ]] && return 1
 
     return 0
 }
 
-Twenty_grand() {
-    local Digit=$1
+Is_numeric_simple_charclass() {
+    local testchar=$1
+    case $testchar in
+        "")
+            return 25
+            ;;
+        *[!0-9]*)
+            return 1
+            ;;
+    esac
+    return 0
+}
 
-    case $Digit in
-        [0-7])
-            COLORATTR=${COLORATTR}';'${Digit}
+Yes_its_numeric() {
+    local Digi=$1
+    local RC=0
+    case $Digi in
+        [013457])
+            COLORATTR='0'${COLORATTR}';'${Digi}
             ;;
         [[:digit:]])
-            echo 'Character class digit' $Digit 'NOT VALID ATTR. Resetting to 1' >&2
-            COLORATTR=${COLORATTR}';1'
+            echo $Digi 'NOT VALID Character class digit. Discarding.' >&2
+            return 4
+            ;;
+        0[013457])
+            COLORATTR=${COLORATTR}';'${Digi}
+            ;;
+        00|01|03|04|05|07)
+            COLORATTR=${COLORATTR}';'${Digi}
+            ;;
+        0[[:digit:]])
+            echo 'Character class digit' $Digi 'NOT VALID ATTR. Discarding.' >&2
+            return 4
+            ;;
+        0[013457])
+            COLORATTR=${COLORATTR}';'${Digi}
+            ;;
+        00|01|03|04|05|07)
+            COLORATTR=${COLORATTR}';'${Digi}
+            ;;
+        0[[:digit:]])
+            echo 'Character class digit' $Digi 'NOT VALID ATTR. Discarding.' >&2
+            return 4
             ;;
         3[0-7])
-            COLORATTR=${COLORATTR}';'${Digit}
+            COLORATTR=${COLORATTR}';'${Digi}
             ;;
         4[0-7])
-            COLORATTR=${COLORATTR}';'${Digit}
-            ;;
-        [:digit:])
-            echo $Digit' NOT VALID ATTR. Resetting to 0' >&2
-            COLORATTR=${COLORATTR}';0'
+            COLORATTR=${COLORATTR}';'${Digi}
             ;;
         *)
             echo 'Unknown Attribute Code' $Digit '. Discarding' >&2
+            return 24
             ;;
     esac
         #introduce 9 for random foreground color
 
-    return $?
+    return $RC
 }
 
 twenty_grand() {
     local Digit=$1
-    #echo $Digit ' MADE IT TO twenty_grand' >&2
 
     if [ $Digit -lt 8 ]
     then COLORATTR=${COLORATTR}';'${Digit}
@@ -350,6 +391,7 @@ Zanned_response() {
     fi
 
     [[ -z "$mess" ]] && mess='Unknown Message..????'
+    #rettyprint "n,1,${basic_emph},47,M,0,n" $mess || RC=$?
     prettyprint "n,1,${basic_emph},40,M,0,n" $mess || RC=$?
 
     return $RC
