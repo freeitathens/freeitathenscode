@@ -12,17 +12,18 @@ DOWNLOADS=${HOME}/Downloads
 Configs_from_github() {
 
     local RC=0
-    shopts_list='dotglob,nullglob'
-    reset_shopts_list=''
+    declare -r HOLDIFS=$IFS
+
+    declare -r shopts_list='dotglob nullglob'
+    declare -r reset_shopts_list=$(shopt -p |tr '\n' ';')
+    Pauze 'Reset shopts with '$reset_shopts_list
     Activate_shopts $shopts_list
 
-    if [ "${Refresh_apt}." == 'Y.' ]
-    then
-        sudo apt-get install git
-    fi
+    sudo apt-get install git
     Git_name=FRITAdot
     cd $DOWNLOADS || exit 12
     git clone https://github.com/bpr97050/${Git_name}.git
+
     Git2Frita_DIR=${PWD}/$Git_name
     #rm -rf ${Git2Frita_DIR}/.git
     cd $Git2Frita_DIR || return 13
@@ -30,63 +31,38 @@ Configs_from_github() {
     cd
     rm -rf $Git2Frita_DIR
 
-    De_Activate_shopts $reset_shopts_list
+    Reset_shopts $shopts_list $reset_shopts_list
     return $RC
 }
 Activate_shopts() {
-    local opt_list=$1
-    [[ -z "$opt_list" ]] && return 4
+    local shopts_list=$1
+    [[ -z "$shopts_list" ]] && return 4
     local RC=0
 
-    OLDIFS=$IFS;IFS=','
-    declare -a in_list_a=($opt_list)
-    declare -i ix=0
-    while [ $ix -lt ${#in_list_a[*]} ]
+    IFS=$' '
+    for name_shopt in $shopts_list
     do
-        word_invert=''
-        (shopt -q ${in_list_a[$ix]} || Shopt_on ${in_list_a[$ix]}) ||RC=$?
-        echo ${in_list_a[$ix]}' is '${word_invert}'(Normally) set' >&2
-        ((ix++))
+        shopt -s $name_shopt || ((RC+=$?))
     done
-    IFS=$OLDIFS
+    IFS=$HOLDIFS
 
     return $RC
 }
-Shopt_on() {
-    local name_shopt=$1
-    [[ -z "$name_shopt" ]] && return 5
-    local RC=0
- 
-    word_invert='NOT '
-    [[ -z "$reset_shopts_list" ]] || reset_shopts_list=${reset_shopts_list}','
-    reset_shopts_list=${reset_shopts_list}${name_shopt}
-    shopt -s $name_shopt || return $?
-
-    return $RC
-}
-De_Activate_shopts() {
-    local reset_list=$1
-    [[ -z "$reset_list" ]] && return 0
+Reset_shopts() {
+    local shopts_list=$1
+    [[ -z "$shopts_list" ]] && return 5
+    local reset_list=$2
+    [[ -z "$reset_list" ]] && return 4
     local RC=0
 
-    OLDIFS=$IFS;IFS=$','
-    for name_shopt in $reset_list
+    IFS=$' '
+    for name_shopt in $shopts_list
     do
-        Shopt_off $name_shopt || RC=$?
+        echo $reset_list |egrep -o "(^|;)shopt -u $name_shopt(;|$)" && shopt -u $name_shopt
     done
-    IFS=$OLDIFS
+    IFS=$HOLDIFS
 
     shopt |grep 'on' >&2
-    return $RC
-}
-Shopt_off() {
-    local name_shopt=$1
-    [[ -z "$name_shopt" ]] && return 7
-    local RC=0
-
-    echo 'Turning off shopt:' $name_shopt >&2
-    shopt -u $name_shopt || return $?
-
     return $RC
 }
 
@@ -104,13 +80,28 @@ Chromium_stuff() {
     #sudo apt-get install pepflashplugin-installer\
     #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
     #   |sudo tee -a /etc/chromium-browser/default
+
     cd $DOWNLOADS
     #Pepperflash/Multimedia codecs installer
+    check_install_RC=1
     wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw\
-        && sudo mv check /usr/local/bin/ && sudo chmod +x /usr/local/bin/check
-    #if []
-    #    /usr/local/bin/check
-    #fi
+        && sudo mv check /usr/local/bin/\
+        && sudo chmod +x /usr/local/bin/check\
+        && check_install_RC=0
+
+    # Option for user to install non-free multimedia stuff for Chrom[e|ium]
+    if [ $check_install_RC -eq 0 ]
+    then
+        Answer='N'
+        Pause_n_Answer 'Y|N' 'INFO,Install non-free Multimedia packages for Chrome?'
+        if [ "${Answer}." == 'Y.' ]
+        then
+            Mess='non-free Multimedia install '
+            tackon='OK'
+            sudo /usr/local/bin/check || tackon='NOT OK'
+            Pauze "$Mess$tackon"
+        fi
+    fi
 
     wget -O master_preferences\
         https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
