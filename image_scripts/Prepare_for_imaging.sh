@@ -38,6 +38,35 @@ do
     esac
 done
 
+# *--* Confirm Distro name with user *--*
+Confirm_DISTRO_CPU() {
+    return_value=0
+
+    Pauze "WARN,You have a ${CPU_ADDRESS}-bit box running $DISTRO ."
+
+    case $DISTRO in
+        lubuntu)
+            prettyprint '1,32,47,M,0' 'Valid'
+            ;;
+        LinuxMint|mint)
+            prettyprint '1,32,47,M,0' 'Valid'
+            DISTRO='mint'
+            ;;
+        Ubuntu)
+            prettyprint '1,32,47,M,0' 'Valid'
+            ;;
+        *)
+            prettyprint '1,31,47,M,0' 'Invalid:'
+            prettyprint 't,7,31,47,M,0,n' "Problem with Distro Name ${DISTRO}."
+            Pauze "PROBLEM,(Note, you can run this as $0 distroname)"
+            return 16
+            ;;
+    esac
+
+    Pauze "Confirmed Distro ${DISTRO}."
+    return $return_value
+}
+
 if [ "${refresh_update}." == 'Y.' ]
 then
     updatedb &
@@ -45,11 +74,13 @@ fi
 
 Get_CPU_ADDRESS
 Get_DISTRO $fallback_distro
+
 CDC_RC=0
 Confirm_DISTRO_CPU || CDC_RC=$?
 if [ $CDC_RC -gt 0 ]
 then
-    Pauze "ERROR,Invalid Distro $DISTRO"
+    prettyprint '5,31,47,M,n,0' 'Exiting'
+    Pauze "See you back soon!"
     exit $CDC_RC
 fi
 

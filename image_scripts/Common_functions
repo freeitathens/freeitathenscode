@@ -18,26 +18,27 @@ Get_DISTRO() {
     DISTRO=$1
     local RC=0
 
-    Told_distro=$(lsb_release -a 2>/dev/null|grep '^Distributor ID:' |cut -f2 -d: |sed -e 's/^[ \t]*//')
-    Pauze "System reports distro as ${Told_distro}."
-    if [ $DISTRO == $Told_distro ]
+    System_sez_distro=$(lsb_release -a 2>/dev/null|grep '^Distributor ID:' |cut -f2 -d: |sed -e 's/^[ \t]*//')
+    if [ "${SESSION}." == 'Lubuntu.' ]
     then
-        Pauze "Agrees with your input: $DISTRO"
+        System_sez_distro='lubuntu'
+    fi
+
+    prettyprint 'n,1,34,47,M' "System reports distro as ${System_sez_distro}."
+    if [ "${DISTRO}." == "${System_sez_distro}." ]
+    then
+        Pauze " ... agrees with your input: $DISTRO"
     elif [ "${DISTRO}." == '.' ]
     then
-        Pauze "Supplying $DISTRO as distribution name."
-        DISTRO=$Told_distro
+        DISTRO=$System_sez_distro
+        Pauze " ... supplying $DISTRO as distribution name."
     else
         Answer='N'
         Pause_n_Answer 'Y|N' "WARNING,You gave me ${DISTRO}. Replace? "
         if [ "${Answer}." == 'Y.' ]
         then 
-            DISTRO=$Told_distro
+            DISTRO=$System_sez_distro
             Pauze "Ok, supplying $DISTRO as distribution name."
-        elif [ "${SESSION}." == 'Lubuntu.' ]
-        then
-            DISTRO='lubuntu'
-            Pauze "Using $DISTRO as distribution name."
         fi
     fi
 
@@ -54,34 +55,6 @@ detectDE()
     elif [ x"$DESKTOP_SESSION" = x"LXDE" ]; then DE=lxde;
     else DE=""
     fi
-}
-
-# *--* Confirm Distro name with user *--*
-Confirm_DISTRO_CPU() {
-    return_value=0
-
-    Pauze "WARN,You have a ${CPU_ADDRESS}-bit box running $DISTRO ."
-
-    case $DISTRO in
-        lubuntu)
-            prettyprint '1,32,47,M,0' 'Valid'
-            ;;
-        LinuxMint|mint)
-            prettyprint '1,32,47,M,0' 'Valid'
-            ;;
-        Ubuntu)
-            prettyprint '1,32,47,M,0' 'Valid'
-            ;;
-        *)
-            prettyprint '1,31,47,M,0,n' 'Invalid.'
-            prettyprint 't,7,31,47,M,0,n' '(Note, you can run this as' $0 'distro)'
-            prettyprint '5,31,47,M,n,0' 'Exiting'
-            return_value=16
-            ;;
-    esac
-    Pauze "Confirmed Distro. Return value is $return_value"
-
-    return $return_value
 }
 
 Contact_server() {
@@ -391,8 +364,7 @@ Zanned_response() {
     fi
 
     [[ -z "$mess" ]] && mess='Unknown Message..????'
-    #rettyprint "n,1,${basic_emph},47,M,0,n" $mess || RC=$?
-    prettyprint "n,1,${basic_emph},40,M,0,n" $mess || RC=$?
+    prettyprint "1,${basic_emph},40,M,0,n" $mess || RC=$?
 
     return $RC
 }

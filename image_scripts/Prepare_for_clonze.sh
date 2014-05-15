@@ -7,36 +7,29 @@ fi
 
 source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
 
-fallback_distro='bloatware'
+fallback_distro=''
 refresh_from_apt='Y'
 while getopts 'd:Rh' OPT
 do
     case $OPT in
         d)
-        fallback_distro=$OPTARG
+            fallback_distro=$OPTARG
         ;;
         R)
-   	    refresh_from_apt='N'
+            refresh_from_apt='N'
         ;;
         h)
-	    Pauze $(basename $0) 'valid options are -d Distro [-R|-h]'
+            Pauze $(basename $0) 'valid options are -d Distro [-R|-h]'
             exit 0
         ;;
         *)
-	    Pauze "Unknown option: $OPT . Try -d distro [-R]"
+            Pauze "Unknown option: $OPT . Try -d distro [-R]"
         ;;
     esac
 done
 
 Get_CPU_ADDRESS
 Get_DISTRO $fallback_distro
-CDC_RC=0
-Confirm_DISTRO_CPU || CDC_RC=$?
-if [ $CDC_RC -gt 0 ]
-then
-    Pauze "ERROR,Invalid Distro $DISTRO"
-    exit $CDC_RC
-fi
 
 Pauze 'Checking/Confirming removal of UUID reference in fstab'
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
@@ -75,16 +68,16 @@ free
 lsb_release -a
 
 Pauze 'Remove Cache files'
-#XFCE Only:
-    #ensure existence of : /home/*/.config/xfce4/xfconf/
-        #xfce-perchannel-xml/xfce4-session.xml: 
-        #<property name="SessionName" type="string" value="Default"/>
 for CD in $(find ${HOME}/ -depth -type d -not -empty -iname '*cache*'); do rm -rv ${CD}/*; done
 
 #Bilt-images reminders (Cust_srt)
 #- 32-bit
 #  * Desktop Icon settings; remove File System (but useful on new-user?)
 
-#/usr/share/lubuntu/wallpapers/: directory
-#udevadm info --query=env --name=/dev/sda1 |grep UUID
+# XFCE Only:
+#    ensure existence of : /home/*/.config/xfce4/xfconf/
+#    xfce-perchannel-xml/xfce4-session.xml: 
+#    <property name="SessionName" type="string" value="Default"/>
+
+# udevadm info --query=env --name=/dev/sda1 |grep UUID
 
