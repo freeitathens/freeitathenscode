@@ -1,5 +1,6 @@
 #!/bin/bash +x
-source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
+codebase="${HOME}/freeitathenscode"
+source ${codebase}/image_scripts/Common_functions || exit 12
 
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
@@ -46,14 +47,14 @@ Confirm_DISTRO_CPU() {
 
     case $DISTRO in
         lubuntu)
-            prettyprint '1,32,47,M,0' 'Valid'
+            prettyprint '7,32,47,M,0' 'Valid'
             ;;
         LinuxMint|mint)
-            prettyprint '1,32,47,M,0' 'Valid'
+            prettyprint '7,32,47,M,0' 'Valid'
             DISTRO='mint'
             ;;
         Ubuntu)
-            prettyprint '1,32,47,M,0' 'Valid'
+            prettyprint '7,32,47,M,0' 'Valid'
             ;;
         *)
             prettyprint '1,31,47,M,0' 'Invalid:'
@@ -110,9 +111,9 @@ then Contact_server
 fi
 
 Pauze 'Check on subversion status'
-if [ -d ${HOME}/freeitathenscode/.svn ]
+if [ -d ${codebase}/.svn ]
 then
-    cd ${HOME}/freeitathenscode/
+    cd ${codebase}/
     [[ "${refresh_update}." == 'Y.' ]] && svn update
 else
     cd
@@ -202,8 +203,8 @@ fi
 if [ $DISTRO == 'lubuntu' ]
 then
     Pauze 'Run BPR Code'
-    [[ -f ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh ]] &&\
-        ${HOME}/freeitathenscode/image_scripts/BPR_xt_lubuntu_32bit.sh $refresh_from_apt $refresh_git $Messages_O
+    [[ -f ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh ]] &&\
+        ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh $refresh_from_apt $refresh_git $Messages_O
     Pauze "Run BPR: Last return code: $?"
 fi
 
@@ -214,15 +215,27 @@ then
     apt-get dist-upgrade
 fi
 
-Pauze "Connecting Quality control stuff"\
-   "$(ls -ld ${HOME}/bin)"\
-   "$(diff --brief ${HOME}/freeitathenscode/QC_Process/Quality\ Control.desktop ~/Desktop/Quality\ Control.desktop\
-   && echo 'Quality Control Desktop is in sync')"
-[[ -d ${HOME}/bin ]] || mkdir ${HOME}/bin
-[[ -e $ ]] || ln -s ${HOME}/freeitathenscode/QC_Process/QC.sh ${HOME}/bin/QC.sh
-diff --brief ${HOME}/freeitathenscode/QC_Process/Quality\ Control.desktop ~/Desktop/Quality\ Control.desktop\
-   || cp -iv ${HOME}/freeitathenscode/QC_Process/Quality\ Control.desktop ~/Desktop/Quality\ Control.desktop
-#ln -s ${HOME}/freeitathenscode/QC_Process/Disable\ 3D.desktop ~/Desktop/Disable\ 3D.desktop
+Pauze 'Connecting Quality control stuff'
+local_scripts_DIR="${HOME}/bin"
+[[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
+[[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${codebase}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
+
+qc_desk="${Codebase}/QC_Process/Quality\ Control.desktop"
+qc_dalt="${Codebase}/QC_process_dev/Master_${CPU_ADDRESS}/Quality\ Control.desktop"
+[[ -f ${qc_dalt} ]] && qc_desk=$qc_dalt
+qc_actu="${HOME}/Desktop/Quality\ Control.desktop"
+df_RC=0
+diff --brief $qc_actu $qc_desk || df_RC=$?
+if [ $df_RC -gt 0 ]
+then
+    Answer='N'
+    Pause_n_Answer 'Y|N' 'WARNING,Update Quality Control Desktop?'
+    if [ "${Answer}." == 'Y.' ]
+    then
+        cp -iv $qc_desk $qc_actu
+    fi
+fi
+#ln -s ${codebase}/QC_Process/Disable\ 3D.desktop ~/Desktop/Disable\ 3D.desktop
 
 Answer='N'
 Pause_n_Answer 'Y|N' 'INFO,Run nouser and nogroup checks/fixes?'
@@ -231,5 +244,6 @@ then
     find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -uid 1000 -nouser -exec chown -c root {} \; &
     find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -gid 1000 -nogroup -exec chgrp -c root {} \; &
 fi
+
 set +x
 
