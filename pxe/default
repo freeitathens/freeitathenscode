@@ -52,21 +52,42 @@ label hdt
 
 MENU BEGIN Select & Run Mint OR '*buntu' Live CD 
 
+label live-mm-64-oem-config-17
+  menu label RUN "Live CD" Mint 17 Mate 64-bit (31-May Build, FINAL LTS)
+  kernel mint17-64bit-mate/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mint17-64bit-mate/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mint17-64bit-mate file=/cdrom/preseed/cli.seed
+
+#label live-ku-64-oem-config-17
+#  menu label RUN "Live CD" Mint 17 Kubuntu 64-bit
+#  kernel mint17-64bit-mate/casper/vmlinuz
+#  append boot=casper netboot=nfs initrd=mint17-64bit-mate/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mint17-64bit-mate file=/cdrom/preseed/linuxmint.seed
+
 LABEL live-L1404S
   MENU LABEL Run "Live CD" Lubuntu 14.04 (standard desktop)
   LINUX Lub_14_04_std/casper/vmlinuz
   INITRD Lub_14_04_std/casper/initrd.lz
   APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/Lub_14_04_std file=/cdrom/preseed/lubuntu.seed
 
-label live-u1204
-  menu label Run Ubuntu 12.04
-  kernel u-12.04/casper/vmlinuz
-  append boot=casper netboot=nfs initrd=u-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-12.04 file=/cdrom/preseed/ubuntu.seed
+LABEL Live-zorin
+  MENU LABEL Run "Live CD" Zorin Lite 8
+  LINUX zorin8/casper/vmlinuz
+  INITRD zorin8/casper/initrd.gz
+  APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/zorin8 file=/cdrom/preseed/custom.seed
 
-label live-k1204
-  menu label Run Kubuntu 12.04
-  kernel k-12.04/casper/vmlinuz
-  append boot=casper netboot=nfs initrd=k-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/k-12.04 file=/cdrom/preseed/ubuntu.seed
+label live-mm-64-oem-config-13
+  menu label Run Mint 13 64-bit with Mate (oem-config version)
+  kernel mm64_oemconfig/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mm64_oemconfig/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mm64_oemconfig file=/cdrom/preseed/mint.seed
+
+label live-mm-13
+  menu label Run Mint 13 with Mate
+  kernel mm-13/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mm-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mm-13 file=/cdrom/preseed/mint.seed
+
+label live-mc-13
+  menu label Run Mint 13 with Cinnamon
+  kernel mc-13/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mc-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mc-13 file=/cdrom/preseed/mint.seed
 
 label live-x1204
   menu label Run Xubuntu 12.04
@@ -78,20 +99,15 @@ label live-l1204
   kernel l-12.04/casper/vmlinuz
   append boot=casper netboot=nfs initrd=l-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/l-12.04 file=/cdrom/preseed/ubuntu.seed
 
-label live-mm-13
-  menu label Run Mint 13 with Mate
-  kernel mm-13/casper/vmlinuz
-  append boot=casper netboot=nfs initrd=mm-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mm-13 file=/cdrom/preseed/mint.seed
+label live-u1204
+  menu label Run Ubuntu 12.04
+  kernel u-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=u-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-12.04 file=/cdrom/preseed/ubuntu.seed
 
-label live-mm-64-oem-config-13
-  menu label Run Mint 13 64-bit with Mate (oem-config version)
-  kernel mm64_oemconfig/casper/vmlinuz
-  append boot=casper netboot=nfs initrd=mm64_oemconfig/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mm64_oemconfig file=/cdrom/preseed/mint.seed
-
-label live-mc-13
-  menu label Run Mint 13 with Cinnamon
-  kernel mc-13/casper/vmlinuz
-  append boot=casper netboot=nfs initrd=mc-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mc-13 file=/cdrom/preseed/mint.seed
+label live-k1204
+  menu label Run Kubuntu 12.04
+  kernel k-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=k-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/k-12.04 file=/cdrom/preseed/ubuntu.seed
 
 MENU END
 
