@@ -230,11 +230,11 @@ local_scripts_DIR="${HOME}/bin"
 [[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
 [[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${codebase}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
 
-find ${Codebase}/QC_Process -iname 'Quality*' -exec md5sum {} \;
-find ${Codebase}/QC_process_dev/Master_${CPU_ADDRESS} -iname 'Quality*' -exec md5sum {} \;
+find ${codebase}/QC_Process -iname 'Quality*' -exec md5sum {} \;
+find ${codebase}/QC_process_dev/Master_${CPU_ADDRESS} -iname 'Quality*' -exec md5sum {} \;
 find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;
-#qc_desk="${Codebase}/QC_Process/Quality\ Control.desktop"
-#qc_dalt="${Codebase}/QC_process_dev/Master_${CPU_ADDRESS}/Quality\ Control.desktop"
+#qc_desk="${codebase}/QC_Process/Quality\ Control.desktop"
+#qc_dalt="${codebase}/QC_process_dev/Master_${CPU_ADDRESS}/Quality\ Control.desktop"
 #[[ -f "${qc_dalt}" ]] && qc_desk="$qc_dalt"
 #qc_actu="${HOME}/Desktop/Quality\ Control.desktop"
 #df_RC=0
