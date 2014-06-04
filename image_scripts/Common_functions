@@ -1,45 +1,60 @@
 #!/bin/bash
 
 # *--* Identify box as 32 or 64 bit capable. *--*
-Get_CPU_ADDRESS() {
-    CPU_ADDRESS=32
-    CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
-    for GL in $CPUFLAGS
+Get_Address_Len() {
+
+    address_len=32
+    lscpu |grep -P '^Arch.+x86_64$' >&2
+    for fl in $(cat /proc/cpuinfo |grep '^flags')
     do
-        if [ $GL == 'lm' ]
+        if [ $fl == 'lm' ]
         then
-            CPU_ADDRESS=64
+            address_len=64
+            break
         fi
     done
+    export address_len
+
+    return 0
 }
-# if [ 64 -eq $(lscpu |grep '^Arch' |head -n1 |grep -o '64$' ]
+
+Get_CPU_ADDRESS() {
+
+    echo 'Get_CPU_ADDRESS is deprecated. Use Get_Address_Len.' >&2
+    Get_Address_Len
+    CPU_ADDRESS=$address_len
+
+}
 
 Get_DISTRO() {
     DISTRO=$1
     local RC=0
 
-    System_sez_distro=$(lsb_release -a 2>/dev/null|grep '^Distributor ID:' |cut -f2 -d: |sed -e 's/^[ \t]*//')
-    if [ "${SESSION}." == 'Lubuntu.' ]
+    GEB_distro=$(lsb_release -a 2>/dev/null|grep '^Distributor ID:'\
+        |cut -f2 -d: |sed -e 's/^[ \t]*//')
+    Pauze "System reports distro as ${GEB_distro}."
+
+    if [ -z ${DISTRO} ]
     then
-        System_sez_distro='lubuntu'
+        if [ "${SESSION}." == 'Lubuntu.' ]
+        then
+            DISTRO='lubuntu'
+            Pauze "Using $DISTRO as distribution name."
+            return 1
+        else
+            if [ -z ${GEB_distro} ]
+            then
+                return 17
+            fi
+        fi
+        DISTRO=$GEB_distro
+        Pauze "No distro supplied from user. ${DISTRO} becomes default."
+        return 1
     fi
 
-    prettyprint 'n,1,34,47,M' "System reports distro as ${System_sez_distro}."
-    if [ "${DISTRO}." == "${System_sez_distro}." ]
+    if [ "${DISTRO}." == "${GEB_distro}." ]
     then
-        Pauze " ... agrees with your input: $DISTRO"
-    elif [ "${DISTRO}." == '.' ]
-    then
-        DISTRO=$System_sez_distro
-        Pauze " ... supplying $DISTRO as distribution name."
-    else
-        Answer='N'
-        Pause_n_Answer 'Y|N' "WARNING,You gave me ${DISTRO}. Replace? "
-        if [ "${Answer}." == 'Y.' ]
-        then 
-            DISTRO=$System_sez_distro
-            Pauze "Ok, supplying $DISTRO as distribution name."
-        fi
+        Pauze "System distro value (${GEB_distro}) agrees with your input (${DISTRO})."
     fi
 
     return $RC
@@ -57,6 +72,52 @@ detectDE()
     fi
 }
 
+# *--* Confirm Distro name with user *--*
+Confirm_DISTRO_CPU() {
+    Set_RC=${1:-20}
+
+    case $Set_RC in
+        0)
+            prettyprint 'n,t,1,33,40,M,n' "Evaluating your input: ${DISTRO}"
+            ;;
+        1)
+            Answer='N'
+            Pause_n_Answer 'Y|N' "System supplied value ${DISTRO}. OK? "
+            if [ "${Answer}." != 'Y.' ]
+            then 
+                Pauze "Exiting."
+                return 12
+            fi
+            ;;
+        *)
+            echo 'nothing possible now.'
+            return $Set_RC
+            ;;
+    esac
+
+    good_distro_ind=0
+    case $DISTRO in
+        lubuntu)
+            prettyprint '1,32,47,M,0' 'Valid'
+            ;;
+        LinuxMint|mint)
+            prettyprint '1,32,47,M,0' 'Valid'
+            ;;
+        Ubuntu)
+            prettyprint '1,32,47,M,0' 'Valid'
+            ;;
+        *)
+            prettyprint '1,31,47,M,0,n' 'Invalid.'
+            prettyprint 't,7,31,47,M,0,n' '(Note, you can run this as' $0 'distro)'
+            prettyprint '5,31,47,M,n,0' 'Exiting'
+            good_distro_ind=16
+            ;;
+    esac
+    Pauze "INFO,Confirmed $DISTRO on ${CPU_ADDRESS}-bit box."
+
+    return $good_distro_ind
+}
+
 Contact_server() {
     if [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]
     then
@@ -65,28 +126,28 @@ Contact_server() {
 }
 
 Correct_subversion_ssh() {
-    for LOC in ${HOME} /etc
+    for subv_home in ${HOME}/.subversion /etc/subversion
     do
-        SUBLOC="${LOC}/subversion"
-        if [ -d ${SUBLOC} ]
-        then 
-            SUBCONF="${SUBLOC}/config"
-            if [ -f ${SUBCONF} ]
-            then
-                prettyprint 'n,t,31,47,M,0' "Fix $SUBCONF for Frita's ssh connection?..."
-                read Xr
-                case $Xr in
-                Y|y)
-                perl -pi'.bak' -e 's/#\s*ssh\s(.+?)ssh -q(.+)$/ssh ${1}ssh -p8222 -v${2}/' ${SUBCONF}
-                ;;
+        [[ -d ${subv_home} ]] || return 8
+
+        subv_conf="${subv_home}/config"
+        if [ -f ${subv_conf} ]
+        then
+            Answer='N'
+            Pause_n_Answer 'Y|N' "Fix $subv_conf for Frita's ssh connection (Y|N)? "
+            case $Answer in
+                Y)
+                    sudo perl -pi'.bak' -e 's/#\s*ssh\b(.+?ssh)\s+-q(.+)$/ssh${1} -v${2}/' ${subv_conf}
+                    [[ $? -eq 0 ]] && break
+                    ;;
                 *)
-                prettyprint 'n,t,34,47,M,0' 'No changes made...'
-                ;;
-                esac
-                break
-            fi
+                    prettyprint 'n,t,34,47,M,0' 'No changes made...'
+                    ;;
+            esac
         fi
     done
+    return 0
+
 }
 
 Set_background() {
@@ -222,6 +283,7 @@ Is_numeric_re() {
 
 Is_numeric_simple_charclass() {
     local testchar=$1
+
     case $testchar in
         "")
             return 25
@@ -230,12 +292,14 @@ Is_numeric_simple_charclass() {
             return 1
             ;;
     esac
+
     return 0
 }
 
 Yes_its_numeric() {
     local Digi=$1
     local RC=0
+
     case $Digi in
         [013457])
             COLORATTR='0'${COLORATTR}';'${Digi}
@@ -280,28 +344,20 @@ Yes_its_numeric() {
     return $RC
 }
 
-twenty_grand() {
-    local Digit=$1
+Pauze() {
 
-    if [ $Digit -lt 8 ]
-    then COLORATTR=${COLORATTR}';'${Digit}
-    elif [ $Digit -ge 30 ]
+    # !Print to terminal only if this session is interactive.
+    if [[ $- != *i* ]]
     then
-        if [ $Digit -lt 38 ];then COLORATTR=${COLORATTR}';'${Digit};fi
-    elif [ $Digit -ge 40 ]
-    then
-        if [ $Digit -lt 48 ];then COLORATTR=${COLORATTR}';'${Digit};fi
+        Log_mess $@
+        return 0
     fi
 
-    return $?
-}
-
-Pauze() {
     set +u
     IFS=$' \t\n'
     local RC=0
 
-    echo -e "\n\n"
+    echo -e "\n"
     #while [ -n "$1" ]
     while [ $# -gt 0 ]
     do
@@ -345,7 +401,7 @@ Zanned_response() {
     then
         Try_level=$(echo $mess |cut -f1 -d,)
         Try_mess=$(echo $mess |cut -f2- -d,)
-        Do_swap='Y'
+        Do_swift='Y'
         case $Try_level in
         ERR*)
             basic_emph=31
@@ -357,16 +413,29 @@ Zanned_response() {
             basic_emph=36
             ;;
         *)
-            Do_swap='N'
+            Do_swift='N'
             ;;
         esac
-        [[ $Do_swap == 'Y' ]] && mess=$Try_mess
+        [[ $Do_swift == 'Y' ]] && mess=$Try_mess
     fi
 
     [[ -z "$mess" ]] && mess='Unknown Message..????'
-    prettyprint "1,${basic_emph},40,M,0,n" $mess || RC=$?
+    #rettyprint "n,1,${basic_emph},47,M,0,n" $mess || RC=$?
+    prettyprint "n,1,${basic_emph},40,M,0,n" $mess || RC=$?
 
     return $RC
+}
+
+Log_mess() {
+    Message=$@
+    [[ -z $Message ]] && Message='Hey, message is blank'
+
+    LOGGER=$(which logger)
+    [[ -z $LOGGER ]] && return 12
+
+    $LOGGER -t 'COMMON' $Message || return $?
+
+    return 0
 }
 
 Time_to_kill() {
@@ -407,4 +476,20 @@ Time_to_kill() {
 #Digit=11111122222
 #  [[ $Digit =~ [^[:digit:]] ]] && echo yes
 #  (rc1)
+
+#twenty_grand() {
+#    local Digit=$1
+#
+#    if [ $Digit -lt 8 ]
+#    then COLORATTR=${COLORATTR}';'${Digit}
+#    elif [ $Digit -ge 30 ]
+#    then
+#        if [ $Digit -lt 38 ];then COLORATTR=${COLORATTR}';'${Digit};fi
+#    elif [ $Digit -ge 40 ]
+#    then
+#        if [ $Digit -lt 48 ];then COLORATTR=${COLORATTR}';'${Digit};fi
+#    fi
+#
+#    return $?
+#}
 

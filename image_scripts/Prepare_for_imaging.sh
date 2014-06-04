@@ -132,12 +132,15 @@ fi
 set -u
 
 Pauze 'Try to set Frita Backgrounds'
-Backgrounds_location='/usr/share/backgrounds'
-if [ $DISTRO == 'lubuntu' ]
-then
-    Backgrounds_location='/usr/share/lubuntu/wallpapers'
-fi
 backmess='Background Set?'
+case $DISTRO in
+    lubuntu|Ubuntu)
+        Backgrounds_location='/usr/share/lubuntu/wallpapers'
+        ;;
+    *)
+        Backgrounds_location='/usr/share/backgrounds'
+        ;;
+esac
 
 Set_background $FreeIT_image;bg_RC=$?
 case $bg_RC in
@@ -153,11 +156,14 @@ esac
 
 Pauze "Response from setting Frita Backgrounds was $backmess"
 
-if [ $DISTRO != 'lubuntu' ]
-then
-    Pauze 'NOTE to ensure backports in list' 
-    #TODO ensure 'backports' in /etc/apt/sources.list
-fi
+case $DISTRO in
+    mint)
+        Pauze 'WARNING,Ensure backports in /etc/apt/sources.list (or sources.d/)' 
+        ;;
+    *)
+        Pauze 'Assuming Backports are automatically included'
+        ;;
+esac
 
 Pauze 'PPAs for firefox and gimp'
 if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'mozillateam*' |wc -l) ];then
@@ -200,13 +206,17 @@ else
     Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
 fi
 
-if [ $DISTRO == 'lubuntu' ]
-then
-    Pauze 'Run BPR Code'
-    [[ -f ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh ]] &&\
-        ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh $refresh_from_apt $refresh_git $Messages_O
-    Pauze "Run BPR: Last return code: $?"
-fi
+case $DISTRO in
+    lubuntu|Ubuntu)
+        Pauze 'Run BPR Code'
+        [[ -f ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh ]] &&\
+            ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh $refresh_from_apt $refresh_git $Messages_O
+        Pauze "Run BPR: Last return code: $?"
+        ;;
+    *)
+        Pauze "Don't need to run BPR additions for "$DISTRO
+        ;;
+esac
 
 Pauze "apt dist-upgrade ( COND: $refresh_from_apt )"
 if [ $refresh_from_apt == 'Y' ]
@@ -220,21 +230,24 @@ local_scripts_DIR="${HOME}/bin"
 [[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
 [[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${codebase}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
 
-qc_desk="${Codebase}/QC_Process/Quality\ Control.desktop"
-qc_dalt="${Codebase}/QC_process_dev/Master_${CPU_ADDRESS}/Quality\ Control.desktop"
-[[ -f ${qc_dalt} ]] && qc_desk=$qc_dalt
-qc_actu="${HOME}/Desktop/Quality\ Control.desktop"
-df_RC=0
-diff --brief $qc_actu $qc_desk || df_RC=$?
-if [ $df_RC -gt 0 ]
-then
-    Answer='N'
-    Pause_n_Answer 'Y|N' 'WARNING,Update Quality Control Desktop?'
-    if [ "${Answer}." == 'Y.' ]
-    then
-        cp -iv $qc_desk $qc_actu
-    fi
-fi
+find ${Codebase}/QC_Process -iname 'Quality*' -exec md5sum {} \;
+find ${Codebase}/QC_process_dev/Master_${CPU_ADDRESS} -iname 'Quality*' -exec md5sum {} \;
+find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;
+#qc_desk="${Codebase}/QC_Process/Quality\ Control.desktop"
+#qc_dalt="${Codebase}/QC_process_dev/Master_${CPU_ADDRESS}/Quality\ Control.desktop"
+#[[ -f "${qc_dalt}" ]] && qc_desk="$qc_dalt"
+#qc_actu="${HOME}/Desktop/Quality\ Control.desktop"
+#df_RC=0
+#diff --brief "$qc_actu" "$qc_desk" || df_RC=$?
+#if [ $df_RC -gt 0 ]
+#then
+#    Answer='N'
+#    Pause_n_Answer 'Y|N' 'WARNING,Update Quality Control Desktop?'
+#    if [ "${Answer}." == 'Y.' ]
+#    then
+#        cp -iv "$qc_desk" "$qc_actu"
+#    fi
+#fi
 #ln -s ${codebase}/QC_Process/Disable\ 3D.desktop ~/Desktop/Disable\ 3D.desktop
 
 Answer='N'
