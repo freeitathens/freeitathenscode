@@ -44,6 +44,7 @@ then
     updatedb &
 fi
 
+address_len=0
 Get_Address_Len
 
 Get_DISTRO $fallback_distro;CDC_RC=$?
@@ -162,7 +163,7 @@ if [ 0 -eq $(find /etc/apt/sources.list.d/ -type f -name 'otto-kesselgulasch*' |
 fi
 
 Pauze 'mint and mate specials'
-if [ $CPU_ADDRESS -eq 32 ]
+if [ $address_len -eq 32 ]
 then
     if [ $DISTRO == 'mint' ]
     # This is actually specific to xfce: mint (32?).
@@ -200,9 +201,9 @@ local_scripts_DIR="${HOME}/bin"
 [[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
 [[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${codebase}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
 
-find ${codebase}/QC_Process -iname 'Quality*' -exec md5sum {} \;
-find ${codebase}/QC_process_dev/Master_${CPU_ADDRESS} -iname 'Quality*' -exec md5sum {} \;
-find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;
+(find ${codebase}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
+    find ${codebase}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
+    find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn'
 #qc_desk="${codebase}/QC_Process/Quality\ Control.desktop"
 #qc_dalt="${codebase}/QC_process_dev/Master_${CPU_ADDRESS}/Quality\ Control.desktop"
 #[[ -f "${qc_dalt}" ]] && qc_desk="$qc_dalt"

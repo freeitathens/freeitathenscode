@@ -351,7 +351,7 @@ Pauze() {
     if [[ $- != *i* ]]
     then
         Log_mess $@
-        return 0
+        #return 0
     fi
 
     set +u
@@ -428,6 +428,7 @@ Zanned_response() {
 }
 
 Log_mess() {
+    return 0
     Message=$@
     [[ -z $Message ]] && Message='Hey, message is blank'
 
