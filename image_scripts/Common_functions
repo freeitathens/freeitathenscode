@@ -102,6 +102,7 @@ Confirm_DISTRO_CPU() {
             ;;
         LinuxMint|mint)
             prettyprint '1,32,47,M,0' 'Valid'
+            DISTRO='mint'
             ;;
         Ubuntu)
             prettyprint '1,32,47,M,0' 'Valid'
