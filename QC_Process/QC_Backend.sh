@@ -470,7 +470,7 @@ then
             fi
             ;;
         Disable_3D)
-            dialog --title "Free IT Athens Quality Control Test" --msgbox "Click Disable 3D Icon" 20 80
+            dialog --title "Free IT Athens Quality Control Test" --msgbox "You're on your own ;-)" 20 80
             ;;
     esac
 fi

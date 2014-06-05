@@ -17,9 +17,9 @@
 #	echo "Download failed, using existing version"
 #fi
 
-if [ ! -e ~/Desktop/Disable_3D.desktop ]; then
-    ln -s ~/freeitathenscode/QC_Process/Disable_3D.desktop ~/Desktop/.
-fi
+#if [ ! -e ~/Desktop/Disable_3D.desktop ]; then
+#   ln -s ~/freeitathenscode/QC_Process/Disable_3D.desktop ~/Desktop/.
+#i
 
 # whether we updated it or not, run the QC script
 ~/freeitathenscode/QC_Process/QC_Backend.sh

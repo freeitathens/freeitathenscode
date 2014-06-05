@@ -223,7 +223,6 @@ local_scripts_DIR="${HOME}/bin"
 #        cp -iv "$qc_desk" "$qc_actu"
 #    fi
 #fi
-#ln -s ${codebase}/QC_Process/Disable\ 3D.desktop ~/Desktop/Disable\ 3D.desktop
 
 Answer='N'
 Pause_n_Answer 'Y|N' 'INFO,Run nouser and nogroup checks/fixes?'
