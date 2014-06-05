@@ -347,11 +347,12 @@ Yes_its_numeric() {
 
 Pauze() {
 
+    Log_mess $@
     # !Print to terminal only if this session is interactive.
-    if [[ $- != *i* ]]
+    [[ -z Runner_shell_as ]] || Runner_shell_as='?'
+    if [[ $Runner_shell_as != *i* ]]
     then
-        Log_mess $@
-        #return 0
+        return 4
     fi
 
     set +u
@@ -359,7 +360,6 @@ Pauze() {
     local RC=0
 
     echo -e "\n"
-    #while [ -n "$1" ]
     while [ $# -gt 0 ]
     do
         Zanned_response $1 || ((RC+=$?))
@@ -427,8 +427,30 @@ Zanned_response() {
     return $RC
 }
 
+Run_Cap_Out() {
+    cmd=$1
+    shift
+    local RC=0
+    [[ -z $cmd ]] && return 8
+    typecmd=$(type -t $cmd)
+    [[ -z $typecmd ]] && return 9
+
+    [[ -z $Messages_O ]] && Messages_O='/tmp/Generic_log'
+    [[ -z $Errors_O ]] && Errors_O='/tmp/Generic_err'
+
+    if [ $typecmd == 'file' ]
+    then
+        if [[ ! $cmd =~ '/' ]]
+        then
+            cmd=$(which $cmd)
+        fi
+    fi
+    stuff=$@
+    $cmd $stuff 2>>${Errors_O} |tee -a ${Messages_O} || RC=$?
+    return $RC
+}
+
 Log_mess() {
-    return 0
     Message=$@
     [[ -z $Message ]] && Message='Hey, message is blank'
 
@@ -436,6 +458,7 @@ Log_mess() {
     [[ -z $LOGGER ]] && return 12
 
     $LOGGER -t 'COMMON' $Message || return $?
+    [[ -f ${Messages_O} ]] && echo $Message >>${Messages_O}
 
     return 0
 }

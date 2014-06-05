@@ -1,6 +1,9 @@
 #!/bin/bash +x
 codebase="${HOME}/freeitathenscode"
 source ${codebase}/image_scripts/Common_functions || exit 12
+#Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX")
+declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
+declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
 
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
@@ -8,7 +11,8 @@ then
     exit 4
 fi
 
-Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX")
+declare -r HOLDIFS=$IFS
+declare -rx Runner_shell_as=$-
 fallback_distro=''
 FreeIT_image='FreeIT.png'
 refresh_from_apt='Y'
@@ -62,8 +66,8 @@ egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
     'fstab cannot go on image with local UUID referencer'
 
 Pauze 'Checking swap'
-swapoff --all --verbose
-swapon --all --verbose
+Run_Cap_Out swapoff --all --verbose
+Run_Cap_Out swapon --all --verbose
 
 Pauze 'Confirm no medibuntu in apt sources'
 egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
@@ -72,7 +76,7 @@ egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/source
 if [ $refresh_from_apt == 'Y' ]
 then
     apt-get update &>>${Messages_O} &
-    Time_to_kill $! "Running apt-get update Details in $Messages_O"
+    Time_to_kill $! "Running apt-get update. Details in $Messages_O"
     apt-get install subversion || exit 6
 fi
 
@@ -96,7 +100,7 @@ cd
 Pauze "Install necessary packages (COND: $refresh_from_apt )"
 if [ $refresh_from_apt == 'Y' ]
 then
-    PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice vlc aptitude vim flashplugin-installer htop'
+    PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop'
     apt-get install $PKGS
 fi
 
@@ -203,9 +207,9 @@ local_scripts_DIR="${HOME}/bin"
 
 (find ${codebase}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
     find ${codebase}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
-    find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn'
+    find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort
 #qc_desk="${codebase}/QC_Process/Quality\ Control.desktop"
-#qc_dalt="${codebase}/QC_process_dev/Master_${CPU_ADDRESS}/Quality\ Control.desktop"
+#qc_dalt="${codebase}/QC_process_dev/MasterCPDRESS}/Quality\ Control.desktop"
 #[[ -f "${qc_dalt}" ]] && qc_desk="$qc_dalt"
 #qc_actu="${HOME}/Desktop/Quality\ Control.desktop"
 #df_RC=0
@@ -232,10 +236,10 @@ fi
 set +x
 
 # *--* Confirm Distro name with user *--*
-#Confirm_DISTRO_CPU() {
+#Confirm_DISTPU() {
 #    return_value=0
 #
-#    Pauze "WARN,You have a ${CPU_ADDRESS}-bit box running $DISTRO ."
+#    Pauze "WARN,You have a ${DDRESS}-bit box running $DISTRO ."
 
 #    case $DISTRO in
 #        lubuntu)
