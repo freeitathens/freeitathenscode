@@ -1,11 +1,16 @@
 #!/bin/bash +x
+declare -r HOLDIFS=$IFS
+declare -rx Runner_shell_as=$-
+declare -rx codebase="${HOME}/freeitathenscode"
+declare -rx Messages_O=$(mktemp -t "Prep2Clonze_log.XXXXX")
+declare -rx Errors_O=$(mktemp -t "Prep2Clonze_err.XXXXX")
+source ${codebase}/image_scripts/Common_functions || exit 12
+
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
     echo 'Hello User: Please rerun with sudo or root'
     exit 4
 fi
-
-source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
 
 fallback_distro=''
 refresh_from_apt='Y'
@@ -28,8 +33,17 @@ do
     esac
 done
 
-Get_CPU_ADDRESS
-Get_DISTRO $fallback_distro
+address_len=0
+Get_Address_Len
+
+Get_DISTRO $fallback_distro;CDC_RC=$?
+Confirm_DISTRO_CPU $CDC_RC || CDC_RC=$?
+if [ $CDC_RC -gt 0 ]
+then
+    prettyprint '5,31,47,M,n,0' 'Exiting'
+    Pauze "See you back soon!"
+    exit $CDC_RC
+fi
 
 Pauze 'Checking/Confirming removal of UUID reference in fstab'
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\

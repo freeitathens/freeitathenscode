@@ -1,9 +1,10 @@
 #!/bin/bash +x
-codebase="${HOME}/freeitathenscode"
-source ${codebase}/image_scripts/Common_functions || exit 12
-#Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX")
+declare -r HOLDIFS=$IFS
+declare -rx Runner_shell_as=$-
+declare -rx codebase="${HOME}/freeitathenscode"
 declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
+source ${codebase}/image_scripts/Common_functions || exit 12
 
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
@@ -11,8 +12,6 @@ then
     exit 4
 fi
 
-declare -r HOLDIFS=$IFS
-declare -rx Runner_shell_as=$-
 fallback_distro=''
 FreeIT_image='FreeIT.png'
 refresh_from_apt='Y'
@@ -235,6 +234,7 @@ fi
 set +x
 
 # *--* Confirm Distro name with user *--*
+#Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX")
 #Confirm_DISTPU() {
 #    return_value=0
 #
