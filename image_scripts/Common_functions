@@ -78,7 +78,7 @@ Confirm_DISTRO_CPU() {
 
     case $Set_RC in
         0)
-            prettyprint 'n,t,1,33,40,M,n' "Evaluating your input: ${DISTRO}"
+            prettyprint 'n,1,33,40,M,n' "Evaluating your input: ${DISTRO}"
             ;;
         1)
             Answer='N'
@@ -98,14 +98,14 @@ Confirm_DISTRO_CPU() {
     good_distro_ind=0
     case $DISTRO in
         lubuntu)
-            prettyprint '1,32,47,M,0' 'Valid'
+            prettyprint '1,32,40,M,0,n' 'Valid'
             ;;
         LinuxMint|mint)
-            prettyprint '1,32,47,M,0' 'Valid'
+            prettyprint '1,32,40,M,0,n' 'Valid'
             DISTRO='mint'
             ;;
         Ubuntu)
-            prettyprint '1,32,47,M,0' 'Valid'
+            prettyprint '1,32,40,M,0,n' 'Valid'
             ;;
         *)
             prettyprint '1,31,47,M,0,n' 'Invalid.'
@@ -114,7 +114,7 @@ Confirm_DISTRO_CPU() {
             good_distro_ind=16
             ;;
     esac
-    Pauze "INFO,Confirmed $DISTRO on ${CPU_ADDRESS}-bit box."
+    Pauze "INFO,Confirmed $DISTRO on ${address_len}-bit box."
 
     return $good_distro_ind
 }
@@ -349,7 +349,7 @@ Pauze() {
 
     Log_mess $@
     # !Print to terminal only if this session is interactive.
-    [[ -z Runner_shell_as ]] || Runner_shell_as='?'
+    [[ -z Runner_shell_as ]] && Runner_shell_as='?'
     if [[ $Runner_shell_as != *i* ]]
     then
         return 4
@@ -451,14 +451,14 @@ Run_Cap_Out() {
 }
 
 Log_mess() {
-    Message=$@
-    [[ -z $Message ]] && Message='Hey, message is blank'
+    Message=$(echo $@ |tr '-' '_')
+    [[ -z $Message ]] && return 13
 
     LOGGER=$(which logger)
     [[ -z $LOGGER ]] && return 12
 
-    $LOGGER -t 'COMMON' $Message || return $?
     [[ -f ${Messages_O} ]] && echo $Message >>${Messages_O}
+    $LOGGER -t 'COMMONALITY' $Message || return $?
 
     return 0
 }
