@@ -1,6 +1,6 @@
 #!/bin/bash +x
 declare -r HOLDIFS=$IFS
-declare -rx Runner_shell_as=$-
+Runner_shell_hold=$-
 declare -rx codebase="${HOME}/freeitathenscode"
 declare -rx Messages_O=$(mktemp -t "Prep2Clonze_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep2Clonze_err.XXXXX")
@@ -14,9 +14,12 @@ fi
 
 fallback_distro=''
 refresh_from_apt='Y'
-while getopts 'd:Rh' OPT
+while getopts 'jd:Rh' OPT
 do
     case $OPT in
+        j)
+            Runner_shell_hold=${Runner_shell_hold}'i'
+	    ;;
         d)
             fallback_distro=$OPTARG
         ;;
@@ -24,7 +27,7 @@ do
             refresh_from_apt='N'
         ;;
         h)
-            Pauze $(basename $0) 'valid options are -d Distro [-R|-h]'
+            Pauze $(basename $0) 'valid options are -d Distro [-R|-h|-j]'
             exit 0
         ;;
         *)
@@ -32,6 +35,7 @@ do
         ;;
     esac
 done
+declare -rx Runner_shell_as=${Runner_shell_hold}
 
 address_len=0
 Get_Address_Len

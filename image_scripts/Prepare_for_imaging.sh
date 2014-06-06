@@ -1,6 +1,6 @@
-#!/bin/bash +x
+#!/bin/bash
 declare -r HOLDIFS=$IFS
-declare -rx Runner_shell_as=$-
+Runner_shell_hold=$-
 declare -rx codebase="${HOME}/freeitathenscode"
 declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
@@ -18,9 +18,12 @@ refresh_from_apt='Y'
 refresh_update='N'
 refresh_git='Y'
 
-while getopts 'd:i:RuG' OPT
+while getopts 'jd:i:RuG' OPT
 do
     case $OPT in
+        j)
+            Runner_shell_hold=${Runner_shell_hold}'i'
+	    ;;
         d)
             fallback_distro=$OPTARG
             ;;
@@ -36,11 +39,17 @@ do
         G)
             refresh_git='N'
             ;;
+        h)
+            Pauze $(basename $0) 'valid options are -d Distro [-R|-u|-G|-i imagefile|-h|-j]'
+            exit 0
+        ;;
         *)
-            Pauze "Unknown option: ${OPT}. Try: -d distro [ -R -u -G -i imagefile]"
+            Pauze "Unknown option: ${OPT}. Try: -d distro [ -R -u -G -i imagefile|-h|-j]"
+            exit 8
             ;;
     esac
 done
+declare -rx Runner_shell_as=${Runner_shell_hold}
 
 if [ "${refresh_update}." == 'Y.' ]
 then
