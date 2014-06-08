@@ -1,68 +1,70 @@
 #!/bin/bash
-Refresh_apt=${1:-'N'}
-Refresh_git=${2:-'N'}
-shift 2
-source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
-Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX")
+Refresh_apt=${1:-'Y'}
+Refresh_git=${2:-'Y'}
+[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$3
+[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$-
+shift 3
 
+#source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
+source /usr/local/bin/Common_functions || exit 12
+
+declare -x Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX") 2>/dev/null
+declare -r HOLDIFS=$IFS 2>/dev/null
 DOWNLOADS=${HOME}/Downloads
-[[ -d ${DOWNLOADS} ]] || DOWNLOADS=/tmp
+[[ -d ${DOWNLOADS} ]] || mkdir ${HOME}/Downloads
+[[ -d ${DOWNLOADS} ]] || exit 13
 
 #Start BPR Configs
 Configs_from_github() {
-
     local RC=0
-    declare -r HOLDIFS=$IFS
 
-    declare -r shopts_list='dotglob nullglob'
-    declare -r reset_shopts_list=$(shopt -p |tr '\n' ';')
-    Pauze 'Reset shopts with '$reset_shopts_list
-    Activate_shopts $shopts_list
+    Shopts_keep_settings=$(mktemp -t "SHOPTS_KEEP.XXXXX" || echo '/tmp/Mktmp_error')
+    shopt -p >$Shopts_keep_settings
+    Pauze 'Reset shopts by sourcing '$Shopts_keep_settings
+    declare -r shopts_seton_list='dotglob nullglob'
+    Activate_shopts $shopts_seton_list
 
-    sudo apt-get install git
     Git_name=FRITAdot
-    cd $DOWNLOADS || exit 12
-    git clone https://github.com/bpr97050/${Git_name}.git
+    cd $DOWNLOADS || RC=$?
+    [[ $RC -eq 0 ]]\
+        && ( rm -rf ${Git_name}/ 2>/dev/null\
+             && git clone https://github.com/bpr97050/${Git_name}.git || RC=$? )
 
-    Git2Frita_DIR=${PWD}/$Git_name
-    #rm -rf ${Git2Frita_DIR}/.git
-    cd $Git2Frita_DIR || return 13
-    sudo rsync -aRv --exclude '.git' . /etc/skel
+    [[ $RC -eq 0 ]]\
+        && ( sudo rsync -aRv --exclude '.git' --delete-excluded\
+            ${Git_name}/\
+            /etc/skel || RC=$? )
+
     cd
-    rm -rf $Git2Frita_DIR
-
-    Reset_shopts $shopts_list $reset_shopts_list
+    Reset_shopts $Shopts_keep_settings
     return $RC
 }
+#declare -r shopts_original_list=$(shopt -p |tr '\n' ';')
+
 Activate_shopts() {
-    local shopts_list=$1
-    [[ -z "$shopts_list" ]] && return 4
+    local shopts_seton_list=$1
+    [[ -z "$shopts_seton_list" ]] && return 4
     local RC=0
 
-    IFS=$' '
-    for name_shopt in $shopts_list
+    IFS=' '
+    for name_shopt in $shopts_seton_list
     do
-        shopt -s $name_shopt || ((RC+=$?))
+        shopt -s $name_shopt &>/dev/null || ((RC+=$?))
     done
     IFS=$HOLDIFS
 
     return $RC
 }
+
 Reset_shopts() {
-    local shopts_list=$1
-    [[ -z "$shopts_list" ]] && return 5
-    local reset_list=$2
-    [[ -z "$reset_list" ]] && return 4
+    local Shopts_file=$1
+    [[ -z "$Shopts_file" ]] && return 5
     local RC=0
 
-    IFS=$' '
-    for name_shopt in $shopts_list
-    do
-        echo $reset_list |egrep -o "(^|;)shopt -u $name_shopt(;|$)" && shopt -u $name_shopt
-    done
-    IFS=$HOLDIFS
-
+    source $Shopts_file || RC=$?
+    # Send a list of active short options to std err
     shopt |grep 'on' >&2
+
     return $RC
 }
 
@@ -74,6 +76,7 @@ Chromium_stuff() {
     then
         sudo apt-get update &>>${Messages_O} &
         Time_to_kill $! "Running apt-get update. Details in $Messages_O"
+        Refresh_apt='N'
     fi
     sudo apt-get install chromium-browser
     #sudo add-apt-repository ppa:skunk/pepper-flash
@@ -103,16 +106,21 @@ Chromium_stuff() {
         fi
     fi
 
+    # Ensure "/etc/chromium-browser" is a directory (not a file)
+    [[ -e /etc/chromium-browser ]]\
+        && ( [[ -d /etc/chromium-browser ]] || sudo mv -iv /etc/chromium-browser /tmp/ )
+    [[ -d /etc/chromium-browser ]] || sudo mkdir /etc/chromium-browser
+    # Download master_preferences config file for chromium
     wget -O master_preferences\
         https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
         && sudo mv master_preferences /etc/chromium-browser/
 
-    #Bookmarks
+    # Download default bookmarks for Chromium
     wget -O default_bookmarks.html https://gist.github.com/bpr97050/b6b5679f94d344879328/raw\
-        && sudo mv default_bookmarks.html /etc/chromium-browser
+        && sudo mv default_bookmarks.html /etc/chromium-browser/
     cd -
 
-    #Chromium Flags
+    # Ensure certain Chromium Flags settings are in place.
     sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
         --disable-new-tab-first-run --no-first-run\
         --disable-google-now-integration"/g' /etc/chromium-browser/default
@@ -144,6 +152,9 @@ Apt_stuff() {
     #Replace Mplayer with VLC (VLC seems to be more user friendly and less buggy)
     Apt_action_replace 'gnome-mplayer' 'vlc'
     ((RC+=$?))
+
+    # Make sure git version control manager is installed
+    Apt_install git
 
     return $RC
 }
@@ -182,28 +193,37 @@ Apt_action_replace() {
     return $RC
 }
 
-Pauze "BPR code apt-get update. Renew apt is $Refresh_apt"
-
-sudo apt-get update &>>${Messages_O} &
-Time_to_kill $! "Running apt-get update. Details in $Messages_O"
-
 if [ "${Refresh_apt}." == 'Y.' ]
 then
-    Pauze 'BEN Apt_stuff'
-    Apt_stuff || echo 'Apt?'
+    Pauze "BPR code apt-get update. Renew apt is $Refresh_apt"
+    sudo apt-get update &>>${Messages_O} &
+    Time_to_kill $! "Running apt-get update. Details in $Messages_O"
+    Refresh_apt='N'
 fi
+
+Pauze 'BPR Apt stuff'
+Apt_stuff || Pauze 'Some apt-get action did not complete (perhaps postponing install(s)?.)'
 
 if [ $Refresh_git == 'Y' ]
 then
-    Pauze 'BEN Configs_from_github (partly cond)'
+    Pauze 'BPR Configs_from_github (partly cond)'
     Configs_from_github || echo 'Configs_from_github?'
 fi
 
 #Set LightDM wallpaper
-sudo sed -i 's/background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
-sudo echo "background=#FFFFFF" >> /etc/lightdm/lightdm-gtk-greeter.conf
+for greetings in $(find /etc/lightdm/ -mindepth 1 -maxdepth 1 -type f -name 'lightdm-gtk-greeter*')
+do
+    Answer='N'
+    Pause_n_Answer 'Y|N' 'INFO,reset background in '$greetings'?'
+    if [ "${Answer}." == 'Y.' ]
+    then 
+        sudo sed -i 's/^background=/#background=/g' $greetings
+        echo "background=#CC00FF" | sudo tee -a $greetings
+    fi
+done
+#sudo sed -i 's/^background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
 
-Pauze "Ben Chromium_stuff (partly cond, Redo apt is $Refresh_apt . Redo git is $Refresh_git )"
+Pauze "BPR Chromium_stuff (partly cond, Refresh apt cache? $Refresh_apt . Download from github? $Refresh_git )"
 Chromium_stuff || echo 'Chromium Config?'
 
 #Auto security upgrades
