@@ -96,13 +96,14 @@ Chromium_stuff() {
     if [ $check_install_RC -eq 0 ]
     then
         Answer='N'
-        Pause_n_Answer 'Y|N' 'INFO,Install non-free Multimedia packages for Chrome?'
+        Pause_n_Answer 'Y|N' 'WARN,Setup firstboot option to offer non-free Multimedia?'
         if [ "${Answer}." == 'Y.' ]
         then
             Mess='non-free Multimedia install '
             tackon='OK'
-            sudo /usr/local/bin/check || tackon='NOT OK'
-            Pauze "$Mess$tackon"
+            #sudo /usr/local/bin/check || tackon='NOT OK'
+            #Pauze "$Mess$tackon"
+            Pauze 'Make icon on desktop that runs /usr/bin/check'
         fi
     fi
 
