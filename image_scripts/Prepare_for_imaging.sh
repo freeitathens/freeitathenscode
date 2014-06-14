@@ -108,9 +108,13 @@ cd
 Pauze "Install necessary packages (COND: $refresh_from_apt )"
 if [ $refresh_from_apt == 'Y' ]
 then
-    PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop'
+    PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].*'
     apt-get install $PKGS
 fi
+for driveman in $(aptitude search '.*driver-manager')
+do
+    apt-get install $driveman
+done
 
 set -u
 
