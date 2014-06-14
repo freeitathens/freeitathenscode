@@ -46,9 +46,9 @@ Get_DISTRO() {
             then
                 return 17
             fi
+            DISTRO=$GEB_distro
         fi
-        DISTRO=$GEB_distro
-        Pauze "No distro supplied from user. ${DISTRO} becomes default."
+        Pauze "No distro supplied in parms. ${DISTRO} becomes default."
         return 1
     fi
 

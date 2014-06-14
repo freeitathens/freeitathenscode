@@ -60,7 +60,7 @@ address_len=0
 Get_Address_Len
 
 Get_DISTRO $fallback_distro;CDC_RC=$?
-Confirm_DISTRO_CPU $CDC_RC || CDC_RC=$?
+Confirm_DISTRO_CPU $CDC_RC;CDC_RC=$?
 if [ $CDC_RC -gt 0 ]
 then
     prettyprint '5,31,47,M,n,0' 'Exiting'
