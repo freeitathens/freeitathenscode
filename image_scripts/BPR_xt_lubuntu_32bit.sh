@@ -68,63 +68,85 @@ Reset_shopts() {
     return $RC
 }
 
+Run_apt_update() {
+
+    sudo apt-get update &>>${Messages_O} &
+    Time_to_kill $! "Running apt-get update. Details in $Messages_O"
+    Refresh_apt='N'
+
+}
+
 Chromium_stuff() {
 
     local RC=0
 
     if [ "${Refresh_apt}." == 'Y.' ]
     then
-        sudo apt-get update &>>${Messages_O} &
-        Time_to_kill $! "Running apt-get update. Details in $Messages_O"
-        Refresh_apt='N'
+	Run_apt_update
     fi
     sudo apt-get install chromium-browser
-    #sudo add-apt-repository ppa:skunk/pepper-flash
-    #sudo apt-get install pepflashplugin-installer\
-    #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
-    #   |sudo tee -a /etc/chromium-browser/default
-
-    cd $DOWNLOADS
-    #Pepperflash/Multimedia codecs installer
-    check_install_RC=1
-    wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw\
-        && sudo mv check /usr/local/bin/\
-        && sudo chmod +x /usr/local/bin/check\
-        && check_install_RC=0
-
-    # Option for user to install non-free multimedia stuff for Chrom[e|ium]
-    if [ $check_install_RC -eq 0 ]
-    then
-        Answer='N'
-        Pause_n_Answer 'Y|N' 'WARN,Setup firstboot option to offer non-free Multimedia?'
-        if [ "${Answer}." == 'Y.' ]
-        then
-            Mess='non-free Multimedia install '
-            tackon='OK'
-            #sudo /usr/local/bin/check || tackon='NOT OK'
-            #Pauze "$Mess$tackon"
-            Pauze 'Make icon on desktop that runs /usr/bin/check'
-        fi
-    fi
 
     # Ensure "/etc/chromium-browser" is a directory (not a file)
     [[ -e /etc/chromium-browser ]]\
         && ( [[ -d /etc/chromium-browser ]] || sudo mv -iv /etc/chromium-browser /tmp/ )
     [[ -d /etc/chromium-browser ]] || sudo mkdir /etc/chromium-browser
-    # Download master_preferences config file for chromium
-    wget -O master_preferences\
-        https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
-        && sudo mv master_preferences /etc/chromium-browser/
 
-    # Download default bookmarks for Chromium
-    wget -O default_bookmarks.html https://gist.github.com/bpr97050/b6b5679f94d344879328/raw\
-        && sudo mv default_bookmarks.html /etc/chromium-browser/
-    cd -
+    cd $DOWNLOADS
 
-    # Ensure certain Chromium Flags settings are in place.
-    sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
-        --disable-new-tab-first-run --no-first-run\
-        --disable-google-now-integration"/g' /etc/chromium-browser/default
+    Answer='N'
+    Pause_n_Answer 'Y|N' 'Git-Load Chromium Master Preferences?'
+    if [ $Answer == 'Y' ]
+    then
+	# Download master_preferences config file for chromium
+	wget -O master_preferences\
+	    https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
+	    && sudo mv master_preferences /etc/chromium-browser/
+    fi
+
+    Answer='N'
+    Pause_n_Answer 'Y|N' 'Set chrome defaults?'
+    if [ $Answer == 'Y' ]
+    then
+	# Ensure certain Chromium Flags settings are in place.
+	sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
+	    --disable-new-tab-first-run --no-first-run\
+	    --disable-google-now-integration"/g' /etc/chromium-browser/default
+    fi
+
+    Answer='N'
+    Pause_n_Answer 'Y|N' 'Git-Load default_bookmarks.html?'
+    if [ $Answer == 'Y' ]
+    then
+	# Download default bookmarks for Chromium
+	wget -O default_bookmarks.html\
+	    https://gist.github.com/bpr97050/b6b5679f94d344879328/raw\
+	    && sudo mv default_bookmarks.html /etc/chromium-browser/
+    fi
+
+    Answer='N'
+    Pause_n_Answer 'Y|N' 'Git-Load one-time Proprietary setup script?'
+    if [ $Answer == 'Y' ]
+    then
+	check_install_RC=1
+	#Pepperflash/Multimedia codecs installer
+	wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw\
+	    && sudo mv check /usr/local/bin/\
+	    && sudo chmod +x /usr/local/bin/check\
+	    && check_install_RC=0
+	if [ $check_install_RC -eq 0 ]
+	then
+	    Answer='N'
+	    Pause_n_Answer 'Y|N' 'WARN,Setup firstboot option to offer non-free Multimedia?'
+	    if [ "${Answer}." == 'Y.' ]
+	    then
+		Mess='non-free Multimedia install '
+		tackon='OK'
+		#sudo /usr/local/bin/check || tackon='NOT OK'
+		#Pauze "$Mess$tackon"
+		Pauze 'Make icon on desktop that runs /usr/bin/check'
+	    fi
+	fi
+    fi
 
     return $RC
 }
@@ -197,9 +219,7 @@ Apt_action_replace() {
 if [ "${Refresh_apt}." == 'Y.' ]
 then
     Pauze "BPR code apt-get update. Renew apt is $Refresh_apt"
-    sudo apt-get update &>>${Messages_O} &
-    Time_to_kill $! "Running apt-get update. Details in $Messages_O"
-    Refresh_apt='N'
+    Run_apt_update
 fi
 
 Pauze 'BPR Apt stuff'
@@ -237,6 +257,11 @@ Pauze "INFO,Finished with BPR custom code. last RC: $?"
 #Only notify about LTS starting July 24th
 #https://help.ubuntu.com/community/PreciseUpgrades
 #End BPR Configs
+
+    #sudo add-apt-repository ppa:skunk/pepper-flash
+    #sudo apt-get install pepflashplugin-installer\
+    #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
+    #   |sudo tee -a /etc/chromium-browser/default
 
     #Wine stuff in case the user needs to run a Windows executable
     #udo apt-get install wine winetricks
