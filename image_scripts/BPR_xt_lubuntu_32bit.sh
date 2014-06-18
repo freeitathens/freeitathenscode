@@ -76,6 +76,37 @@ Run_apt_update() {
 
 }
 
+Firefox_stuff() {
+
+    local RC=0
+
+    if [ "${Refresh_apt}." == 'Y.' ]
+    then
+        sudo apt-get update &>>${Messages_O} &
+        Time_to_kill $! "Running apt-get update. Details in $Messages_O"
+        Refresh_apt='N'
+    fi
+
+    # Options for Firefox bookmarks and settings
+    if [ $check_install_RC -eq 0 ]
+    then
+        Answer='N'
+        Pause_n_Answer 'Y|N' 'INFO,Install default bookmarks and settings for Firefox?'
+        if [ "${Answer}." == 'Y.' ]
+        then
+    		wget -O syspref.js https://gist.github.com/bpr97050/eb37e9850e2d951bc676/raw
+    		mv syspref.js /etc/firefox/syspref.js
+    		wget -O places.sqlite http://a.pomf.se/kyiput.sqlite
+    		timeout -k 1m 5s firefox
+    		rm /$HOME/.mozilla/firefox/*.default/places.sqlite
+    		/$HOME/.mozilla/firefox/*.default/places.sqlite-*
+    		mv places.sqlite /$HOME/.mozilla/firefox/*.default/places.sqlite
+        fi
+    fi
+
+    return $RC
+}
+
 Chromium_stuff() {
 
     local RC=0
@@ -244,8 +275,10 @@ do
 done
 #sudo sed -i 's/^background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
 
-Pauze "BPR Chromium_stuff (partly cond, Refresh apt cache? $Refresh_apt . Download from github? $Refresh_git )"
-Chromium_stuff || echo 'Chromium Config?'
+Pauze "Firefox custom config"
+Firefox_stuff || echo 'Firefox Config?'
+#Pauze "Chromium_stuff (partly cond, Refresh apt cache? $Refresh_apt . Download from github? $Refresh_git )"
+#Chromium_stuff || echo 'Chromium Config?'
 
 #Auto security upgrades
 sudo dpkg-reconfigure -plow unattended-upgrades
