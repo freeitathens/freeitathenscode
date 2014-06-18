@@ -1,9 +1,11 @@
 #!/bin/bash
 declare -r HOLDIFS=$IFS
-Runner_shell_hold=$-
+declare -x Runner_shell_hold=$-
 declare -rx codebase="${HOME}/freeitathenscode"
 declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
+declare -x aptcache_needs_update='Y'
+declare -x refresh_git='Y'
 source ${codebase}/image_scripts/Common_functions || exit 12
 
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
@@ -14,7 +16,6 @@ fi
 
 fallback_distro=''
 FreeIT_image='FreeIT.png'
-refresh_from_apt='Y'
 refresh_update='N'
 refresh_git='Y'
 
@@ -31,7 +32,7 @@ do
             FreeIT_image=$OPTARG
             ;;
         R)
-            refresh_from_apt='N'
+            aptcache_needs_update='N'
             ;;
         u)
             refresh_update='Y'
@@ -80,13 +81,14 @@ Run_Cap_Out swapon --all --verbose
 Pauze 'Confirm no medibuntu in apt sources'
 egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
 
-#Pauze "apt update AND install subversion ( COND: $refresh_from_apt )"
-if [ $refresh_from_apt == 'Y' ]
+Pauze "apt update ( COND: $aptcache_needs_update )"
+if [ $aptcache_needs_update == 'Y' ]
 then
     apt-get update &>>${Messages_O} &
     Time_to_kill $! "Running apt-get update. Details in $Messages_O"
-    apt-get install subversion || exit 6
 fi
+Pauze "install subversion"
+apt-get install subversion || exit 6
 
 Pauze "Check that server address is correct and is contactable ( COND: $refresh_update )"
 if [ "${refresh_update}." == 'Y.' ]
@@ -105,13 +107,9 @@ else
 fi
 cd
 
-Pauze "Install necessary packages (COND: $refresh_from_apt )"
-if [ $refresh_from_apt == 'Y' ]
-then
-    PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].*'
-    apt-get install $PKGS
-fi
-apt-get install driver-manager
+PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].* mintdrivers'
+Pauze 'Install necessary packages: ' $PKGS
+apt-get install $PKGS
 
 set -u
 
@@ -194,7 +192,8 @@ case $DISTRO in
     lubuntu|Ubuntu)
         Pauze 'Run BPR Code'
         [[ -f ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh ]] &&\
-            ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh $refresh_from_apt $refresh_git $Messages_O
+            ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh
+        $aptcache_needs_update $refresh_git $Messages_O
         Pauze "Run BPR: Last return code: $?"
         ;;
     *)
@@ -202,8 +201,8 @@ case $DISTRO in
         ;;
 esac
 
-Pauze "apt dist-upgrade ( COND: $refresh_from_apt )"
-if [ $refresh_from_apt == 'Y' ]
+Pauze "apt dist-upgrade ( COND: $aptcache_needs_update )"
+if [ $aptcache_needs_update == 'Y' ]
 then
     #apt-get update
     apt-get dist-upgrade

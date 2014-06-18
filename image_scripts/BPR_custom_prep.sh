@@ -1,11 +1,9 @@
 #!/bin/bash
-[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$3
-[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$-
+#[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$3
+#[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$-
 
 #source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
-source /usr/local/bin/Common_functions || exit 12
 
-declare -x Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX") 2>/dev/null
 declare -r HOLDIFS=$IFS 2>/dev/null
 DOWNLOADS=${HOME}/Downloads
 [[ -d ${DOWNLOADS} ]] || mkdir ${HOME}/Downloads
@@ -25,18 +23,16 @@ Configs_from_github() {
     cd $DOWNLOADS || RC=$?
     [[ $RC -eq 0 ]]\
         && ( rm -rf ${Git_name}/ 2>/dev/null\
-             && git clone https://github.com/bpr97050/${Git_name}.git || RC=$? )
+        && git clone https://github.com/bpr97050/${Git_name}.git || RC=$? )
 
     [[ $RC -eq 0 ]]\
         && ( sudo rsync -aRv --exclude '.git' --delete-excluded\
-            ${Git_name}/\
-            /etc/skel || RC=$? )
+        ${Git_name}/\
+        /etc/skel || RC=$? )
 
-    cd
     Reset_shopts $Shopts_keep_settings
     return $RC
 }
-#declare -r shopts_original_list=$(shopt -p |tr '\n' ';')
 
 Activate_shopts() {
     local shopts_seton_list=$1
@@ -70,36 +66,33 @@ Run_apt_update() {
     Pauze 'apt-get update'
     sudo apt-get update &>>${Messages_O} &
     Time_to_kill $! "Running apt-get update. Details in $Messages_O"
-    Refresh_apt='N'
+    aptcache_needs_update='N'
 
 }
 
 Firefox_stuff() {
 
+    [[ -d /etc/firefox ]] || return 4
+
     local RC=0
 
-    if [ "${Refresh_apt}." == 'Y.' ]
+    if [ "${aptcache_needs_update}." == 'Y.' ]
     then
-        sudo apt-get update &>>${Messages_O} &
-        Time_to_kill $! "Running apt-get update. Details in $Messages_O"
-        Refresh_apt='N'
+        Run_apt_update
     fi
 
     # Options for Firefox bookmarks and settings
-    if [ $check_install_RC -eq 0 ]
+    Answer='N'
+    Pause_n_Answer 'Y|N' 'INFO,Install default bookmarks and settings for Firefox?'
+    if [ "${Answer}." == 'Y.' ]
     then
-        Answer='N'
-        Pause_n_Answer 'Y|N' 'INFO,Install default bookmarks and settings for Firefox?'
-        if [ "${Answer}." == 'Y.' ]
-        then
-            wget -O syspref.js https://gist.github.com/bpr97050/eb37e9850e2d951bc676/raw
-            mv syspref.js /etc/firefox/syspref.js
-            wget -O places.sqlite http://a.pomf.se/kyiput.sqlite
-            timeout -k 1m 5s firefox
-            rm /$HOME/.mozilla/firefox/*.default/places.sqlite
-            /$HOME/.mozilla/firefox/*.default/places.sqlite-*
-            mv places.sqlite /$HOME/.mozilla/firefox/*.default/places.sqlite
-        fi
+        wget -O syspref.js https://gist.github.com/bpr97050/eb37e9850e2d951bc676/raw
+        mv syspref.js /etc/firefox/syspref.js
+        wget -O places.sqlite http://a.pomf.se/kyiput.sqlite
+        timeout -k 1m 5s firefox
+        rm /$HOME/.mozilla/firefox/*.default/places.sqlite
+        /$HOME/.mozilla/firefox/*.default/places.sqlite-*
+        mv places.sqlite /$HOME/.mozilla/firefox/*.default/places.sqlite
     fi
 
     return $RC
@@ -111,7 +104,7 @@ Chromium_stuff() {
 
     if [ "${aptcache_needs_update}." == 'Y.' ]
     then
-    Run_apt_update
+        Run_apt_update
     fi
     sudo apt-get install chromium-browser
 
@@ -126,55 +119,55 @@ Chromium_stuff() {
     Pause_n_Answer 'Y|N' 'Git-Load Chromium Master Preferences?'
     if [ $Answer == 'Y' ]
     then
-    # Download master_preferences config file for chromium
-    wget -O master_preferences\
-        https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
-        && sudo mv master_preferences /etc/chromium-browser/
+        # Download master_preferences config file for chromium
+        wget -O master_preferences\
+            https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
+            && sudo mv master_preferences /etc/chromium-browser/
     fi
 
     Answer='N'
     Pause_n_Answer 'Y|N' 'Set chrome defaults?'
     if [ $Answer == 'Y' ]
     then
-    # Ensure certain Chromium Flags settings are in place.
-    sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
-        --disable-new-tab-first-run --no-first-run\
-        --disable-google-now-integration"/g' /etc/chromium-browser/default
+        # Ensure certain Chromium Flags settings are in place.
+        sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
+            --disable-new-tab-first-run --no-first-run\
+            --disable-google-now-integration"/g' /etc/chromium-browser/default
     fi
 
     Answer='N'
     Pause_n_Answer 'Y|N' 'Git-Load default_bookmarks.html?'
     if [ $Answer == 'Y' ]
     then
-    # Download default bookmarks for Chromium
-    wget -O default_bookmarks.html\
-        https://gist.github.com/bpr97050/b6b5679f94d344879328/raw\
-        && sudo mv default_bookmarks.html /etc/chromium-browser/
+        # Download default bookmarks for Chromium
+        wget -O default_bookmarks.html\
+            https://gist.github.com/bpr97050/b6b5679f94d344879328/raw\
+            && sudo mv default_bookmarks.html /etc/chromium-browser/
     fi
 
     Answer='N'
     Pause_n_Answer 'Y|N' 'Git-Load one-time Proprietary setup script?'
     if [ $Answer == 'Y' ]
     then
-    check_install_RC=1
-    #Pepperflash/Multimedia codecs installer
-    wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw\
-        && sudo mv check /usr/local/bin/\
-        && sudo chmod +x /usr/local/bin/check\
-        && check_install_RC=0
-    if [ $check_install_RC -eq 0 ]
-    then
-        Answer='N'
-        Pause_n_Answer 'Y|N' 'WARN,Setup firstboot option to offer non-free Multimedia?'
-        if [ "${Answer}." == 'Y.' ]
+        check_install_RC=1
+        #Pepperflash/Multimedia codecs installer
+        wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw\
+            && sudo mv check /usr/local/bin/\
+            && sudo chmod +x /usr/local/bin/check\
+            && check_install_RC=0
+        if [ $check_install_RC -eq 0 ]
         then
-        Mess='non-free Multimedia install '
-        tackon='OK'
-        #sudo /usr/local/bin/check || tackon='NOT OK'
-        #Pauze "$Mess$tackon"
-        Pauze 'Make icon on desktop that runs /usr/bin/check'
+            Answer='N'
+            Pause_n_Answer 'Y|N' 'WARN,Setup firstboot option to offer non-free Multimedia?'
+            if [ "${Answer}." == 'Y.' ]
+            then
+                Mess='non-free Multimedia install '
+                tackon='OK'
+                #sudo /usr/local/bin/check || tackon='NOT OK'
+                #Pauze "$Mess$tackon"
+                Pauze 'Make icon on desktop that runs /usr/bin/check'
+            fi
         fi
-    fi
     fi
 
     return $RC
@@ -255,7 +248,7 @@ Apt_stuff || Pauze 'Some apt-get action did not complete (perhaps postponing ins
 
 if [ $Refresh_git == 'Y' ]
 then
-    Pauze 'BPR Configs_from_github (partly cond)'
+    Pauze 'BPR Configs_from_github'
     Configs_from_github || echo 'Configs_from_github?'
 fi
 
@@ -267,7 +260,7 @@ do
     if [ "${Answer}." == 'Y.' ]
     then 
         sudo sed -i 's/^background=/#background=/g' $greetings
-        echo "background=#CC00FF" | sudo tee -a $greetings
+        echo "background=#88ff00" | sudo tee -a $greetings
     fi
 done
 #sudo sed -i 's/^background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
@@ -288,15 +281,15 @@ Pauze "INFO,Finished with BPR custom code. last RC: $?"
 #https://help.ubuntu.com/community/PreciseUpgrades
 #End BPR Configs
 
-    #sudo add-apt-repository ppa:skunk/pepper-flash
-    #sudo apt-get install pepflashplugin-installer\
+#sudo add-apt-repository ppa:skunk/pepper-flash
+#sudo apt-get install pepflashplugin-installer\
     #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
     #   |sudo tee -a /etc/chromium-browser/default
 
-    #Wine stuff in case the user needs to run a Windows executable
-    #udo apt-get install wine winetricks
-    #Upgrade to Trusty
-    #sudo do-release-upgrade
-    # NOT! Messes with keyboard! Remove Ibus
-    #sudo apt-get purge --auto-remove ibus
+#Wine stuff in case the user needs to run a Windows executable
+#udo apt-get install wine winetricks
+#Upgrade to Trusty
+#sudo do-release-upgrade
+# NOT! Messes with keyboard! Remove Ibus
+#sudo apt-get purge --auto-remove ibus
 
