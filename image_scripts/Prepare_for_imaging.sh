@@ -17,7 +17,6 @@ fi
 fallback_distro=''
 FreeIT_image='FreeIT.png'
 refresh_update='N'
-refresh_git='Y'
 
 while getopts 'jd:i:RuG' OPT
 do
@@ -191,9 +190,8 @@ fi
 case $DISTRO in
     lubuntu|Ubuntu)
         Pauze 'Run BPR Code'
-        [[ -f ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh ]] &&\
-            ${codebase}/image_scripts/BPR_xt_lubuntu_32bit.sh
-        $aptcache_needs_update $refresh_git $Messages_O
+        [[ -f ${codebase}/image_scripts/BPR_custom_prep.sh ]] &&\
+            ${codebase}/image_scripts/BPR_custom_prep.sh
         Pauze "Run BPR: Last return code: $?"
         ;;
     *)
