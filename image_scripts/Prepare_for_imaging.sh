@@ -1,23 +1,23 @@
 #!/bin/bash
-declare -r HOLDIFS=$IFS
-declare -x Runner_shell_hold=$-
 declare -rx codebase="${HOME}/freeitathenscode"
-declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
-declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
-declare -x aptcache_needs_update='Y'
-declare -x refresh_git='Y'
-FreeIT_image='FreeIT.png'
-refresh_update='N'
-fallback_distro=''
 source ${codebase}/image_scripts/Common_functions || exit 12
-
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
     Pauze 'ERROR,Please rerun with sudo or as root'
     exit 4
 fi
 
-while getopts 'jd:i:RuG' OPT
+declare -r HOLDIFS=$IFS
+declare -x Runner_shell_hold=$-
+declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
+declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
+declare -x aptcache_needs_update='Y'
+declare -x refresh_git='Y'
+fallback_distro=''
+FreeIT_image='FreeIT.png'
+refresh_update='N'
+
+while getopts 'jd:i:RuGh' OPT
 do
     case $OPT in
         j)
@@ -58,7 +58,8 @@ fi
 address_len=0
 Get_Address_Len
 
-Get_DISTRO $fallback_distro;CDC_RC=$?
+DISTRO=$fallback_distro
+Get_DISTRO $DISTRO;CDC_RC=$?
 Confirm_DISTRO_CPU $CDC_RC;CDC_RC=$?
 if [ $CDC_RC -gt 0 ]
 then
@@ -187,7 +188,7 @@ else
 fi
 
 case $DISTRO in
-    lubuntu|Ubuntu)
+    lubuntu|Ubuntu|mint)
         Pauze 'Run BPR Code'
         [[ -f ${codebase}/image_scripts/BPR_custom_prep.sh ]] &&\
             ${codebase}/image_scripts/BPR_custom_prep.sh
@@ -201,9 +202,9 @@ esac
 Pauze "apt dist-upgrade ( COND: $aptcache_needs_update )"
 if [ $aptcache_needs_update == 'Y' ]
 then
-    #apt-get update
-    apt-get dist-upgrade
+    apt-get update
 fi
+apt-get dist-upgrade
 
 Pauze 'Connecting Quality control stuff'
 local_scripts_DIR="${HOME}/bin"
@@ -269,3 +270,4 @@ set +x
 #    return $return_value
 #}
 
+apt-get purge unrar gstreamer0.10-plugins-bad-multiverse libfaac0 

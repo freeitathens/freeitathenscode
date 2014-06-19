@@ -2,7 +2,8 @@
 #[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$3
 #[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$-
 
-#source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
+source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
+set -u
 
 declare -r HOLDIFS=$IFS 2>/dev/null
 DOWNLOADS=${HOME}/Downloads
@@ -246,29 +247,39 @@ fi
 Pauze 'BPR Apt stuff'
 Apt_stuff || Pauze 'Some apt-get action did not complete (perhaps postponing install(s)?.)'
 
+Answer='N'
+Pause_n_Answer 'Y|N(default='$Answer')' 'WARN,Firefox custom config'
+if [ "${Answer}." == 'Y.' ]
+then 
+    Firefox_stuff || echo 'Firefox Config?'
+fi
+#Pauze "Chromium_stuff (partly cond, Download from github? $Refresh_git )"
+#Chromium_stuff || echo 'Chromium Config?'
+
 if [ $Refresh_git == 'Y' ]
 then
     Pauze 'BPR Configs_from_github'
-    Configs_from_github || echo 'Configs_from_github?'
+    #Configs_from_github || echo 'Configs_from_github?'
 fi
 
 #Set LightDM wallpaper
-for greetings in $(find /etc/lightdm/ -mindepth 1 -maxdepth 1 -type f -name 'lightdm-gtk-greeter*')
-do
-    Answer='N'
-    Pause_n_Answer 'Y|N' 'INFO,reset background in '$greetings'?'
-    if [ "${Answer}." == 'Y.' ]
-    then 
-        sudo sed -i 's/^background=/#background=/g' $greetings
-        echo "background=#88ff00" | sudo tee -a $greetings
-    fi
-done
+if [ -d /etc/lightdm/ ]
+then
+    for greetings in $(find /etc/lightdm/ -mindepth 1 -maxdepth 1 -type f -name 'lightdm-gtk-greeter*')
+    do
+        Answer='N'
+        Pause_n_Answer 'Y|N' 'INFO,reset background in '$greetings'?'
+        if [ "${Answer}." == 'Y.' ]
+        then 
+            sudo sed -i 's/^background=/#background=/g' $greetings
+            echo "background=#88ff00" | sudo tee -a $greetings
+        fi
+    done
+elif [ -d /etc/mdm/ ]
+then
+    Pauze '/etc/mdm/conf: Set BackgroundColor in [ greeter ] stanza to #00e5ee'
+fi
 #sudo sed -i 's/^background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
-
-Pauze "Firefox custom config"
-Firefox_stuff || echo 'Firefox Config?'
-#Pauze "Chromium_stuff (partly cond, Download from github? $Refresh_git )"
-#Chromium_stuff || echo 'Chromium Config?'
 
 #Auto security upgrades
 sudo dpkg-reconfigure -plow unattended-upgrades

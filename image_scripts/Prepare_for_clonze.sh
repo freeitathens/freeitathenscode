@@ -19,7 +19,7 @@ do
     case $OPT in
         j)
             Runner_shell_hold=${Runner_shell_hold}'i'
-	    ;;
+	        ;;
         d)
             fallback_distro=$OPTARG
             ;;
@@ -29,7 +29,7 @@ do
         h)
             Pauze $(basename $0) 'valid options are -d Distro [-R|-h|-j]'
             exit 0
-        ;;
+            ;;
         *)
             Pauze "Unknown option: $OPT . Try -d distro [-R]"
             exit 8
@@ -41,14 +41,10 @@ declare -rx Runner_shell_as=${Runner_shell_hold}
 address_len=0
 Get_Address_Len
 
-Get_DISTRO $fallback_distro;CDC_RC=$?
+DISTRO=$fallback_distro
+Get_DISTRO $DISTRO;CDC_RC=$?
 Confirm_DISTRO_CPU $CDC_RC;CDC_RC=$?
-if [ $CDC_RC -gt 0 ]
-then
-    prettyprint '5,31,47,M,n,0' 'Exiting'
-    Pauze "See you back soon!"
-    exit $CDC_RC
-fi
+[[ $CDC_RC -gt 0 ]] && prettyprint '5,31,47,M,n,0' $DISTRO' Wha?'
 
 Pauze 'Checking/Confirming removal of UUID reference in fstab'
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
