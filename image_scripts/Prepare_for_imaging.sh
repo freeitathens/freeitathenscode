@@ -6,6 +6,9 @@ declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
 declare -x aptcache_needs_update='Y'
 declare -x refresh_git='Y'
+FreeIT_image='FreeIT.png'
+refresh_update='N'
+fallback_distro=''
 source ${codebase}/image_scripts/Common_functions || exit 12
 
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
@@ -13,10 +16,6 @@ then
     Pauze 'ERROR,Please rerun with sudo or as root'
     exit 4
 fi
-
-fallback_distro=''
-FreeIT_image='FreeIT.png'
-refresh_update='N'
 
 while getopts 'jd:i:RuG' OPT
 do

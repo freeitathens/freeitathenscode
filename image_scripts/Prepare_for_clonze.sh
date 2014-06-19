@@ -1,19 +1,19 @@
 #!/bin/bash +x
 declare -r HOLDIFS=$IFS
-Runner_shell_hold=$-
+declare -x Runner_shell_hold=$-
 declare -rx codebase="${HOME}/freeitathenscode"
 declare -rx Messages_O=$(mktemp -t "Prep2Clonze_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep2Clonze_err.XXXXX")
+declare -x aptcache_needs_update='Y'
+fallback_distro=''
 source ${codebase}/image_scripts/Common_functions || exit 12
 
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
-    echo 'Hello User: Please rerun with sudo or root'
+    Pauze 'ERROR,Please rerun with sudo or as root'
     exit 4
 fi
 
-fallback_distro=''
-refresh_from_apt='Y'
 while getopts 'jd:Rh' OPT
 do
     case $OPT in
@@ -22,17 +22,18 @@ do
 	    ;;
         d)
             fallback_distro=$OPTARG
-        ;;
+            ;;
         R)
-            refresh_from_apt='N'
-        ;;
+            aptcache_needs_update='N'
+            ;;
         h)
             Pauze $(basename $0) 'valid options are -d Distro [-R|-h|-j]'
             exit 0
         ;;
         *)
             Pauze "Unknown option: $OPT . Try -d distro [-R]"
-        ;;
+            exit 8
+            ;;
     esac
 done
 declare -rx Runner_shell_as=${Runner_shell_hold}
@@ -41,7 +42,7 @@ address_len=0
 Get_Address_Len
 
 Get_DISTRO $fallback_distro;CDC_RC=$?
-Confirm_DISTRO_CPU $CDC_RC || CDC_RC=$?
+Confirm_DISTRO_CPU $CDC_RC;CDC_RC=$?
 if [ $CDC_RC -gt 0 ]
 then
     prettyprint '5,31,47,M,n,0' 'Exiting'
@@ -54,22 +55,22 @@ egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
     prettyprint 'n,1,31,47,M,0,n'\
     'fstab cannot go on image with local UUID referencer'
 
-Pauze 'Launching apt upgrades (?COND='$refresh_from_apt')'
-if [ "${refresh_from_apt}." == 'Y.' ]
+Pauze 'Launching apt update (?COND='$aptcache_needs_update')'
+if [ "${aptcache_needs_update}." == 'Y.' ]
 then
     apt-get update
-    apt-get dist-upgrade
-    apt-get autoremove
-    apt-get clean
 fi
+apt-get dist-upgrade
+apt-get autoremove
+apt-get clean
 
 Pauze 'Cleaning up root files that oem used...'
 find /root/.pulse /root/.dbus/session-bus -ls -delete
 find /root/.pulse /root/.dbus/session-bus -ls
 find /root/ -name ".pulse*" -ls -delete
 find /root/ -name ".pulse*" -ls
-find /home/oem/.ssh -not -type d -ls -delete
-find /home/oem/.ssh -not -type d -ls
+find ${HOME}/.ssh -not -type d -ls -delete
+find ${HOME}/.ssh -not -type d -ls
 
 Pauze 'Clearing cups settings (if any)'
 for CUPSDEF in /etc/cups/{classes,printers,subscriptions}.conf; do if [ -f ${CUPSDEF}.O ];then sudo cp -v ${CUPSDEF}.O $CUPSDEF;bn=$(basename $CUPSDEF);sudo find /etc/cups/ -name "${bn}*" -exec sudo md5sum {} \; -exec sudo ls -l {} \; ;else :;fi;done
