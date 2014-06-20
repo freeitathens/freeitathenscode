@@ -4,7 +4,8 @@
 
 source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
 set -u
-Pauze 'In BPRcode: aptcache_needs_update='${aptcache_needs_update}
+#Pauze 'In BPRcode: aptcache_needs_update='${aptcache_needs_update}
+Pauze 'In BPRcode: refresh_git='${refresh_git}
 
 declare -r HOLDIFS=$IFS 2>/dev/null
 DOWNLOADS=${HOME}/Downloads
@@ -24,15 +25,15 @@ Run_apt_update() {
 
 Firefox_stuff() {
 
-    [[ -d /etc/firefox ]] || return 4
-
     local RC=0
 
     if [ "${aptcache_needs_update}." == 'Y.' ]
     then
         Run_apt_update
     fi
+    apt-get install firefox || return 16
 
+    cd $DOWNLOADS
     # Options for Firefox bookmarks and settings
     Answer='N'
     Pause_n_Answer 'Y|N' 'INFO,Install default bookmarks and settings for Firefox?'
@@ -42,11 +43,12 @@ Firefox_stuff() {
         mv syspref.js /etc/firefox/syspref.js
         wget -O places.sqlite http://a.pomf.se/kyiput.sqlite
         timeout -k 1m 5s firefox
-        rm /$HOME/.mozilla/firefox/*.default/places.sqlite
-        /$HOME/.mozilla/firefox/*.default/places.sqlite-*
-        mv places.sqlite /$HOME/.mozilla/firefox/*.default/places.sqlite
+        rm -iv ${HOME}/.mozilla/firefox/*.default/places.sqlite{,-*} 
+               #{HOME}/.mozilla/firefox/*.default/places.sqlite-*
+        mv places.sqlite ${HOME}/.mozilla/firefox/*.default/places.sqlite
     fi
 
+    cd -
     return $RC
 }
 
@@ -122,6 +124,7 @@ Chromium_stuff() {
         fi
     fi
 
+    cd -
     return $RC
 }
 
@@ -255,10 +258,9 @@ if [ "${Answer}." == 'Y.' ]
 then 
     Firefox_stuff || echo 'Firefox Config?'
 fi
-#Pauze "Chromium_stuff (partly cond, Download from github? $Refresh_git )"
 #Chromium_stuff || echo 'Chromium Config?'
 
-if [ $Refresh_git == 'Y' ]
+if [ $refresh_git == 'Y' ]
 then
     Pauze 'BPR Configs_from_github'
     #Configs_from_github || echo 'Configs_from_github?'
