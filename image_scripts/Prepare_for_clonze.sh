@@ -1,18 +1,18 @@
 #!/bin/bash +x
-declare -r HOLDIFS=$IFS
-declare -x Runner_shell_hold=$-
 declare -rx codebase="${HOME}/freeitathenscode"
-declare -rx Messages_O=$(mktemp -t "Prep2Clonze_log.XXXXX")
-declare -rx Errors_O=$(mktemp -t "Prep2Clonze_err.XXXXX")
-declare -x aptcache_needs_update='Y'
-fallback_distro=''
 source ${codebase}/image_scripts/Common_functions || exit 12
-
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
     Pauze 'ERROR,Please rerun with sudo or as root'
     exit 4
 fi
+
+declare -r HOLDIFS=$IFS
+declare -x Runner_shell_hold=$-
+declare -rx Messages_O=$(mktemp -t "Prep2Clonze_log.XXXXX")
+declare -rx Errors_O=$(mktemp -t "Prep2Clonze_err.XXXXX")
+declare -x aptcache_needs_update='Y'
+fallback_distro=''
 
 while getopts 'jd:Rh' OPT
 do
