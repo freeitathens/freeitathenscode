@@ -286,7 +286,10 @@ fi
 #sudo sed -i 's/^background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
 
 #Auto security upgrades
+Pauze 'Offer dpkg auto non-harmful upgrades'
 sudo dpkg-reconfigure -plow unattended-upgrades
+
+Pauze 'apt-get purge autoremove and autoclean'
 sudo apt-get --purge autoremove
 sudo apt-get autoclean
 
