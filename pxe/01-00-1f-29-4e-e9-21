@@ -2,7 +2,7 @@ default vesamenu.c32
 #default menu.c32
 prompt 0
 MENU MARGIN 2
-MENU BACKGROUND clonezilla/syslinux/syslinux-100.png
+MENU BACKGROUND clonezilla-i486/syslinux/syslinux-100.png
 MENU COLOR UNSEL 1;32;40 #c0000090 #00000000
 MENU COLOR TIMEOUT_MSG 1;33;47 #c0000090 #00000000
 MENU COLOR TIMEOUT 1;34;47 #c0000090 #00000000
@@ -156,13 +156,13 @@ LABEL memtest
 
 label clonezilla_64
   menu label Clonezilla live (64 bit)
-  kernel clonezilla/live/vmlinuz
-  append initrd=clonezilla/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla/live/filesystem.squashfs
+  kernel clonezilla-amd64/live/vmlinuz
+  append initrd=clonezilla-amd64/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs
 
 label clonezilla_32
   menu label Clonezilla live (32 bit)
-  kernel clonezilla-live-2.1.2-43-i486/live/vmlinuz
-  append initrd=clonezilla-live-2.1.2-43-i486/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-live-2.1.2-43-i486/live/filesystem.squashfs
+  kernel clonezilla-i486/live/vmlinuz
+  append initrd=clonezilla-i486/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 MENU BEGIN Utilities - Testing  
 
@@ -200,13 +200,6 @@ label DBAN_2
 
 MENU END
 
-#   append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr                -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
-#   OLD ocs_prerun="/sbin/dhclient -v" 
-#label dban
-# menu label (DEPRECATED, OLD DBAN) Wipe hard drive
-#  kernel memdisk
-#  append initrd=dban_OLD/dban.img floppy
-
 # *buntu debugging tips
 #
 # append break=mount debug=y
@@ -221,11 +214,6 @@ MENU END
 # for alternate installer
 # DEBCONF_DEBUG=5
 # ocs_lang and ocs_live_keymap are deprecated
-
-# Previous default boot phased out on 6 Jun 2011 in favor of parted based partition resizing
-#  MENU label Install Ubuntu With Clonezilla
-#  kernel clonezilla-live-1.2.6-40/vmlinuz1
-#  append initrd=clonezilla-live-1.2.6-40/initrd1.img boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun1="sudo mount -t nfs 192.168.1.9:/home/partimag /home/partimag" ocs_live_run="/opt/drbl/sbin/ocs-sr -g auto -e1 auto -e2 -c -r -j2 -k1 -r -p true restoredisk latest-ubuntu sda" ocs_live_extra_param="" ocs_live_keymap="NONE" ocs_live_batch="yes" ocs_lang="en_US.UTF-8" vga=788 nosplash fetch=tftp://192.168.1.9/clonezilla-live-1.2.6-40/filesystem.squashfs
 
 # does not work, says invalid ar_source.  possibly problem with sysrcd.  also sysrcd takes a long time to get to this point, is there any faster option?
 #label sysrcd-wipe
@@ -268,13 +256,6 @@ MENU END
 # for alternate installer
 # DEBCONF_DEBUG=5
 # ocs_lang and ocs_live_keymap are deprecated
-
-# Previous default boot phased out on 6 Jun 2011 in favor of parted based partition resizing
-#  MENU label Install Ubuntu With Clonezilla
-#  kernel clonezilla-live-1.2.6-40/vmlinuz1
-#  append initrd=clonezilla-live-1.2.6-40/initrd1.img boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun1="sudo mount -t nfs 192.168.1.9:/home/partimag /home/partimag" ocs_live_run="/opt/drbl/sbin/ocs-sr -g auto -e1 auto -e2 -c -r -j2 -k1 -r -p true restoredisk latest-ubuntu sda" ocs_live_extra_param="" ocs_live_keymap="NONE" ocs_live_batch="yes" ocs_lang="en_US.UTF-8" vga=788 nosplash fetch=tftp://192.168.1.9/clonezilla-live-1.2.6-40/filesystem.squashfs
-# -p reboot -l en_US.UTF-8
-#systemrescuecd/isolinux/rescue64
 #
 #label install-1004
 #  menu label Auto install Ubuntu 10.04.1

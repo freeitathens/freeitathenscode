@@ -1,7 +1,7 @@
 DEFAULT vesamenu.c32
 PROMPT 0
 MENU MARGIN 2
-MENU BACKGROUND clonezilla/syslinux/splash.png
+MENU BACKGROUND clonezilla-i486/syslinux/splash.png
 MENU COLOR UNSEL        1;32;40 #c0000090 #00000000
 MENU COLOR TIMEOUT_MSG  7;33;47 #c0000090 #00000000
 MENU COLOR TIMEOUT      7;34;47 #c0000090 #00000000
@@ -17,7 +17,7 @@ MENU TABMSG Press ENTER to boot or TAB to edit a menu entry
 MENU TABMSGROW  17
 MENU COLOR TABMSG       * #ffffffff #00000000 *
 
-MENU TITLE Free I.T. Disc Wiping Station
+MENU TITLE Free I.T. Official DBAN Station
 #menu color title        * #d8d8d8ff *
 #menu color border       * #d8d8d8ff #00000000 none
 #menu color sel          * #00000000 #d8d8d8ff *
