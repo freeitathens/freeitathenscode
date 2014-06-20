@@ -199,13 +199,18 @@ case $DISTRO in
         ;;
 esac
 
-Pauze "apt dist-upgrade ( COND: $aptcache_needs_update )"
+Pauze 'apt-get update ( COND: '$aptcache_needs_update ')'
 if [ $aptcache_needs_update == 'Y' ]
 then
     apt-get update
     export aptcache_needs_update='N'
 fi
+Pauze 'apt dist-upgrade'
 apt-get dist-upgrade
+
+Pauze 'Lauching Virtual Greybeard'
+vrms
+Pauze '/\Please Purge Non-Free Stuff IF NEEDED/\'
 
 Pauze 'Connecting Quality control stuff'
 local_scripts_DIR="${HOME}/bin"
@@ -270,4 +275,3 @@ set +x
 #    return $return_value
 #}
 
-apt-get purge unrar gstreamer0.10-plugins-bad-multiverse libfaac0 

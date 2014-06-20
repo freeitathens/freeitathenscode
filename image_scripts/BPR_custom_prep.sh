@@ -4,6 +4,7 @@
 
 source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
 set -u
+Pauze 'In BPRcode: aptcache_needs_update='${aptcache_needs_update}
 
 declare -r HOLDIFS=$IFS 2>/dev/null
 DOWNLOADS=${HOME}/Downloads
@@ -11,56 +12,6 @@ DOWNLOADS=${HOME}/Downloads
 [[ -d ${DOWNLOADS} ]] || exit 13
 
 #Start BPR Configs
-Configs_from_github() {
-    local RC=0
-
-    Shopts_keep_settings=$(mktemp -t "SHOPTS_KEEP.XXXXX" || echo '/tmp/Mktmp_error')
-    shopt -p >$Shopts_keep_settings
-    Pauze 'Reset shopts by sourcing '$Shopts_keep_settings
-    declare -r shopts_seton_list='dotglob nullglob'
-    Activate_shopts $shopts_seton_list
-
-    Git_name=FRITAdot
-    cd $DOWNLOADS || RC=$?
-    [[ $RC -eq 0 ]]\
-        && ( rm -rf ${Git_name}/ 2>/dev/null\
-        && git clone https://github.com/bpr97050/${Git_name}.git || RC=$? )
-
-    [[ $RC -eq 0 ]]\
-        && ( sudo rsync -aRv --exclude '.git' --delete-excluded\
-        ${Git_name}/\
-        /etc/skel || RC=$? )
-
-    Reset_shopts $Shopts_keep_settings
-    return $RC
-}
-
-Activate_shopts() {
-    local shopts_seton_list=$1
-    [[ -z "$shopts_seton_list" ]] && return 4
-    local RC=0
-
-    IFS=' '
-    for name_shopt in $shopts_seton_list
-    do
-        shopt -s $name_shopt &>/dev/null || ((RC+=$?))
-    done
-    IFS=$HOLDIFS
-
-    return $RC
-}
-
-Reset_shopts() {
-    local Shopts_file=$1
-    [[ -z "$Shopts_file" ]] && return 5
-    local RC=0
-
-    source $Shopts_file || RC=$?
-    # Send a list of active short options to std err
-    shopt |grep 'on' >&2
-
-    return $RC
-}
 
 Run_apt_update() {
 
@@ -235,6 +186,57 @@ Apt_action_replace() {
     then
         Apt_install $replacements ||RC=$?
     fi
+
+    return $RC
+}
+
+Configs_from_github() {
+    local RC=0
+
+    Shopts_keep_settings=$(mktemp -t "SHOPTS_KEEP.XXXXX" || echo '/tmp/Mktmp_error')
+    shopt -p >$Shopts_keep_settings
+    Pauze 'Reset shopts by sourcing '$Shopts_keep_settings
+    declare -r shopts_seton_list='dotglob nullglob'
+    Activate_shopts $shopts_seton_list
+
+    Git_name=FRITAdot
+    cd $DOWNLOADS || RC=$?
+    [[ $RC -eq 0 ]]\
+        && ( rm -rf ${Git_name}/ 2>/dev/null\
+        && git clone https://github.com/bpr97050/${Git_name}.git || RC=$? )
+
+    [[ $RC -eq 0 ]]\
+        && ( sudo rsync -aRv --exclude '.git' --delete-excluded\
+        ${Git_name}/\
+        /etc/skel || RC=$? )
+
+    Reset_shopts $Shopts_keep_settings
+    return $RC
+}
+
+Activate_shopts() {
+    local shopts_seton_list=$1
+    [[ -z "$shopts_seton_list" ]] && return 4
+    local RC=0
+
+    IFS=' '
+    for name_shopt in $shopts_seton_list
+    do
+        shopt -s $name_shopt &>/dev/null || ((RC+=$?))
+    done
+    IFS=$HOLDIFS
+
+    return $RC
+}
+
+Reset_shopts() {
+    local Shopts_file=$1
+    [[ -z "$Shopts_file" ]] && return 5
+    local RC=0
+
+    source $Shopts_file || RC=$?
+    # Send a list of active short options to std err
+    shopt |grep 'on' >&2
 
     return $RC
 }
