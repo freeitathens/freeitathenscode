@@ -8,7 +8,6 @@ then
 fi
 
 declare -r HOLDIFS=$IFS
-declare -x Runner_shell_hold=$-
 declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
 declare -x aptcache_needs_update='Y'
@@ -30,7 +29,7 @@ do
             FreeIT_image=$OPTARG
             ;;
         R)
-            aptcache_needs_update='N'
+            export aptcache_needs_update='N'
             ;;
         u)
             refresh_update='Y'
@@ -85,6 +84,7 @@ if [ $aptcache_needs_update == 'Y' ]
 then
     apt-get update &>>${Messages_O} &
     Time_to_kill $! "Running apt-get update. Details in $Messages_O"
+    export aptcache_needs_update='N'
 fi
 Pauze "install subversion"
 apt-get install subversion || exit 6
@@ -203,6 +203,7 @@ Pauze "apt dist-upgrade ( COND: $aptcache_needs_update )"
 if [ $aptcache_needs_update == 'Y' ]
 then
     apt-get update
+    export aptcache_needs_update='N'
 fi
 apt-get dist-upgrade
 
@@ -241,7 +242,6 @@ fi
 set +x
 
 # *--* Confirm Distro name with user *--*
-#Messages_O=$(mktemp -t "$(basename $0)_report.XXXXX")
 #Confirm_DISTPU() {
 #    return_value=0
 #
