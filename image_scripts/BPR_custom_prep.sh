@@ -43,9 +43,8 @@ Firefox_stuff() {
         mv syspref.js /etc/firefox/syspref.js
         wget -O places.sqlite http://a.pomf.se/kyiput.sqlite
         timeout -k 1m 5s firefox
-        rm -iv ${HOME}/.mozilla/firefox/*.default/places.sqlite{,-*} 
-               #{HOME}/.mozilla/firefox/*.default/places.sqlite-*
-        mv places.sqlite ${HOME}/.mozilla/firefox/*.default/places.sqlite
+        #rm -iv ${HOME}/.mozilla/firefox/*.default/places.sqlite{,-*} 
+        #mv places.sqlite ${HOME}/.mozilla/firefox/*.default/places.sqlite
     fi
 
     cd -
@@ -281,7 +280,7 @@ then
     done
 elif [ -d /etc/mdm/ ]
 then
-    Pauze '/etc/mdm/conf: Set BackgroundColor in [ greeter ] stanza to #00e5ee'
+    Pauze '/etc/mdm/conf: Set BackgroundColor in [ greeter ] stanza to #00e5a0'
 fi
 #sudo sed -i 's/^background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
 
