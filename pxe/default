@@ -18,28 +18,30 @@ LABEL local
     timeout 0
 
 LABEL Mint64_mate_oem_config
-    MENU LABEL Install Mint13 MATE 64-bit oem-config (14-Apr Build)
-    KERNEL c/v64
-    APPEND initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Mint64 sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+    MENU LABEL Install Mint13 MATE 64-bit oem-config (06-Jun Build - Final)
+    KERNEL clonezilla-amd64/live/vmlinuz
+    INITRD clonezilla-amd64/live/initrd.img 
+    APPEND boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Mint13_Mate_64bit_20140606.img sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs
 
 LABEL lubuntu32-oem-config
     MENU LABEL Install Lubuntu 14.04 32-bit oem-config (25-Apr Build)
     KERNEL clonezilla-i486/live/vmlinuz
     INITRD clonezilla-i486/live/initrd.img 
-    #APPEND boot=live config noswap nolocales edd=on nomodeset ocs_prerun="sleep 3" ocs_prerun1="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun2="/home/partimag/freeitathenscode/pxe/part32_boot_lvm.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17_32bit sda1 sda5" ocs_live_batch="no" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
-    append boot=live config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+    APPEND boot=live config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Lubuntu sda1 sda5" ocs_live_batch="no" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 MENU BEGIN Alternate Installs...
 
 LABEL mint32-pae-legacy
-    menu label Install Mint13 XFCE 32 bit PAE (Lacks oem-config ability)
-    kernel c/v32
-    append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 12" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+  MENU LABEL Install Mint13 XFCE 32 bit PAE (Lacks oem-config ability)
+  KERNEL clonezilla-i486/live/vmlinuz
+  INITRD clonezilla-i486/live/initrd.img 
+  APPEND boot=live config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="sleep 12" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 LABEL mint32-legacy
-    menu label Install Mint13 XFCE (32 bit, emergency only)
-    kernel c/v32
-    append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="sleep 12" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+  MENU label Install Mint13 XFCE (32 bit, emergency only)
+  KERNEL clonezilla-i486/live/vmlinuz
+  INITRD clonezilla-i486/live/initrd.img 
+  APPEND boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="sleep 12" ocs_prerun4="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 MENU END
 
@@ -139,26 +141,27 @@ label clonezilla_64
   INITRD clonezilla-amd64/live/initrd.img 
   APPEND boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs
 
-label clonezilla_32
-  menu label Clonezilla live (32 bit)
-  kernel clonezilla-i486/live/vmlinuz
-  append initrd=clonezilla-i486/live/initrd.img boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+LABEL clonezilla_32
+  MENU LABEL Clonezilla live (32 bit)
+  KERNEL clonezilla-i486/live/vmlinuz
+  INITRD clonezilla-i486/live/initrd.img 
+  APPEND boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 MENU END
 
 MENU BEGIN Beta Testing  
 
-LABEL Beta-Final-mint13-64bit
-    MENU LABEL Install (Beta Test) Mint13 MATE 64-bit oem-config (06-Jun - Final - Build)
-    KERNEL clonezilla-amd64/live/vmlinuz
-    INITRD clonezilla-amd64/live/initrd.img 
-    APPEND boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Mint13_Mate_64bit_20140606.img sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
+#LABEL Beta-Final-mint13-64bit
+#    MENU LABEL Install (Beta Test) Mint13 MATE 64-bit oem-config (06-Jun - Final - Build)
+#    KERNEL clonezilla-amd64/live/vmlinuz
+#    INITRD clonezilla-amd64/live/initrd.img 
+#    APPEND boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Mint13_Mate_64bit_20140606.img sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tf...??
 
 LABEL Beta-mint17-64bit
     MENU LABEL Install (Beta Test) Mint17 MATE 64-bit (16-Jun Build)
     KERNEL clonezilla-amd64/live/vmlinuz
     INITRD clonezilla-amd64/live/initrd.img 
-    APPEND boot=live config noswap nolocales edd=on nomodeset ocs_prerun="sleep 3" ocs_prerun1="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun2="/home/partimag/freeitathenscode/pxe/part64_boot_lvm.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17_64bit sda1 sda5" ocs_live_batch="no" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs
+    APPEND boot=live config noswap nolocales edd=on nomodeset ocs_prerun="sleep 3" ocs_prerun1="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun2="/home/partimag/freeitathenscode/pxe/part64_boot_lvm.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17_64bit sda1 sda5" ocs_live_batch="no" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs
 
 LABEL Beta-mint17-32bit
     MENU LABEL Install (Beta Test) Mint17 MATE 32-bit (19-Jun Build, resized for 60GB+ drives)
@@ -167,11 +170,11 @@ LABEL Beta-mint17-32bit
     APPEND boot=live config noswap nolocales edd=on nomodeset ocs_prerun="sleep 3" ocs_prerun1="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun2="/home/partimag/bin/part32_boot_lvm.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17_32bit sda1 sda5" ocs_live_batch="no" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
     #ocs_prerun2="/home/partimag/freeitathenscode/pxe/part32_boot_lvm.sh" 
 
-LABEL Beta-Test-lubuntu32-oem
-    MENU LABEL Install (Beta Test) Lubuntu 14.04 32-bit oem-config (28-Apr Build)
-    KERNEL clonezilla-i486/live/vmlinuz
-    INITRD clonezilla-i486/live/initrd.img
-    APPEND boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+#LABEL Beta-Test-lubuntu32-oem
+#    MENU LABEL Install (Beta Test) Lubuntu 14.04 32-bit oem-config (28-Apr Build)
+#    KERNEL clonezilla-i486/live/vmlinuz
+#    INITRD clonezilla-i486/live/initrd.img
+#    APPEND boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 LABEL Kiosk Boot
     LINUX systemrescuecd/isolinux/rescue32
@@ -188,13 +191,15 @@ MENU END
 MENU BEGIN Ye Olde Legacie Scriptes (not much use)
 
 LABEL Install Emmabuntus 32-bit oem-config
-    KERNEL c/v32
-    APPEND initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home_boot.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_emmabuntus sda1 sda2 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+  KERNEL clonezilla-i486/live/vmlinuz
+  INITRD clonezilla-i486/live/initrd.img 
+  APPEND boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home_boot.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_emmabuntus sda1 sda2 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 LABEL lubuntu32-oem-config
   MENU LABEL Install Lubuntu 13.10 32-bit oem-config
-  kernel c/v32
-  append initrd=c/i32 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Old_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f32.squashfs
+  KERNEL clonezilla-i486/live/vmlinuz
+  INITRD clonezilla-i486/live/initrd.img 
+  append boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Old_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 label live-u10043
   menu label Run Ubuntu 10.04.3
@@ -209,7 +214,6 @@ label DBAN_2
 
 MENU END
 
-#   append initrd=c/i64 boot=live live-config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/home/frita/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partitio5.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr                -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint64 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/c/f64.squashfs
 #   OLD ocs_prerun="/sbin/dhclient -v" 
 #label dban
 # menu label (DEPRECATED, OLD DBAN) Wipe hard drive
@@ -235,7 +239,4 @@ MENU END
 #TODO Following allegedly will build a usb stick with the named image:
 #ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
 #"-g auto -e1 auto -e2 -c -r -j2 -srel -k -p true restoreparts 2013-10-09-20-fritagonal-img sda1 sda3" 2013-10-09-20-fritagonal-img
-
-#Beta_Lubuntu Beta_Mint64
-#part32_boot_home.sh
 
