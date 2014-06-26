@@ -4,6 +4,8 @@ parted -s /dev/sda mklabel msdos || ((RC+=$?))
 sleep 3
 parted -s -a minimal /dev/sda mkpart primary ext2 1 512 || echo 'Problem('$?') creating /boot'
 sleep 3
+parted -s -a minimal /dev/sda mkpart primary ext2 512 2000 || echo 'Problem('$?') creating swap'
+mkswap /dev/sda2 || echo 'Problem('$?') with mkswap'
 parted -s -a minimal /dev/sda mkpart extended 2000 100% || echo 'Problem('$?') creating extended'
 sleep 3
 parted -s -a minimal /dev/sda mkpart logical ext3 2001 100% || echo 'Problem('$?') creating lvm'
