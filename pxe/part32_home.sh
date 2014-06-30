@@ -1,10 +1,21 @@
 #!/bin/bash
-parted -s /dev/sda mklabel msdos
-parted -s -a minimal /dev/sda mkpart primary ext3 1 10513
-parted -s -a minimal /dev/sda mkpart primary linux-swap 10513 11538
-parted -s -a minimal /dev/sda mkpart extended 11538 100%
-parted -s -a minimal /dev/sda mkpart logical ext3 11539 100%
-fdisk -l /dev/sda
+Accum_RC=0
+Error_mess() {
+    local RC=$1
+    shift
+    mess=$@
+    echo 'Problem! Non-zero return code ('$RC') when '$mess'.'
+    ((Accum_RC+=$RC))
+    echo '<ENTER> to continue'
+    read Xu
+}
+sudo parted -s /dev/sda mklabel msdos || Error_mess $? 'initializing partition table'
+sleep 2
+sudo parted -s -a optimal /dev/sda unit GiB mkpart primary ext2 1 10
+sudo parted -s -a optimal /dev/sda unit MiB mkpart linux-swap 9524 10000
+sudo parted -s -a optimal /dev/sda unit MiB mkpart extended 10000 100%
+sudo parted -s -a optimal /dev/sda unit MiB mkpart logical ext3 10001 56700
+sudo parted -s -a optimal /dev/sda unit MiB mkpart logical ext3 56700 100%
 
 mkswap /dev/sda2 
 if [ $? -ne 0 ]
@@ -16,4 +27,6 @@ else
 	echo -e "\n\e[1;32;40mSwap created successfully.\e[0m"
 	sleep 2
 fi
+
+fdisk -l /dev/sda
 

@@ -4,14 +4,12 @@
 Version=1.0
 Type=Application
 Terminal=false
-Icon[en_US]=/usr/share/icons/Mint-X/apps/scalable/gdm-setup.svg
+Icon[en_US]=/usr/share/icons/Mint-X/apps/scalable/amnesia-dark-decent.svg
 Name[en_US]=Quality Control
 Exec=/etc/alternatives/x-terminal-emulator -e /home/oem/freeitathenscode/QC_Process/QC.sh
-Comment[en_US]=Ensure machine is within FreeIT guidelines
+Comment[en_US]=Ensure machine meets Free I.T. requirements
 Name=Quality Control
-Comment=Ensure machine is within FreeIT guidelines
-Icon=/usr/share/icons/Mint-X/apps/scalable/gdm-setup.svg
-GenericName=
-#/usr/share/icons/elementary/stock/32/stock_person.svg
-#/usr/share/icons/Humanity/stock/48/stock_person.svg
+Comment=Ensure machine meets Free I.T. requirements
+Icon=/usr/share/icons/Mint-X/apps/scalable/mame.svg
+GenericName=Quality Control
 
