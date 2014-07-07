@@ -1,5 +1,4 @@
 default vesamenu.c32
-#default menu.c32
 prompt 0
 MENU MARGIN 2
 MENU BACKGROUND clonezilla-i486/syslinux/ocswp.png
@@ -10,7 +9,6 @@ MENU COLOR HELP 1;36;40 #c0000090 #00000000
 
 MENU TITLE *-Free I.T. Athens-* PXE Boot Menu
 
-#MENU AUTOBOOT Starting Local System in (timeout #) seconds
 LABEL local
     MENU default
     MENU LABEL Boot from Local Disk

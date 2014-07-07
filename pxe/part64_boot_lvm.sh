@@ -4,7 +4,7 @@ Accum_RC=0
 Task_init() {
     Mess=${1:-'Unknown Task!'}
     local sleep_secs=${2:-3}
-    echo -e "\e[0mPausing for $sleep_secs seconds...\e[0m"
+    echo -e "\e[0;33;40mPausing for $sleep_secs seconds...\e[0m"
     sleep $sleep_secs
     started_good='N'
     return 0
@@ -84,7 +84,7 @@ then
 fi
 
 Task_init 'Creating boot partition'
-sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 0% 256\
+sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 0% 513\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
 
@@ -115,12 +115,13 @@ if [ $Accum_RC -eq 0 ]
 then
     echo -e "\n\t\e[1;32;40mPartitioning was successful\e[0m"
 else
-    echo -e "\n\t\e[5;31;40mPartitioning had issues. Contact Staff."
-    echo -e "\n\e[0;37;43m<ENTER> to continue\e[0m\n"
+    echo -e "\n\t\e[5;31;40mPartitioning had issues. Contact Staff.<ENTER>\e[0m"
     read Xu
 fi
 echo -e "\nNewly created partition scheme:"
 fdisk -l /dev/sda
+
+sleep $sleep_secs
 
 #sudo /sbin/sfdisk --change-id /dev/sda 5 8e
 
