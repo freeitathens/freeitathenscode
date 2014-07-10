@@ -85,6 +85,8 @@ lsb_release -a
 Pauze 'Remove Cache files'
 for CD in $(find ${HOME}/ -depth -type d -not -empty -iname '*cache*'); do rm -rv ${CD}/*; done
 
+rm -riv /var/lib/sudo/oem/*
+
 #Bilt-images reminders (Cust_srt)
 #- 32-bit
 #  * Desktop Icon settings; remove File System (but useful on new-user?)

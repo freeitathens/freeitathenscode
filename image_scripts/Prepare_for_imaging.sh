@@ -106,7 +106,7 @@ else
 fi
 cd
 
-PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].* mintdrivers'
+PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].* mintdrivers gparted terminator hardinfo'
 Pauze 'Install necessary packages: ' $PKGS
 apt-get install $PKGS
 
