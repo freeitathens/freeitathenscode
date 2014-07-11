@@ -1,4 +1,7 @@
 #!/bin/bash
+Reference_mount=${1:-/home/partimag/'}
+echo 'Reference mount is '$Reference_mount
+sleep 4
 RC=0
 parted -s /dev/sda mklabel msdos || ((RC+=$?))
 sleep 3

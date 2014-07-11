@@ -15,7 +15,7 @@ Good_mess() {
     local RC=0
     started_good='Y'
 
-    echo 'Good return code when '$mess'.'
+    echo -e "\e[0;32;40mGood return code for action "$mess".\e[0m"
 
     return $RC
 }
@@ -35,42 +35,41 @@ Prob_mess() {
 Handle_possible_lvm() {
     local accum_RC=0
 
-    echo -e "\e[1;31;40mCHECKING FOR LVM Spaces from a previous install:\e[0m"
-    if [ 0 -eq $((vgscan 2>/dev/null;pvscan 2>/dev/null) |wc -c) ]
-    then
-        echo -e "\e[0;32;40mNo LVM Spaces. This is normal.\e[0m"
-        return 0
-    fi
-
+    echo -e "\e[0;32;40mCHECKING FOR LVM Spaces from a previous install\e[0m"
     vgscan;pvscan
-    echo -e "\e[0m\n\n\e[1;34;40mAttempting to remove all LVM Spaces:\e[0m"
-    for VGr in $(vgscan |grep -o -P '".+"' |sed -e 's/"//g')
+
+    for VGr in $(vgscan 2>/dev/null|grep -o -P '".+"' |sed -e 's/"//g')
     do
+        ((accum_RC+=1))
         echo 'Removing Volume Group '$VGr
         vgremove --force $VGr || ((accum_RC+=$?))
     done
-    for PVo in $(pvscan |grep 'PV' |sed -e 's/[ \t]\+/ /g' |cut -f3 -d' ')
+    for PVo in $(pvscan 2>/dev/null|grep 'PV' |sed -e 's/[ \t]\+/ /g' |cut -f3 -d' ')
     do
+        ((accum_RC+=2))
         if [[ $PVo =~ '/dev' ]]
         then
             echo 'Running pvremove on '$PVo
             pvremove $PVo || ((accum_RC+=$?))
         else
-            pvscan
-            echo 'Remove any physical lvm volumes manually'
+            echo 'Remove any physical LVM volumes manually'
             ((accum_RC+=128))
         fi
     done
 
     if [ $accum_RC -eq 0 ]
     then
+        echo -e "\e[0;32;40mNo LVM Spaces. This is normal.\e[0m"
+        return 0
+    elif [ $accum_RC -lt 10 ] 
+    then
         echo -e "\e[1;31;40mNow REBOOT \e[1;34;40m(Alt+F2; sudo /sbin/reboot).\e[0m"
         echo -e "\t\e[1;31;40mNext time should be fine.\e[0m"
     else
         echo -e "\t\e[1;37;41m-->>\e[1;31;40m please RESCRUB this drive.\e[0m"
-        echo -e "\t\e[1;37;41m-or>\e[1;31;40m CONTACT a staff member.\e[0m"
+        echo -e "\t\e[1;37;41m-or>\e[1;31;40m RC=${accum_RC}. CONTACT a staff member.\e[0m"
     fi
-    echo -e "\n\t\e[1;35;40m<ENTER>\e[0m"
+    echo -e "\n\t\e[1;35;40m(or <ENTER> to continue...)\e[0m"
     read Xu
 
     return $accum_RC
@@ -82,11 +81,8 @@ Task_init 'Initializing partition table'
 sudo parted -s /dev/sda mklabel msdos\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
-#if [ $? -ne 0 ]
-#then
-#fi
 
-Task_init 'Creating boot partition'
+Task_init 'Creating boot partition' 1
 sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 0% 513\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
@@ -96,20 +92,20 @@ sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 0% 513\
 #   && Good_mess $Mess\
 #   || Prob_mess $? $Mess
 
-Task_init 'Creating main lvm partition' 
+Task_init 'Creating main LVM partition' 1
 sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 513 37193\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
-Task_init 'Setting lvm flag on'
+Task_init 'Setting LVM flag on' 1
 parted -s /dev/sda set 2 lvm on\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
 
-Task_init 'Making lvm-ready partition with extra space'
+Task_init 'Making LVM-ready partition with extra space' 1
 sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 37193 100%\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
-Task_init 'Setting lvm flag on extra'
+Task_init 'Setting LVM flag on extra'
 parted -s /dev/sda set 3 lvm on\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
@@ -123,8 +119,6 @@ else
 fi
 echo -e "\nNewly created partition scheme:"
 fdisk -l /dev/sda
-
-sleep $sleep_secs
 
 #sudo /sbin/sfdisk --change-id /dev/sda 5 8e
 
