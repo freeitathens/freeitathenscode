@@ -323,6 +323,26 @@ IFS=$' \t\n'
     return $RC
 }
 
+Test_ff_flash() {
+    path2firefox=$(which firefox 2>/dev/null |tr -d '\n')
+    if [ -n "$path2firefox" ]
+    then
+        dialog --keep-tite --clear --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
+            --yesno "Test \Z4\ZrShockwave Flash\ZR \Z0in $path2firefox ?" 9 60
+        d_RC=$?
+        if [ $d_RC -eq 0 ]
+        then
+            $path2firefox -no-remote http://www.youtube.com/watch?v=mwbgwZxodKE 2>>$ERRFILE &
+            ice_PID=$!
+            echo $ice_PID 'process # for ff' >>$ERRFILE
+            Window_killa $ice_PID 40
+            Append_to_log 'INFO' 'Flash plugin test' 'Test was run'
+        fi
+    else
+        Append_to_log 'PROB' 'Flash plugin test' 'This test is NOT possible'
+    fi
+}
+
 # *--* Optical drive(s) QC test
 TARGET_OPTICAL=''
 optical_drive_count=0
@@ -493,26 +513,9 @@ then
 fi
 
 # *--* Test playing flash content
-path2firefox=$(which firefox 2>/dev/null)
-if [ ! -z "$path2firefox" ]
+if [ $CPU_ADDRESS -eq 32 ]
 then
-#
-    #Test_ff_msg=
-    dialog --keep-tite --clear --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
-    --yesno "Test \Z4\ZrShockwave Flash\ZR \Z0in $path2firefox ?" 9 60
-    d_RC=$?
-    if [ $d_RC -eq 0 ]
-    then
-        $path2firefox -no-remote http://www.youtube.com/watch?v=mwbgwZxodKE 2>>$ERRFILE &
-        ice_PID=$!
-        echo $ice_PID 'process # for ff' >>$ERRFILE
-        Window_killa $ice_PID 40
-        Append_to_log 'INFO' 'Flash plugin test' 'Test was run'
-        #(sleep 40;ps -p $ice_PID -o time= 2>/dev/null && Kill $ice_PID) &
-        #'http://www.youtube.com/watch?v=7OXiS4BTXNQ' craxy cd-rom
-    fi
-else
-    Append_to_log 'PROB' 'Flash plugin test' 'This test is NOT possible'
+    Test_ff_flash
 fi
 
 Wrapup_report 1 $LOGFILE
