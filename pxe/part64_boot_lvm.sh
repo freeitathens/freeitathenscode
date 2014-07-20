@@ -87,20 +87,14 @@ sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 0% 513\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
 
-#Task_init 'Creating extended' 1
-#sudo parted -s -a optimal /dev/sda unit MiB mkpart extended 513 100%\
-#    && Good_mess $Mess\
-#    || Prob_mess $? $Mess
-
 Task_init 'Creating main LVM partition' 1
-sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 514 74242\
+sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 513 74242\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
 Task_init 'Setting LVM flag on' 1
 parted -s /dev/sda set 2 lvm on\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
-#sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 514 74242
 
 Task_init 'Making LVM-ready partition with extra space' 1
 sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 74242 100%\
@@ -129,3 +123,8 @@ fdisk -l /dev/sda
 #cat >/sys/class/scsi_host/hostN/device/target1\:0\:0/1\:0\:0\:0/model (use find or tab key after "scsi_host")
 #echo '\''- - -'\'' > /sys/class/scsi_host/hostN/scan' "
 
+
+#Task_init 'Creating extended' 1
+#sudo parted -s -a optimal /dev/sda unit MiB mkpart extended 513 100%\
+#    && Good_mess $Mess\
+#    || Prob_mess $? $Mess

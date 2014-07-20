@@ -1,0 +1,4 @@
+/sbin/sfdisk --change-id /dev/sda 6 8e
+pvcreate /dev/sda6
+vgextend --verbose frita_vg /dev/sda6
+lvextend --verbose --extents +100%FREE --resizefs /dev/frita_vg/home

@@ -87,11 +87,6 @@ sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 0% 513\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
 
-#ask_init 'Creating extended' 
-#udo parted -s -a optimal /dev/sda unit MiB mkpart extended 256 100%\
-#   && Good_mess $Mess\
-#   || Prob_mess $? $Mess
-
 Task_init 'Creating main LVM partition' 1
 sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 513 37193\
     && Good_mess $Mess\
@@ -105,7 +100,7 @@ Task_init 'Making LVM-ready partition with extra space' 1
 sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 37193 100%\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
-Task_init 'Setting LVM flag on extra'
+Task_init 'Setting LVM flag on extra' 1
 parted -s /dev/sda set 3 lvm on\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
