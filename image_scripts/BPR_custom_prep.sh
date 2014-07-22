@@ -2,9 +2,9 @@
 #[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$3
 #[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$-
 
-source ${HOME}/freeitathenscode/image_scripts/Common_functions || exit 12
+[[ -z $codebase ]] && codebase="${HOME}/freeitathenscode/image_scripts"
+source ${codebase}/Common_functions || exit 12
 set -u
-#Pauze 'In BPRcode: aptcache_needs_update='${aptcache_needs_update}
 Pauze 'In BPRcode: refresh_git='${refresh_git}
 
 declare -r HOLDIFS=$IFS 2>/dev/null

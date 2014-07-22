@@ -128,65 +128,6 @@ Confirm_DISTRO_CPU() {
     return $good_distro_ind
 }
 
-Contact_server() {
-    if [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]
-    then
-        Pauze 'Checked Server is valid: 192.168.1.9'
-    fi
-}
-
-Correct_subversion_ssh() {
-    for subv_home in ${HOME}/.subversion /etc/subversion
-    do
-        [[ -d ${subv_home} ]] || return 8
-
-        subv_conf="${subv_home}/config"
-        if [ -f ${subv_conf} ]
-        then
-            Answer='N'
-            Pause_n_Answer 'Y|N' "Fix $subv_conf for Frita's ssh connection (Y|N)? "
-            case $Answer in
-                Y)
-                    sudo perl -pi'.bak' -e 's/#\s*ssh\b(.+?ssh)\s+-q(.+)$/ssh${1} -v${2}/' ${subv_conf}
-                    [[ $? -eq 0 ]] && break
-                    ;;
-                *)
-                    prettyprint 'n,t,34,47,M,0' 'No changes made...'
-                    ;;
-            esac
-        fi
-    done
-    return 0
-
-}
-
-Set_background() {
-
-    [[ -z "$Backgrounds_location" ]] && return 9
-    [[ -d "$Backgrounds_location" ]] || return 5
-    [[ -z "$FreeIT_image" ]] && return 6
-
-    Pauze "Checking background file location: $Backgrounds_location / $FreeIT_image"
-    Have_BG=$(ls -l ${Backgrounds_location}/$FreeIT_image 2>/dev/null\
-                || find ${Backgrounds_location}/ -name "$FreeIT_image"\
-                || echo 'NADA')
-    if [ "$Have_BG" == 'NADA' ]
-    then
-        unset xR
-        echo 'Shall I try to retrieve' $FreeIT_image '(Y|N)?' 
-        read xR
-        case $xR in
-            y|Y)
-                cp -iv /home/oem/freeitathenscode/image_scripts/$FreeIT_image\
-                ${Backgrounds_location}/ 2>/dev/null || return 15
-                ;;
-            *)
-                Pauze 'WARNING,OK, Handle it later...'
-                ;;
-        esac
-    fi
-}
-
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 
 print_presets() {

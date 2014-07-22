@@ -1,11 +1,28 @@
 #!/bin/bash
-declare -rx codebase="${HOME}/freeitathenscode"
-source ${codebase}/image_scripts/Common_functions || exit 12
 if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
     Pauze 'ERROR,Please rerun with sudo or as root'
     exit 4
 fi
+
+temp_sourcebase="${HOME}/freeitathenscode"
+if [ ! -d $temp_sourcebase ]
+then
+    read -p 'Location of Freeit code? ' -a temp_sourcebase
+    if [ "${temp_sourcebase}." == 'N.' ]
+    then
+        exit 12
+    fi
+    [[ -d $temp_sourcebase ]] || exit 13
+fi
+declare -rx sourcebase=$temp_sourcebase
+
+temp_codebase=${sourcebase}'/image_scripts'
+echo 'Checking for existence of directory called '$temp_codebase
+[[ -d $temp_codebase ]] || exit 14
+
+declare -rx codebase=$temp_codebase
+source ${codebase}/Common_functions || exit 15
 
 declare -r HOLDIFS=$IFS
 declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
@@ -15,8 +32,9 @@ declare -x refresh_git='Y'
 fallback_distro=''
 FreeIT_image='FreeIT.png'
 refresh_update='N'
+refresh_svn='N'
 
-while getopts 'jd:i:RuGh' OPT
+while getopts 'jd:i:RuVGh' OPT
 do
     case $OPT in
         j)
@@ -34,6 +52,9 @@ do
         u)
             refresh_update='Y'
             ;;
+        V)
+            refresh_svn='Y'
+            ;;
         G)
             refresh_git='N'
             ;;
@@ -48,6 +69,67 @@ do
     esac
 done
 declare -rx Runner_shell_as=${Runner_shell_hold}
+
+Contact_server() {
+    if [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]
+    then
+        Pauze 'Checked Server is valid: 192.168.1.9'
+        return 0
+    fi
+    return 1
+}
+
+Correct_subversion_ssh() {
+    for subv_home in ${HOME}/.subversion /etc/subversion
+    do
+        [[ -d ${subv_home} ]] || return 8
+
+        subv_conf="${subv_home}/config"
+        if [ -f ${subv_conf} ]
+        then
+            Answer='N'
+            Pause_n_Answer 'Y|N' "Fix $subv_conf for Frita's ssh connection (Y|N)? "
+            case $Answer in
+                Y)
+                    sudo perl -pi'.bak' -e 's/#\s*ssh\b(.+?ssh)\s+-q(.+)$/ssh${1} -v${2}/' ${subv_conf}
+                    [[ $? -eq 0 ]] && break
+                    ;;
+                *)
+                    prettyprint 'n,t,34,47,M,0' 'No changes made...'
+                    ;;
+            esac
+        fi
+    done
+    return 0
+
+}
+
+Set_background() {
+
+    [[ -z "$Backgrounds_location" ]] && return 9
+    [[ -d "$Backgrounds_location" ]] || return 5
+    [[ -z "$FreeIT_image" ]] && return 6
+
+    Pauze "Checking background file location: $Backgrounds_location / $FreeIT_image"
+    Have_BG=$(ls -l ${Backgrounds_location}/$FreeIT_image\
+                || find ${Backgrounds_location}/ -name "$FreeIT_image"\
+                || echo 'NADA')
+    if [ "$Have_BG" == 'NADA' ]
+    then
+        unset xR
+        echo 'Shall I try to retrieve' $FreeIT_image '(Y|N)?' 
+        read xR
+        case $xR in
+            y|Y)
+                sudo cp -iv /home/oem/freeitathenscode/image_scripts/$FreeIT_image\
+                ${Backgrounds_location}/ || return 15
+                ;;
+            *)
+                Pauze 'WARNING,OK, Handle it later...'
+                ;;
+        esac
+    fi
+}
 
 if [ "${refresh_update}." == 'Y.' ]
 then
@@ -67,10 +149,15 @@ then
     exit $CDC_RC
 fi
 
-Pauze 'Check (absence of) local UUID reference for swap in fstab.'
-egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
-    prettyprint 'n,1,31,47,M,0,n'\
-    'fstab cannot go on image with local UUID referencer'
+Answer='Y'
+Pause_n_Answer 'Y|N' 'INFO,Check (absence of) local UUID reference for swap in fstab.(Default '$Answer')?'
+#Pauze 'Check (absence of) local UUID reference for swap in fstab.'
+if [ "${Answer}." == 'Y.' ]
+then
+    egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
+	      prettyprint 'n,1,31,47,M,0,n'\
+	      'fstab cannot go on image with local UUID referencer'
+fi
 
 Pauze 'Checking swap'
 Run_Cap_Out swapoff --all --verbose
@@ -89,26 +176,37 @@ fi
 Pauze "install subversion"
 apt-get install subversion || exit 6
 
-Pauze "Check that server address is correct and is contactable ( COND: $refresh_update )"
-if [ "${refresh_update}." == 'Y.' ]
-then Contact_server
-fi
-
-Pauze 'Check on subversion status'
-if [ -d ${codebase}/.svn ]
+Pauze "Check that server address is correct and is contactable ( COND: $refresh_svn )"
+if [ "${refresh_svn}." == 'Y.' ]
 then
-    cd ${codebase}/
-    [[ "${refresh_update}." == 'Y.' ]] && svn update
-else
-    cd
-    Correct_subversion_ssh
-    svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
+    Contact_server
+    if [ $? -lt 1 ]
+    then
+        Pauze 'Check on subversion status'
+        if [ -d ${sourcebase}/.svn ]
+        then
+            cd ${sourcebase}/
+            svn update
+        else
+            cd
+            Correct_subversion_ssh
+            svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
+        fi
+        cd
+    fi
 fi
-cd
 
-PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].* mintdrivers gparted terminator hardinfo'
+PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms mintdrivers gparted terminator hardinfo'
 Pauze 'Install necessary packages: ' $PKGS
 apt-get install $PKGS
+
+Answer='N'
+Pause_n_Answer 'Y|N' 'WARN,Install oem-config packages (Default '$Answer')?'
+if [ "${Answer}." == 'Y.' ]
+then
+    PK_OEM='oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].*'
+    apt-get install $PK_OEM
+fi
 
 set -u
 
@@ -190,8 +288,8 @@ fi
 case $DISTRO in
     lubuntu|Ubuntu|mint)
         Pauze 'Run BPR Code'
-        [[ -f ${codebase}/image_scripts/BPR_custom_prep.sh ]] &&\
-            ${codebase}/image_scripts/BPR_custom_prep.sh
+        [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
+            ${codebase}/BPR_custom_prep.sh
         Pauze "Run BPR: Last return code: $?"
         ;;
     *)
@@ -215,13 +313,13 @@ Pauze '/\Please Purge Non-Free Stuff IF NEEDED/\'
 Pauze 'Connecting Quality control stuff'
 local_scripts_DIR="${HOME}/bin"
 [[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
-[[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${codebase}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
+[[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${sourcebase}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
 
-(find ${codebase}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
-    find ${codebase}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
+(find ${sourcebase}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
+    find ${sourcebase}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
     find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort
-#qc_desk="${codebase}/QC_Process/Quality\ Control.desktop"
-#qc_dalt="${codebase}/QC_process_dev/MasterCPDRESS}/Quality\ Control.desktop"
+#qc_desk="${sourcebase}/QC_Process/Quality\ Control.desktop"
+#qc_dalt="${sourcebase}/QC_process_dev/MasterCPDRESS}/Quality\ Control.desktop"
 #[[ -f "${qc_dalt}" ]] && qc_desk="$qc_dalt"
 #qc_actu="${HOME}/Desktop/Quality\ Control.desktop"
 #df_RC=0
