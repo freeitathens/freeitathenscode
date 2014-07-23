@@ -1,5 +1,16 @@
 #!/bin/bash
 Accum_RC=0
+echo 'starting up for '$0
+Calling=$0
+case $Calling in
+    part64_boot_home*)
+        echo 'have boot and home'
+        ;;
+    part64_home*)
+        echo 'have only home'
+        ;;
+esac
+exit
 
 Task_init() {
     Mess=${1:-'Unknown Task!'}
@@ -87,21 +98,18 @@ sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 0% 513\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
 
-Task_init 'Creating main LVM partition' 1
-sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 513 55300\
-    && Good_mess $Mess\
-    || Prob_mess $? $Mess
-Task_init 'Setting LVM flag on' 1
-parted -s /dev/sda set 2 lvm on\
+Task_init 'Creating swap partition' 3
+sudo parted -s -a optimal /dev/sda unit MiB mkpart primary swap 513 2551\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
 
-Task_init 'Making LVM-ready partition with extra space' 1
-sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 55300 100%\
+Task_init 'Creating root partition' 3
+sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext4 513 55300\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
-Task_init 'Setting LVM flag on extra' 1
-parted -s /dev/sda set 3 lvm on\
+
+Task_init 'Creating home partition' 3
+sudo parted -s -a optimal /dev/sda unit MiB mkpart primary ext4 55300 100%\
     && Good_mess $Mess\
     || Prob_mess $? $Mess
 
