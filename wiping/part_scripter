@@ -1,0 +1,7 @@
+parted -s /dev/sda mklabel msdos
+sudo parted -a optimal /dev/sda unit MiB mkpart primary ext2 1 513
+sudo parted -a optimal /dev/sda unit MiB mkpart primary ext2 513 37193
+sudo parted -a cylinder /dev/sda unit MiB mkpart primary ext2 37193 100%
+#unit B                                                           
+#parted -s /dev/sda mkpart logical ext2 538968064 39538968064
+

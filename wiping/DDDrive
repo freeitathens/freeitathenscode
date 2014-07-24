@@ -1,0 +1,59 @@
+#!/bin/bash
+utime=$(date +'%s')
+This_host=$(hostname -s)
+read -p 'Override hostname of '$This_host'?' New_host
+[[ -z $New_host ]] || This_host=$New_host
+
+rptf="${HOME}/${This_host}_Scrub_$utime.rpt"
+echo 'SCRUB REPORT           Started:'$(date) |tee $rptf
+
+devices_present=''
+for dl in a b c d e f
+do
+    Drive='sd'$dl
+    Device='/dev/'$Drive
+
+    if [ 1 -lt $(fdisk -l $Device |wc -l) ]
+    then
+        echo -e "\n\n"'**--** '$Device' **--**'
+        fdisk -l $Device |tee -a $rptf
+        devices_present=${devices_present}' '$Device
+    fi
+
+done
+
+Max=100
+Trax=0
+while [ $Trax -lt $Max ]
+do
+    ((Trax++))
+    select Scrubit in $devices_present 'EXIT'
+    do break
+    done
+    [[ $Scrubit == 'EXIT' ]] && exit 0
+
+    Ans='N'
+    read -p 'Really sure you want to scrub Device '$Scrubit' entirely (Y)? ' Ans
+    if [ ${Ans} == 'Y' ]
+    then
+        dd if=/dev/zero of=$Scrubit ibs=1024M obs=512& DDPID=$!
+        echo $DDPID >&2
+        echo 'Use sudo kill -USR1 '$DDPID' to get status line' |tee -a $rptf
+    else
+        echo 'Did not get a '\''Y'\'' for '$Scrubit'. Moving on...'
+    fi
+
+done
+
+echo 'Finished with '$0'.'
+
+#MONITOR
+#    while [ 1 -eq 1 ];
+#       do for PID in 3972 3975; 
+#           do sudo kill -USR1 $PID 2>&1 |sudo tee -a doppelganger_Scrub_1403796618.rpt
+#date |sudo tee -a doppelganger_Scrub_1403796618.rpt
+#sleep 2
+#done
+#sleep 60
+#done
+
