@@ -318,25 +318,12 @@ Pauze 'Connecting Quality control stuff'
 local_scripts_DIR="${HOME}/bin"
 [[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
 [[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${sourcebase}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
+[[ -e ${local_scripts_DIR}/revert_prep_for_shipping_to_eu ]]\
+    || ln -s ${sourcebase}/revert_prep_for_shipping_to_eu ${local_scripts_DIR}/. 
 
 (find ${sourcebase}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
     find ${sourcebase}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
     find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort
-#qc_desk="${sourcebase}/QC_Process/Quality\ Control.desktop"
-#qc_dalt="${sourcebase}/QC_process_dev/MasterCPDRESS}/Quality\ Control.desktop"
-#[[ -f "${qc_dalt}" ]] && qc_desk="$qc_dalt"
-#qc_actu="${HOME}/Desktop/Quality\ Control.desktop"
-#df_RC=0
-#diff --brief "$qc_actu" "$qc_desk" || df_RC=$?
-#if [ $df_RC -gt 0 ]
-#then
-#    Answer='N'
-#    Pause_n_Answer 'Y|N' 'WARNING,Update Quality Control Desktop?'
-#    if [ "${Answer}." == 'Y.' ]
-#    then
-#        cp -iv "$qc_desk" "$qc_actu"
-#    fi
-#fi
 
 Answer='N'
 Pause_n_Answer 'Y|N' 'INFO,Run nouser and nogroup checks/fixes?'
