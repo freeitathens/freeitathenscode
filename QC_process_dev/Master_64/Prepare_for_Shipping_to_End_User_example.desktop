@@ -1,0 +1,14 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Icon[en_US]=mate-panel-launcher
+Name[en_US]=Prepare for Shipping to End User
+Comment[en_US]=Click here when Quality Control Testing is Successfully completed
+Exec=/usr/sbin/oem-config-prepare
+Name=Prepare for Shipping to End User
+Comment=Click here when Quality Control Testing is Successfully completed
+Icon=/usr/share/icons/gnome-colors-common/scalable/emblems/emblem-package.svg
+#/usr/share/icons/gnome/32x32/actions/bottom.png
