@@ -140,9 +140,9 @@ Apt_stuff() {
     ((RC+=$?))
 
     #Replace Sylpheed with Claws Mail (looks similar to Outlook, more feature complete like Outlook)
-    Apt_action_replace 'sylpheed'\
-        'claws-mail claws-mail-extra-plugins claws-mail-tools claws-mail-plugins'
-    ((RC+=$?))
+#    Apt_action_replace 'sylpheed'\
+#        'claws-mail claws-mail-extra-plugins claws-mail-tools claws-mail-plugins'
+#    ((RC+=$?))
 
     #Music (replace Audacious with Rhythmbox for Ipod support)
     Apt_action_replace 'audacious' 'libimobiledevice4 rhythmbox rhythmbox-plugins'
