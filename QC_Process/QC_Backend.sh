@@ -22,20 +22,23 @@ CPU_ADDRESS=32
 CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 
+cp -v --backup=t /etc/hostname /tmp/hostname.bak
+cp -v --backup=t /etc/hosts /tmp/hosts.bak
+Found_hostname=$(hostname)
 if [ $Master_test == 'M' ]
 then
-    cp -v --backup=t /etc/hostname /tmp/hostname.bak
     Answer='N'
     read -p'Change Hostname (update build stamp on Master)(20 sec timeout to default '$Answer'?' -t20 -a Answer;echo ''
     if [ "${Answer}." == 'Y.' ]
     then
-        read -p"Today's date is "$(date) -t3;echo ''
-        sudo vi /etc/hostname
+        read -p"Today's date is $(date)" -t3;echo ''
+        sudo vi /etc/hostname /etc/hosts
     fi
 else
-    cp -v --backup=t /etc/hostname /tmp/hostname.bak
     echo 'Frita'${CPU_ADDRESS}-$(DATE +'%s') |sudo tee /etc/hostname
 fi
+New_hostname=$(cat /etc/hostname |tr -d '\n')
+sudo sed -i "s/$Found_hostname/$New_hostname/" /etc/hosts
 sudo hostname -F /etc/hostname
 
 # *--* Create log and error text destination files *--*
