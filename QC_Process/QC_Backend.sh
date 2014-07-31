@@ -19,6 +19,10 @@ CPU_ADDRESS=32
 CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 
+cp -v --backup=t /etc/hostname /tmp/hostname.bak
+echo 'Frita'${CPU_ADDRESS}-$(DATE +'%s') |sudo tee /etc/hostname
+sudo hostname -F /etc/hostname
+
 # *--* Create log and error text destination files *--*
 declare -r LOGFILE=${HOME}/QC.log
 declare -r ERRFILE=${HOME}/QC_errors.log

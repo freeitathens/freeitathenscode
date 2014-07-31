@@ -27,11 +27,11 @@ do
             aptcache_needs_update='N'
             ;;
         h)
-            Pauze $(basename $0) 'valid options are -d Distro [-R|-h|-j]'
+            Pauze $(basename $0) 'valid options are -d Distro -j [-R|-h]'
             exit 0
             ;;
         *)
-            Pauze "Unknown option: $OPT . Try -d distro [-R]"
+            Pauze "Unknown option: $OPT"
             exit 8
             ;;
     esac
@@ -51,10 +51,12 @@ egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
     prettyprint 'n,1,31,47,M,0,n'\
     'fstab cannot go on image with local UUID referencer'
 
-Pauze 'Launching apt update (?COND='$aptcache_needs_update')'
-if [ "${aptcache_needs_update}." == 'Y.' ]
+Pauze "apt update ( COND: $aptcache_needs_update )"
+if [ $aptcache_needs_update == 'Y' ]
 then
-    apt-get update
+    apt-get update &>>${Messages_O} &
+    Time_to_kill $! "Running apt-get update. Details in $Messages_O"
+    export aptcache_needs_update='N'
 fi
 apt-get dist-upgrade
 apt-get autoremove
@@ -85,7 +87,7 @@ lsb_release -a
 Pauze 'Remove Cache files'
 for CD in $(find ${HOME}/ -depth -type d -not -empty -iname '*cache*'); do rm -rv ${CD}/*; done
 
-rm -riv /var/lib/sudo/oem/*
+Pauze 'Manually remove remaining oem-owned with rm -riv /var/lib/sudo/oem/*'
 
 #Bilt-images reminders (Cust_srt)
 #- 32-bit

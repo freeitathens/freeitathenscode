@@ -166,8 +166,8 @@ Pauze 'Checking swap'
 Run_Cap_Out swapoff --all --verbose
 Run_Cap_Out swapon --all --verbose
 
-Pauze 'Confirm no medibuntu in apt sources'
-egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
+#Pauze 'Confirm no medibuntu in apt sources'
+#egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
 
 Pauze "apt update ( COND: $aptcache_needs_update )"
 if [ $aptcache_needs_update == 'Y' ]
@@ -176,6 +176,7 @@ then
     Time_to_kill $! "Running apt-get update. Details in $Messages_O"
     export aptcache_needs_update='N'
 fi
+
 Pauze "install subversion"
 apt-get install subversion || exit 6
 
@@ -314,13 +315,15 @@ Pauze 'Lauching Virtual Greybeard'
 vrms
 Pauze '/\Please Purge Non-Free Stuff IF NEEDED/\'
 
-Pauze 'Connecting Quality control stuff'
+Pauze "Ensuring that QC.sh and are properly linked in ${HOME}/bin" 
 local_scripts_DIR="${HOME}/bin"
 [[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
+chown -c oem $local_scripts_DIR
 [[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${sourcebase}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
 [[ -e ${local_scripts_DIR}/revert_prep_for_shipping_to_eu ]]\
-    || ln -s ${sourcebase}/revert_prep_for_shipping_to_eu ${local_scripts_DIR}/. 
+    || ln -s ${sourcebase}/revert_prep_for_shipping_to_eu ${local_scripts_DIR}/revert_prep_for_shipping_to_eu 
 
+Pauze 'Confirming that the correct Run Quality Control icon is in place...'
 (find ${sourcebase}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
     find ${sourcebase}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
     find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort

@@ -1,0 +1,169 @@
+DEFAULT vesamenu.c32
+PROMPT 0
+MENU MARGIN 2
+MENU BACKGROUND Czilla_20140331_saucy_amd64/syslinux/drblwp.png
+#clonezilla-i486/syslinux/splash.png
+#/tftpboot/Czilla_20140331_saucy_amd64/syslinux/ocswp.png
+MENU MSGCOLOR #AA04AA04 #FFDD22DD
+MENU COLOR UNSEL        1;32;40 #c0000090 #00000000
+MENU COLOR TIMEOUT_MSG  7;33;47 #c0000090 #00000000
+MENU COLOR TIMEOUT      7;34;47 #c0000090 #00000000
+MENU COLOR HELP         1;36;40 #c0000090 #00000000
+MENU COLOR help         37;40 #ffdddd00 #00000000 none
+MENU COLOR hotsel       1;7;37;40 #ffffffff #76a1d0ff *
+#MENU ROWS       9
+MENU vshift      4
+MENU helpmsgrow 14
+MENU cmdlinerow 15
+MENU timeoutrow 16
+MENU TABMSG Press ENTER to boot or TAB to edit a menu entry
+MENU TABMSGROW  17
+MENU COLOR TABMSG       * #ffffffff #00000000 *
+
+MENU TITLE Doppelganger is a big box
+#MENU TITLE Doppelgänger
+menu color title        * #d8d8d8ff *
+menu color border       * #d8d8d8ff #00000000 none
+menu color sel          * #00000000 #d8d8d8ff *
+menu color unsel        * #d8d8d8ff #00000000 *
+
+MENU AUTOBOOT Starting in # seconds
+
+LABEL live-mm-64-oem-config-17
+  MENU LABEL TRY Mint 17 with Mate Desktop Environment
+  KERNEL mint17-64bit-mate/casper/vmlinuz
+  INITRD mint17-64bit-mate/casper/initrd.lz 
+  APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/mint17-64bit-mate file=/cdrom/preseed/cli.seed
+  TIMEOUT 300
+
+LABEL DBAN_CURRENT
+    MENU DEFAULT
+    MENU LABEL DBAN 2.2.8 Quick Wipe
+    KERNEL dban_test/dban.bzi
+    APPEND initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe --method zero --prng twister --verify last" nofloppy
+
+LABEL DBAN_CUR_NOOPT
+    MENU LABEL DBAN 2.2.8 Packager's default options
+    KERNEL dban_test/dban.bzi
+    APPEND initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+
+LABEL local
+    MENU LABEL Boot from Local Disk
+    localboot 0x80
+    timeout 0
+
+LABEL Prod-mint17-64bit
+    MENU LABEL Install Mint17 MATE 64-bit oem (22-Jul Build, normal 60GB+)
+    KERNEL Czilla_20140331_saucy_amd64/live/vmlinuz
+    INITRD Czilla_20140331_saucy_amd64/live/initrd.img 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint17N_64.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Mint17N_64bit sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs 
+
+LABEL Mint64_mate_oem_config
+    MENU LABEL Install Mint13 MATE 64-bit oem (06-Jun Build - Final)
+    KERNEL clonezilla-amd64/live/vmlinuz
+    INITRD clonezilla-amd64/live/initrd.img 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint13_64.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Mint13_64bit sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs 
+
+MENU END
+
+LABEL Beta-mint17-64bit
+    MENU LABEL Install Mint17 MATE 64-bit (11-Jul Build, lvm 60GB+)
+    KERNEL clonezilla-amd64/live/vmlinuz
+    INITRD clonezilla-amd64/live/initrd.img 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_boot_lvm.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17_64bit sda1 sda2" ocs_live_batch="yes" ocs_postrun="source /home/partimag/freeitathenscode/pxe/LVM_Post_Run_add3" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs 
+
+MENU BEGIN Utilities
+
+LABEL MEMTEST
+    menu label Test RAM
+    kernel memtest/memtestp
+    append -
+
+LABEL IDHW
+    menu label Identify Hardware
+    kernel memdisk
+    append initrd=hdt/hdt.img floppy
+
+LABEL System Rescue CD "Live Image" (GUI Interface)
+    LINUX systemrescuecd/isolinux/rescue32
+    INITRD systemrescuecd/isolinux/initram.igz
+    APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us dostartx
+
+LABEL System Rescue CD "Live Image" (Command Line Interface)
+    LINUX systemrescuecd/isolinux/rescue32
+    INITRD systemrescuecd/isolinux/initram.igz
+    APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us
+MENU END
+
+MENU BEGIN "Live CD" Selections (Run Linux without installing)
+
+MENU BEGIN "Live CD" : 64-bit
+
+label live-mm-64-oem-config-13
+  MENU label TRY Mint 13 (oem-config) with Mate Desktop Environment
+  KERNEL mm64_oemconfig/casper/vmlinuz
+  INITRD mm64_oemconfig/casper/initrd.lz 
+  APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/mm64_oemconfig file=/cdrom/preseed/mint.seed
+
+MENU END
+
+MENU BEGIN "Live CD" : 32-bit
+
+label live-mm-32-oem-config-17
+  MENU label TRY Mint 17 Mate 32-bit
+  KERNEL mint17-32bit/casper/vmlinuz
+  INITRD mint17-32bit/casper/initrd.lz 
+  APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/mint17-32bit file=/cdrom/preseed/cli.seed
+
+LABEL live-L1404S
+  MENU LABEL TRY Lubuntu 14.04 (standard desktop)
+  LINUX Lub_14_04_std/casper/vmlinuz
+  INITRD Lub_14_04_std/casper/initrd.lz
+  APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/Lub_14_04_std file=/cdrom/preseed/lubuntu.seed
+
+LABEL Live-zorin
+  MENU LABEL TRY Zorin Lite 8
+  LINUX zorin8/casper/vmlinuz
+  INITRD zorin8/casper/initrd.gz
+  APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/zorin8 file=/cdrom/preseed/custom.seed
+
+label live-mm-13
+  menu label TRY Mint13 Mate
+  kernel mm-13/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mm-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mm-13 file=/cdrom/preseed/mint.seed
+
+label live-mc-13
+  menu label TRY Mint13 Cinnamon
+  kernel mc-13/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=mc-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mc-13 file=/cdrom/preseed/mint.seed
+
+label live-x1204
+  menu label TRY Xubuntu 12.04
+  kernel x-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=x-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/x-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-u1204
+  menu label TRY Ubuntu 12.04
+  kernel u-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=u-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-k1204
+  menu label TRY Kubuntu 12.04
+  kernel k-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=k-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/k-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-l1204
+  menu label TRY Lubuntu 12.04
+  kernel l-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=l-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/l-12.04 file=/cdrom/preseed/ubuntu.seed
+
+MENU END
+MENU END
+
+LABEL DBAN_OLD
+    menu label DBAN 2.2.7 (Old Version)
+    kernel dban2/dban.bzi
+    append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+
+#94:de:80:bd:23:95
+

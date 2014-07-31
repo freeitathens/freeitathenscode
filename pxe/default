@@ -1,4 +1,4 @@
-default vesamenu.c32
+DEFAULT vesamenu.c32
 prompt 0
 MENU MARGIN 2
 MENU BACKGROUND clonezilla-i486/syslinux/ocswp.png
@@ -25,13 +25,13 @@ LABEL Prod-mint17-64bit
     MENU LABEL Install Mint17 MATE 64-bit oem (22-Jul Build, normal 60GB+)
     KERNEL Czilla_20140331_saucy_amd64/live/vmlinuz
     INITRD Czilla_20140331_saucy_amd64/live/initrd.img 
-    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Mint17_Mate_64_oem_20140722_parted.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17N_64bit sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint17N_64.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Mint17N_64bit sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs 
 
 LABEL Mint64_mate_oem_config
     MENU LABEL Install Mint13 MATE 64-bit oem (06-Jun Build - Final)
     KERNEL clonezilla-amd64/live/vmlinuz
     INITRD clonezilla-amd64/live/initrd.img 
-    APPEND boot=live live-config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Mint13_Mate_64bit_20140606.img sda1 sda5" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint13_64.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Mint13_64bit sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs 
 
 MENU END
 
@@ -50,6 +50,12 @@ MENU END
 MENU BEGIN Image with Clonezilla: 32-bit
 
 MENU BEGIN 32-bit: Ready for Prime Time
+
+LABEL Prod-mint17-normalfs
+    MENU LABEL Install Mint17 MATE 32-bit (25-Jul Build, Normal FS)
+    KERNEL clonezilla-i486/live/vmlinuz
+    INITRD clonezilla-i486/live/initrd.img 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint17N_32.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Prod_Mint17N_32bit sda1 sda3 sda5" ocs_live_batch="yes" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs 
 
 LABEL Prod-mint17-32bit_flx
     MENU LABEL Install Mint17 MATE 32-bit (30-Jun Build, 40GB+ Flexible FS)
@@ -85,12 +91,11 @@ MENU END
 
 MENU BEGIN 32-bit: NOT Ready for Prime Time (Beta Tests)
 
-LABEL Beta-mint17-32bit
-    MENU LABEL Install (Beta) Mint17 MATE 32-bit (10-Jul Build, flex 40GB+)
+LABEL Beta-mint17-lvm-32bit
+    MENU LABEL Install (Beta) Mint17 MATE 32-bit (23-Jul Build, flex 40GB+)
     KERNEL clonezilla-i486/live/vmlinuz
     INITRD clonezilla-i486/live/initrd.img 
-    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_boot_lvm.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17_32bit sda1 sda2" ocs_live_batch="yes" ocs_postrun="source /home/partimag/freeitathenscode/pxe/LVM_Post_Run_add3" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
-
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_boot_lvm.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17_lvm_32bit sda1 sda2" ocs_live_batch="no" ocs_postrun="source /home/partimag/freeitathenscode/pxe/LVM_Post_Run_add3" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs 
 MENU END
 
 MENU END
@@ -219,17 +224,11 @@ MENU BEGIN Ye Olde Legacie Scriptes
 #    APPEND boot=live config noswap nolocales edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_boot_lvm.old" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Prod_Mint17_64bit sda1 sda5" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs
 #    # locales="en_US.UTF-8" keyboard-layouts=NONE
 
-LABEL Gamma-mint17-32bit
-    MENU LABEL Install (Gamma) Mint17 MATE 32-bit (19-Jun Build)
-    KERNEL clonezilla-i486/live/vmlinuz
-    INITRD clonezilla-i486/live/initrd.img 
-    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_boot_lvm_temp0619.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Gamma_Mint17_32bit sda1 sda5" ocs_live_batch="yes" ocs_postrun="source /home/partimag/freeitathenscode/pxe/LVM_Post_Run_add6" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
-
-#LABEL lubuntu32-oem-config
-#  MENU LABEL Install Lubuntu 13.10 32-bit oem-config
-#  KERNEL clonezilla-i486/live/vmlinuz
-#  INITRD clonezilla-i486/live/initrd.img 
-#  append boot=live live-config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Old_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+#LABEL Gamma-mint17-32bit
+#    MENU LABEL Install (Gamma) Mint17 MATE 32-bit (19-Jun Build)
+#    KERNEL clonezilla-i486/live/vmlinuz
+#    INITRD clonezilla-i486/live/initrd.img 
+#    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_boot_lvm_temp0619.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Gamma_Mint17_32bit sda1 sda5" ocs_live_batch="yes" ocs_postrun="source /home/partimag/freeitathenscode/pxe/LVM_Post_Run_add6" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 label live-u10043
   menu label TRY Ubuntu 10.04.3

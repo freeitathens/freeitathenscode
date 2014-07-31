@@ -1,13 +1,18 @@
 #!/bin/bash
 Accum_RC=0
-echo 'starting up for '$0
 Calling=$0
+echo 'Free I.T. imaging process partitioner starting script: '$Calling
 case $Calling in
     part64_boot_home*)
         echo 'have boot and home'
         ;;
     part64_home*)
         echo 'have only home'
+        ;;
+    partition.sh)
+        ;;
+    *)
+        echo 'Unknown script '$Calling'. Bailing.'
         ;;
 esac
 exit
@@ -136,3 +141,27 @@ fdisk -l /dev/sda
 #sudo parted -s -a optimal /dev/sda unit MiB mkpart extended 513 100%\
 #    && Good_mess $Mess\
 #    || Prob_mess $? $Mess
+./part64_home.sh
+parted -s /dev/sda mklabel msdos
+parted -s -a optimal /dev/sda mkpart primary ext3 1 10001
+parted -s -a optimal /dev/sda mkpart primary linux-swap 10001 12000
+parted -s -a optimal /dev/sda mkpart extended 12000 100%
+parted -s -a optimal /dev/sda mkpart logical ext3 12001 100%
+
+./part64_boot_lvm.sh
+parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 0% 513
+parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 513 55300
+parted -s -a optimal /dev/sda unit MiB mkpart primary ext2 55300 100%
+parted -s /dev/sda set 2 lvm on\
+
+./part64_boot_lvm.old
+parted -s /dev/sda mklabel msdos || ((RC+=$?))
+parted -s -a minimal /dev/sda mkpart primary ext2 1 512
+parted -s -a minimal /dev/sda mkpart extended 512 100%
+parted -s -a minimal /dev/sda mkpart logical ext3 513 100%
+
+# grep -i 'kernel command line' /var/log/dmesg |grep -o -P 'restoreparts\s+\S+?\s' |awk '{print $2}'
+
+#[    0.000000] Command line: BOOT_IMAGE=/vmlinuz-3.2.0-4-amd64 root=UUID=a9f2e4e7-e891-479b-b5f7-a4024562d198 ro quiet
+#[    0.000000] Kernel command line: BOOT_IMAGE=/vmlinuz-3.2.0-4-amd64 root=UUID=a9f2e4e7-e891-479b-b5f7-a4024562d198 ro quiet
+

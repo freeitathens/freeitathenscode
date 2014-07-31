@@ -1,4 +1,11 @@
+for VOLGRP in $(vgscan |grep -o -P '".+"' |sed -e 's/"//g')
+do
+echo 'Volume Group is '$VOLGRP
+read -p'Continue with resizing?'
 /sbin/sfdisk --change-id /dev/sda 3 8e
 pvcreate /dev/sda3
-vgextend --verbose frita_vg /dev/sda3
-lvextend --verbose --extents +100%FREE --resizefs /dev/frita_vg/home
+vgextend --verbose ${VOLGRP} frita_vg /dev/sda3
+lvextend --verbose --extents +100%FREE --resizefs /dev/${VOLGRP}/home /dev/sda3
+#for VGr in $(vgscan |grep -o -P '".+"' |sed -e 's/"//g'); do echo $VGr; echo 'vgremove --force '$VGr; done
+#for PVo in $(pvscan |grep 'PV' |sed -e 's/[ \t]\+/ /g' |cut -f3 -d' '); do if [[ $PVo =~ '/dev' ]];then echo 'pvremove '$PVo;else pvscan;echo 'Remove any physical lvm volumes manually';fi;done
+
