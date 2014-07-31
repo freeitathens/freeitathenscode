@@ -1,6 +1,9 @@
 #/bin/bash
 cd || exit 3
 
+# Check whether this was run from the command line on a Master build
+Master_test=${1-'N'}
+
 # *--* (set -u) = Treat references to undeclared variables as an error
 set -u
 HOLD_IFS=$IFS
@@ -19,8 +22,20 @@ CPU_ADDRESS=32
 CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 
-cp -v --backup=t /etc/hostname /tmp/hostname.bak
-echo 'Frita'${CPU_ADDRESS}-$(DATE +'%s') |sudo tee /etc/hostname
+if [ $Master_test == 'M' ]
+then
+    cp -v --backup=t /etc/hostname /tmp/hostname.bak
+    Answer='N'
+    read -p'Change Hostname (update build stamp on Master)(20 sec timeout to default '$Answer'?' -t20 -a Answer;echo ''
+    if [ "${Answer}." == 'Y.' ]
+    then
+        read -p"Today's date is "$(date) -t3;echo ''
+        sudo vi /etc/hostname
+    fi
+else
+    cp -v --backup=t /etc/hostname /tmp/hostname.bak
+    echo 'Frita'${CPU_ADDRESS}-$(DATE +'%s') |sudo tee /etc/hostname
+fi
 sudo hostname -F /etc/hostname
 
 # *--* Create log and error text destination files *--*
