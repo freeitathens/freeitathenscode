@@ -35,7 +35,7 @@ then
         sudo vi /etc/hostname /etc/hosts
     fi
 else
-    echo 'Frita'${CPU_ADDRESS}-$(DATE +'%s') |sudo tee /etc/hostname
+    echo 'Frita'${CPU_ADDRESS}-$(date +'%s') |sudo tee /etc/hostname
 fi
 New_hostname=$(cat /etc/hostname |tr -d '\n')
 sudo sed -i "s/$Found_hostname/$New_hostname/" /etc/hosts
