@@ -38,7 +38,13 @@ MENU END
 MENU BEGIN 64-bit: NOT Ready for Prime Time (Beta Tests)
 
 LABEL Beta-mint17-64bit
-    MENU LABEL Install Mint17 MATE 64-bit (11-Jul Build, lvm 60GB+)
+    MENU LABEL Install Mint17 MATE 64-bit oem (Beta, 31-Jul Build, normal 60GB+)
+    KERNEL Czilla_20140331_saucy_amd64/live/vmlinuz
+    INITRD Czilla_20140331_saucy_amd64/live/initrd.img 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint17N_64.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17_64bit sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs 
+
+LABEL Beta-mint17-lvm-64bit
+    MENU LABEL Install Mint17 MATE 64-bit (Beta, 11-Jul Build, lvm 60GB+)
     KERNEL clonezilla-amd64/live/vmlinuz
     INITRD clonezilla-amd64/live/initrd.img 
     APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part64_boot_lvm.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17_64bit sda1 sda2" ocs_live_batch="yes" ocs_postrun="source /home/partimag/freeitathenscode/pxe/LVM_Post_Run_add3" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs 
@@ -90,6 +96,13 @@ LABEL Install Emmabuntus 32-bit oem-config
 MENU END
 
 MENU BEGIN 32-bit: NOT Ready for Prime Time (Beta Tests)
+#21889642 Beta_Mint17_32bit
+
+LABEL Beta-mint17-normalfs
+    MENU LABEL Install Mint17 MATE 32-bit (Beta, 31-Jul Build, Normal FS)
+    KERNEL clonezilla-i486/live/vmlinuz
+    INITRD clonezilla-i486/live/initrd.img 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint17N_32.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta_Mint17_32bit sda1 sda3 sda5" ocs_live_batch="yes" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs 
 
 LABEL Beta-mint17-lvm-32bit
     MENU LABEL Install (Beta) Mint17 MATE 32-bit (23-Jul Build, flex 40GB+)
@@ -275,4 +288,8 @@ MENU END
 #TODO Following allegedly will build a usb stick with the named image:
 #ocs-live-dev -c -g en_US.UTF-8 -t -k NONE -e \
 #"-g auto -e1 auto -e2 -c -r -j2 -srel -k -p true restoreparts 2013-10-09-20-fritagonal-img sda1 sda3" 2013-10-09-20-fritagonal-img
+
+#21889642 Beta_Mint17_32bit
+#21889043 Beta_Mint17_64bit
+#21889659 Beta_Mint17_lvm_32bit
 
