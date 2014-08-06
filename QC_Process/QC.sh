@@ -6,8 +6,8 @@ Down_late=${1:-'N'}
 
 if [ $Down_late == 'Y' ]
 then
-    echo "Downloading latest QC script"
-    svn update ~/freeitathenscode/QC_Process > /dev/null
+    echo "Downloading latest QC / imaging scripts"
+    svn update ~/freeitathenscode/{QC_Process,image_scripts} > /dev/null
     # redirect (>) output to bitbucket (/dev/null) keeps user 
     # from being overwhelmed with not-so-relevent messages.
     if [ $? == 0 ]; then

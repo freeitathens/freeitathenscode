@@ -27,9 +27,9 @@ cp -v --backup=t /etc/hosts /tmp/hosts.bak
 Found_hostname=$(hostname)
 if [ $Master_test == 'M' ]
 then
-    Answer='N'
-    read -p'Change Hostname (update build stamp on Master)(20 sec timeout to default '$Answer'?' -t20 -a Answer;echo ''
-    if [ "${Answer}." == 'Y.' ]
+    declare -a Answer='N'
+    read -p'Change Hostname (update build stamp on Master)(20 sec timeout to default '${Answer[0]}'?' -t20 -a Answer;echo ''
+    if [ "${Answer[0]}." == 'Y.' ]
     then
         read -p"Today's date is $(date)" -t3;echo ''
         sudo vi /etc/hostname /etc/hosts
