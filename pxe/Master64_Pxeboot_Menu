@@ -34,7 +34,7 @@ label clonezilla_64
   MENU label Clone (64-bit)
   KERNEL Czilla_20140331_saucy_amd64/live/vmlinuz
   INITRD Czilla_20140331_saucy_amd64/live/initrd.img 
-  APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts Mint17_Mate_64_oem_20140806.img sda1 sda3 sda5" ocs_live_extra_param="" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs ocs_server="192.168.1.9"
+  APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts Mint17_Mate_64_oem_20140808.img sda1 sda3 sda5" ocs_live_extra_param="" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs ocs_server="192.168.1.9"
 
 MENU BEGIN INSTALL LINUX (Image with Clonezilla)
 
