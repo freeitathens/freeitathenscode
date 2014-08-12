@@ -187,9 +187,19 @@ Ramp_up() {
             echo -ne "\t"
             ;;
         M) 
-            echo -ne ${colorattr_pre}${COLORATTR}${colorattr_post}$Message
+            echo -ne ${colorattr_pre}${COLORATTR}'m'$Message
             COLORATTR=''
             ;;
+	F)
+            echo -ne ${colorattr_pre}${COLORATTR}'m'
+	    if [ -f $Message ]
+	    then
+		cat $Message
+	    else
+		echo 'Empty Message File '$Message
+	    fi
+            COLORATTR=''
+	    ;;
         A[[:digit:]]*)
             declare -a mess_parts_a=($Message)
             declare -i mess_ix=$(echo $token |tr -d 'A')
@@ -326,6 +336,7 @@ Pause_n_Answer() {
     IFS=$' \t\n'
     Prompt2U=$1
     shift
+    Answer=''
     local RC=0
 
     while [ -n "$1" ]
@@ -335,6 +346,7 @@ Pause_n_Answer() {
     done
 
     #[[ $Prompt2U =~ [Y|y|N|n] ]] Prompt2U='Y|N' RC=1
+    set +u
     Prompt2U='====> Your response {'${Prompt2U}'}? '
     echo ''
     read -a User_resp -p "$Prompt2U"
@@ -442,7 +454,6 @@ Time_to_kill() {
         #prettyprint 1,32,47,M,0 Valid
 #echo -e "\n\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 #echo -n token=$token |od -Ax -taz
-#echo Msg=$Message
 #echo -n $token |tr -d [:digit:]
 #echo  Pipestatus1 = ${PIPESTATUS[1]}
 #Digit=aa
