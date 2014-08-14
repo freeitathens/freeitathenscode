@@ -1,18 +1,28 @@
-#!/bin/bash
+# #x/bin/bash
 
 # *--* Identify box as 32 or 64 bit capable. *--*
 Get_Address_Len() {
+    use_strict=${1:-'n'}
+    sanity_check=${2:-'n'}
+    shift 2
+    RC=0
+
+    which lscpu || ( [[ $use_strict == 'y' ]] && return 16 )
 
     address_len=32
-    lscpu |grep -P '^Arch.+x86_64$' >&2
-    for fl in $(cat /proc/cpuinfo |grep '^flags')
-    do
-        if [ $fl == 'lm' ]
-        then
-            address_len=64
-            break
-        fi
-    done
+    lscpu |grep -P '^Arch.+x86_64$' >&2 && address_len=64
+
+    if [ $sanity_check == 'y' ]
+    then
+    alt_address_len=32
+    cat /proc/cpuinfo\
+        |grep -P '^flags\s+:.+\blm\b' >&2\
+        && alt_address_len=64
+    if [ $address_len -ne $alt_address_len ]
+    then
+        echo 'Discrepancy in finding cpu address size '$address_len' '$alt_address_len
+    fi
+    fi
     export address_len
 
     return 0
@@ -27,20 +37,21 @@ Get_CPU_ADDRESS() {
 }
 
 Get_DISTRO() {
-    DISTRO=$1
+    NAME_DISTRO=$1
     local RC=0
 
     GEB_distro=$(lsb_release -a 2>/dev/null|grep '^Distributor ID:'\
         |cut -f2 -d: |sed -e 's/^[ \t]*//')
     Pauze "System reports distro as ${GEB_distro}."
 
-    if [ -z ${DISTRO} ]
+    if [ -z ${NAME_DISTRO} ]
     then
         # NO Distribution name from Command Line Interface
         if [ "${SESSION}." == 'Lubuntu.' ]
         then
-            DISTRO='lubuntu'
-            Pauze "Using $DISTRO as distribution name."
+            NAME_DISTRO='lubuntu'
+            Pauze "Using $NAME_DISTRO as distribution name."
+	    # Return code 1 indicates System provides Distro name
             return 1
         else
             if [ -z ${GEB_distro} ]
@@ -49,15 +60,15 @@ Get_DISTRO() {
                 return 17
             fi
             # Use System-detected Distro name.
-            DISTRO=$GEB_distro
+            NAME_DISTRO=$GEB_distro
+	    return 1
         fi
-        # Return code 1 indicates System provides Distro name
-        return 1
+        return 18
     fi
 
-    if [ "${DISTRO}." == "${GEB_distro}." ]
+    if [ "${NAME_DISTRO}." == "${GEB_distro}." ]
     then
-        Pauze "System distro value (${GEB_distro}) agrees with your input (${DISTRO})."
+        Pauze "System distro value (${GEB_distro}) agrees with your input (${NAME_DISTRO})."
     fi
 
     return $RC
@@ -80,53 +91,58 @@ Confirm_DISTRO_CPU() {
     Set_RC=${1:-20}
 
     case $Set_RC in
-        0)
-            prettyprint 'n,1,33,40,M,n' "Evaluating your input: ${DISTRO}"
-            ;;
-        1)
+	0)
+	    prettyprint 'n,1,33,40,M,n' "Evaluating your input: ${NAME_DISTRO}"
+	    ;;
+	1)
 	    Pauze 'No distro supplied in parms. (e.g., -d BLOATWARE)...'
-            Answer='N'
-            Pause_n_Answer 'Y|N(Default='$Answer')' \
-            "...system value ${DISTRO} is used, OK? "
+	    Answer='N'
+	    Pause_n_Answer 'Y|N(Default='$Answer')' \
+		"...system value ${NAME_DISTRO} is used, OK? "
 
-            if [ "${Answer}." != 'Y.' ]
-            then 
-                Pauze "Exiting."
-                return 12
-            fi
-            ;;
-        *)
-            echo 'nothing possible now.'
-            return $Set_RC
-            ;;
+	    if [ "${Answer}." != 'Y.' ]
+	    then 
+		Pauze "Exiting."
+		return 12
+	    fi
+	    ;;
+	*)
+	    echo 'nothing possible now.'
+	    return $Set_RC
+	    ;;
     esac
 
     good_distro_ind=88
     valid_or_not='an Invalid'
-    case $DISTRO in
-        LinuxMint)
-	        good_distro_ind=0
-            valid_or_not='a valid'
-            DISTRO='mint'
-            Pauze 'Substituting more regular name '$DISTRO'.'
-            ;;
-        lubuntu|Ubuntu|mint)
-	        good_distro_ind=0
-            valid_or_not='a valid'
-            ;;
-        *)
-            Pauze 'ERROR,Distro name wha?'
-            ;;
+    case $NAME_DISTRO in
+	LinuxMint|mint)
+	    good_distro_ind=0
+	    valid_or_not='a valid'
+	    DISTRO='mint'
+	    Pauze 'Substituting more regular name '$DISTRO'.'
+	    ;;
+	lubuntu|Ubuntu)
+	    good_distro_ind=0
+	    valid_or_not='a valid'
+	    DISTRO='ubuntu'
+	    Pauze 'Substituting more regular name '$DISTRO'.'
+	    ;;
+	*)
+	    prettyprint '1,31,47,M,0,n' 'Invalid.'
+	    prettyprint 't,7,31,47,M,0,n' '(Note, you can run this as' $0 'distro)'
+	    return $good_distro_ind
+	    ;;
     esac
 
-    prettyprint '1,32,40,M,0,n' $DISTRO' is '$valid_or_not' distribution name.'
+    prettyprint '1,32,40,M,0,n' $NAME_DISTRO' is '$valid_or_not' distribution name.'
     if [ $good_distro_ind -eq 0 ]
     then
-	    Pauze "INFO,Confirmed $DISTRO on ${address_len}-bit box."
+	Pauze "INFO,Confirmed $NAME_DISTRO on ${address_len}-bit box."
     fi
 
     return $good_distro_ind
 }
+
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 
@@ -190,16 +206,16 @@ Ramp_up() {
             echo -ne ${colorattr_pre}${COLORATTR}'m'$Message
             COLORATTR=''
             ;;
-	F)
+    F)
             echo -ne ${colorattr_pre}${COLORATTR}'m'
-	    if [ -f $Message ]
-	    then
-		cat $Message
-	    else
-		echo 'Empty Message File '$Message
-	    fi
+        if [ -f $Message ]
+        then
+        cat $Message
+        else
+        echo 'Empty Message File '$Message
+        fi
             COLORATTR=''
-	    ;;
+        ;;
         A[[:digit:]]*)
             declare -a mess_parts_a=($Message)
             declare -i mess_ix=$(echo $token |tr -d 'A')
