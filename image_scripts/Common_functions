@@ -14,14 +14,14 @@ Get_Address_Len() {
 
     if [ $sanity_check == 'y' ]
     then
-    alt_address_len=32
-    cat /proc/cpuinfo\
-        |grep -P '^flags\s+:.+\blm\b' >&2\
-        && alt_address_len=64
-    if [ $address_len -ne $alt_address_len ]
-    then
-        echo 'Discrepancy in finding cpu address size '$address_len' '$alt_address_len
-    fi
+        alt_address_len=32
+        cat /proc/cpuinfo\
+            |grep -P '^flags\s+:.+\blm\b' >&2\
+            && alt_address_len=64
+        if [ $address_len -ne $alt_address_len ]
+        then
+            echo 'Discrepancy in finding cpu address size '$address_len' '$alt_address_len
+        fi
     fi
     export address_len
 
@@ -51,7 +51,7 @@ Get_DISTRO() {
         then
             NAME_DISTRO='lubuntu'
             Pauze "Using $NAME_DISTRO as distribution name."
-	    # Return code 1 indicates System provides Distro name
+        # Return code 1 indicates System provides Distro name
             return 1
         else
             if [ -z ${GEB_distro} ]
@@ -61,7 +61,7 @@ Get_DISTRO() {
             fi
             # Use System-detected Distro name.
             NAME_DISTRO=$GEB_distro
-	    return 1
+        return 1
         fi
         return 18
     fi
@@ -91,53 +91,53 @@ Confirm_DISTRO_CPU() {
     Set_RC=${1:-20}
 
     case $Set_RC in
-	0)
-	    prettyprint 'n,1,33,40,M,n' "Evaluating your input: ${NAME_DISTRO}"
-	    ;;
-	1)
-	    Pauze 'No distro supplied in parms. (e.g., -d BLOATWARE)...'
-	    Answer='N'
-	    Pause_n_Answer 'Y|N(Default='$Answer')' \
-		"...system value ${NAME_DISTRO} is used, OK? "
+    0)
+        prettyprint 'n,1,33,40,M,n' "Evaluating your input: ${NAME_DISTRO}"
+        ;;
+    1)
+        Pauze 'No distro supplied in parms. (e.g., -d BLOATWARE)...'
+        Answer='N'
+        Pause_n_Answer 'Y|N(Default='$Answer')' \
+        "...system value ${NAME_DISTRO} is used, OK? "
 
-	    if [ "${Answer}." != 'Y.' ]
-	    then 
-		Pauze "Exiting."
-		return 12
-	    fi
-	    ;;
-	*)
-	    echo 'nothing possible now.'
-	    return $Set_RC
-	    ;;
+        if [ "${Answer}." != 'Y.' ]
+        then 
+        Pauze "Exiting."
+        return 12
+        fi
+        ;;
+    *)
+        echo 'nothing possible now.'
+        return $Set_RC
+        ;;
     esac
 
     good_distro_ind=88
     valid_or_not='an Invalid'
     case $NAME_DISTRO in
-	LinuxMint|mint)
-	    good_distro_ind=0
-	    valid_or_not='a valid'
-	    DISTRO='mint'
-	    Pauze 'Substituting more regular name '$DISTRO'.'
-	    ;;
-	lubuntu|Ubuntu)
-	    good_distro_ind=0
-	    valid_or_not='a valid'
-	    DISTRO='ubuntu'
-	    Pauze 'Substituting more regular name '$DISTRO'.'
-	    ;;
-	*)
-	    prettyprint '1,31,47,M,0,n' 'Invalid.'
-	    prettyprint 't,7,31,47,M,0,n' '(Note, you can run this as' $0 'distro)'
-	    return $good_distro_ind
-	    ;;
+    LinuxMint|mint)
+        good_distro_ind=0
+        valid_or_not='a valid'
+        DISTRO='mint'
+        Pauze 'Substituting more regular name '$DISTRO'.'
+        ;;
+    lubuntu|Ubuntu)
+        good_distro_ind=0
+        valid_or_not='a valid'
+        DISTRO='ubuntu'
+        Pauze 'Substituting more regular name '$DISTRO'.'
+        ;;
+    *)
+        prettyprint '1,31,47,M,0,n' 'Invalid.'
+        prettyprint 't,7,31,47,M,0,n' '(Note, you can run this as' $0 'distro)'
+        return $good_distro_ind
+        ;;
     esac
 
     prettyprint '1,32,40,M,0,n' $NAME_DISTRO' is '$valid_or_not' distribution name.'
     if [ $good_distro_ind -eq 0 ]
     then
-	Pauze "INFO,Confirmed $NAME_DISTRO on ${address_len}-bit box."
+    Pauze "INFO,Confirmed $NAME_DISTRO on ${address_len}-bit box."
     fi
 
     return $good_distro_ind
@@ -365,7 +365,8 @@ Pause_n_Answer() {
     set +u
     Prompt2U='====> Your response {'${Prompt2U}'}? '
     echo ''
-    read -a User_resp -p "$Prompt2U"
+    declare -a User_resp
+    read -p "$Prompt2U" -a User_resp
     Answer=${User_resp[0]}
 
     return $RC

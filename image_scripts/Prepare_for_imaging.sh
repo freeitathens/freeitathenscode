@@ -6,20 +6,26 @@ then
 fi
 
 # Establish root of version-controlled code tree.
-temp_sourcebase="${HOME}/freeitathenscode"
-if [ ! -d $temp_sourcebase ]
+sourcebase="${HOME}/freeitathenscode"
+if [ ! -d $sourcebase ]
 then
-    read -p 'Location of Freeit code? ' -a temp_sourcebase
-    if [ "${temp_sourcebase}." == 'N.' ]
+    declare -a prompted_sourcebase
+    echo 'Normally FreeIT code is in '$sourcebase
+    read -p 'Your Location? ' -a prompted_sourcebase
+    hold_sourcebase=${prompted_sourcebase[@]}
+    if [[ "$hold_sourcebase" =~ 'EXIT' ]]
     then
         exit 2
     fi
-    [[ -d $temp_sourcebase ]] || exit 13
+
+    hold_sourcebase=${prompted_sourcebase[0]}
+    [[ -d $hold_sourcebase ]] || exit 13
+    sourcebase=hold_sourcebase
 fi
+declare -rx sourcebase
 
 # Make the version-controlled tree root - sourcebase - an unchangable value,
 #   and let children inherit.
-declare -rx sourcebase=$temp_sourcebase
 
 # Establish directory of Common Functions within sourcebase (vc root)
 temp_codebase=${sourcebase}'/image_scripts'
