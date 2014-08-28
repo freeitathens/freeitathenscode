@@ -8,7 +8,7 @@ MENU COLOR TIMEOUT_MSG 1;33;47 #c0000090 #00000000
 MENU COLOR TIMEOUT 1;34;47 #c0000090 #00000000
 MENU COLOR HELP 1;36;40 #c0000090 #00000000
 
-MENU TITLE Special Menu for Master Build 64-bit
+MENU TITLE Special Menu for Master Build 32-bit
 menu color title        * #d8d8d8ff *
 menu color border       * #d8d8d8ff #00000000 none
 menu color sel          * #00000000 #d8d8d8ff *
@@ -30,12 +30,11 @@ LABEL local
     localboot 0x80
     timeout 0
 
-label clonezilla_64
-  MENU label Clone (64-bit)
+label clonezilla_32
+  MENU label Clone (32-bit)
   KERNEL Czilla_20140331_saucy_amd64/live/vmlinuz
   INITRD Czilla_20140331_saucy_amd64/live/initrd.img 
-  APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts Mint17_Mate_64_oem_20140815.img sda1 sda3 sda5" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs
-  #ocs_server="192.168.1.9"
+  APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts Mint17_Mate_32_oem_20140808.img sda1 sda3 sda5" ocs_live_extra_param="" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs
 
 MENU BEGIN INSTALL LINUX (Image with Clonezilla)
 
