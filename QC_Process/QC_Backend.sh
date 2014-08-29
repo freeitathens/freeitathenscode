@@ -24,7 +24,7 @@ for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 
 sudo cp -v --backup=t /etc/hostname /tmp/hostname.bak
 sudo cp -v --backup=t /etc/hosts /tmp/hosts.bak
-Found_hostname=$(hostname 2>dev/null)
+Found_hostname=$(hostname 2>/dev/null)
 if [ $Master_test == 'M' ]
 then
     declare -a Answer=('N')
@@ -541,6 +541,8 @@ then
 fi
 
 Wrapup_report 1 $LOGFILE
+
+#dialog --keep-tite --colors --title "In Addition..." --msgbox 'Remember to setup lm-sensors' 25 80
 
 clear
 
