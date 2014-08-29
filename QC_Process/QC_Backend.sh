@@ -25,6 +25,8 @@ for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 sudo cp -v --backup=t /etc/hostname /tmp/hostname.bak
 sudo cp -v --backup=t /etc/hosts /tmp/hosts.bak
 Found_hostname=$(hostname 2>/dev/null)
+[[ -z $Found_hostname ]] && Found_hostname='BOOBOOBAABAA'
+
 if [ $Master_test == 'M' ]
 then
     declare -a Answer=('N')
@@ -38,6 +40,7 @@ else
     echo 'Frita'${CPU_ADDRESS}-$(date +'%s') |sudo tee /etc/hostname
 fi
 New_hostname=$(cat /etc/hostname |tr -d '\n')
+[[ -z $New_hostname ]] && New_hostname='MOOMOOMIIMII'
 sudo sed -i "s/$Found_hostname/$New_hostname/" /etc/hosts
 sudo hostname -F /etc/hostname 2>/dev/null
 
