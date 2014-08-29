@@ -45,7 +45,7 @@ declare -x refresh_git='Y'
 refresh_updatedb='N'
 refresh_svn='N'
 
-while getopts 'jd:i:RuVGh' OPT
+while getopts 'jRuVGhd:i:' OPT
 do
     case $OPT in
         j)
@@ -159,13 +159,17 @@ then
     exit $CDC_RC
 fi
 
-Answer='Y'
-Pause_n_Answer 'Y|N' 'INFO,Check (absence of) local UUID reference for swap in fstab.(Default '$Answer')?'
-if [ "${Answer}." == 'Y.' ]
+#Answer='Y'
+#Pause_n_Answer 'Y|N' 'INFO,Check (absence of) local UUID reference for swap in fstab.(Default '$Answer')?'
+#if [ "${Answer}." == 'Y.' ]
+    #egrep -v '^\s*(#|$)' /etc/fstab\
+Pauze 'Check (absence of) local UUID reference for swap in fstab.'
+RCxU=1
+grep -P 'UUID.+swap' /etc/fstab && RCxU=$?
+if [ $RCxU -eq 0 ]
 then
-    egrep -v '^\s*(#|$)' /etc/fstab\
-        |grep swap |grep UUID && prettyprint 'n,1,31,47,M,0,n'\
-        'fstab cannot go on image with local UUID reference'
+    Pauze 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference. Entering editor...'
+    sudo vi /etc/fstab
 fi
 
 Pauze 'Checking swap'
@@ -192,7 +196,7 @@ then
     Contact_server
     if [ $? -lt 1 ]
     then
-        Pauze 'Check on subversion status'
+        Pauze 'Check on subversion local repo status'
         if [ -d ${sourcebase}/.svn ]
         then
             cd ${sourcebase}/
@@ -210,12 +214,15 @@ PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice
 Pauze 'Install necessary packages: ' $PKGS
 apt-get install $PKGS
 
-Answer='N'
-Pause_n_Answer 'Y|N' 'WARN,Install oem-config packages (Default '$Answer')?'
-if [ "${Answer}." == 'Y.' ]
+if [ $address_len -eq 32 ]
 then
-    PK_OEM='oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].*'
-    apt-get install $PK_OEM
+    Answer='N'
+    Pause_n_Answer 'Y|N' 'WARN,Install oem-config packages (Default '$Answer')?'
+    if [ "${Answer}." == 'Y.' ]
+    then
+	PK_OEM='oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].*'
+	apt-get install $PK_OEM
+    fi
 fi
 
 set -u
@@ -334,13 +341,13 @@ Pauze 'Confirming that the correct Run Quality Control icon is in place...'
     find ${sourcebase}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
     find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort
 
-Answer='N'
-Pause_n_Answer 'Y|N' 'INFO,Run nouser and nogroup checks/fixes?'
-if [ "${Answer}." == 'Y.' ]
+Mark_nouser_nogroup_fix_run="${HOME}/Ran_nouser_nogroup_fix"
+if [ ! -e $Mark_nouser_nogroup_fix_run ]
 then
-    find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -uid 1000 -nouser -exec chown -c root {} \; &
-    find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -gid 1000 -nogroup -exec chgrp -c root {} \; &
+    find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -uid 1000\
+    -nouser -exec chown -c root {} \; & PIDnu=$!
+    find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -gid 1000\
+    -nogroup -exec chgrp -c root {} \; & PIDng=$!
+    (while [ ! -e $Mark_nouser_nogroup_fix_run ];do sleep 30;ps -ef |awk '{print $2}' |egrep "$PIDnu|$PIDng" >/dev/null||touch $Mark_nouser_nogroup_fix_run;done;chmod -c 600 $Mark_nouser_nogroup_fix_run || logger -t 'Prepare2Image' 'Problem concluding Nouser Nogroup fix') &
 fi
-
-set +x
 

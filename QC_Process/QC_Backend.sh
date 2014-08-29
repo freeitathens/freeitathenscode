@@ -22,9 +22,9 @@ CPU_ADDRESS=32
 CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
 for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
 
-cp -v --backup=t /etc/hostname /tmp/hostname.bak
-cp -v --backup=t /etc/hosts /tmp/hosts.bak
-Found_hostname=$(hostname)
+sudo cp -v --backup=t /etc/hostname /tmp/hostname.bak
+sudo cp -v --backup=t /etc/hosts /tmp/hosts.bak
+Found_hostname=$(hostname 2>dev/null)
 if [ $Master_test == 'M' ]
 then
     declare -a Answer=('N')
@@ -39,7 +39,7 @@ else
 fi
 New_hostname=$(cat /etc/hostname |tr -d '\n')
 sudo sed -i "s/$Found_hostname/$New_hostname/" /etc/hosts
-sudo hostname -F /etc/hostname
+sudo hostname -F /etc/hostname 2>/dev/null
 
 # *--* Create log and error text destination files *--*
 declare -r LOGFILE=${HOME}/QC.log
