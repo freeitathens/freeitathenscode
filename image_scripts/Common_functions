@@ -1,5 +1,4 @@
-# #x/bin/bash
-
+# *Common_functions: to be sourced
 # *--* Identify box as 32 or 64 bit capable. *--*
 Get_Address_Len() {
     use_strict=${1:-'n'}
@@ -36,44 +35,6 @@ Get_CPU_ADDRESS() {
 
 }
 
-Get_DISTRO() {
-    NAME_DISTRO=$1
-    local RC=0
-
-    GEB_distro=$(lsb_release -a 2>/dev/null|grep '^Distributor ID:'\
-        |cut -f2 -d: |sed -e 's/^[ \t]*//')
-    Pauze "System reports distro as ${GEB_distro}."
-
-    if [ -z ${NAME_DISTRO} ]
-    then
-        # NO Distribution name from Command Line Interface
-        if [ "${SESSION}." == 'Lubuntu.' ]
-        then
-            NAME_DISTRO='lubuntu'
-            Pauze "Using $NAME_DISTRO as distribution name."
-        # Return code 1 indicates System provides Distro name
-            return 1
-        else
-            if [ -z ${GEB_distro} ]
-            then
-                # ... and NO System-detected Distro name...
-                return 17
-            fi
-            # Use System-detected Distro name.
-            NAME_DISTRO=$GEB_distro
-        return 1
-        fi
-        return 18
-    fi
-
-    if [ "${NAME_DISTRO}." == "${GEB_distro}." ]
-    then
-        Pauze "System distro value (${GEB_distro}) agrees with your input (${NAME_DISTRO})."
-    fi
-
-    return $RC
-}
-
 # copied from /usr/bin/xdg-open
 detectDE()
 {
@@ -85,64 +46,6 @@ detectDE()
     else DE=""
     fi
 }
-
-# *--* Confirm Distro name with user *--*
-Confirm_DISTRO_CPU() {
-    Set_RC=${1:-20}
-
-    case $Set_RC in
-    0)
-        prettyprint 'n,1,33,40,M,n' "Evaluating your input: ${NAME_DISTRO}"
-        ;;
-    1)
-        Pauze 'No distro supplied in parms. (e.g., -d BLOATWARE)...'
-        Answer='N'
-        Pause_n_Answer 'Y|N(Default='$Answer')' \
-        "...system value ${NAME_DISTRO} is used, OK? "
-
-        if [ "${Answer}." != 'Y.' ]
-        then 
-        Pauze "Exiting."
-        return 12
-        fi
-        ;;
-    *)
-        echo 'nothing possible now.'
-        return $Set_RC
-        ;;
-    esac
-
-    good_distro_ind=88
-    valid_or_not='an Invalid'
-    case $NAME_DISTRO in
-    LinuxMint|mint)
-        good_distro_ind=0
-        valid_or_not='a valid'
-        DISTRO='mint'
-        Pauze 'Substituting more regular name '$DISTRO'.'
-        ;;
-    lubuntu|Ubuntu)
-        good_distro_ind=0
-        valid_or_not='a valid'
-        DISTRO='ubuntu'
-        Pauze 'Substituting more regular name '$DISTRO'.'
-        ;;
-    *)
-        prettyprint '1,31,47,M,0,n' 'Invalid.'
-        prettyprint 't,7,31,47,M,0,n' '(Note, you can run this as' $0 'distro)'
-        return $good_distro_ind
-        ;;
-    esac
-
-    prettyprint '1,32,40,M,0,n' $NAME_DISTRO' is '$valid_or_not' distribution name.'
-    if [ $good_distro_ind -eq 0 ]
-    then
-    Pauze "INFO,Confirmed $NAME_DISTRO on ${address_len}-bit box."
-    fi
-
-    return $good_distro_ind
-}
-
 
 # *-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*
 

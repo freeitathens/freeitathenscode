@@ -7,7 +7,6 @@ declare -x Runner_shell_hold=$-
 declare -rx Messages_O=$(mktemp -t "Prep2Clonze_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep2Clonze_err.XXXXX")
 declare -x aptcache_needs_update='Y'
-fallback_distro=''
 
 while getopts 'jd:Rh' OPT
 do
@@ -15,9 +14,6 @@ do
         j)
             Runner_shell_hold=${Runner_shell_hold}'i'
 	        ;;
-        d)
-            fallback_distro=$OPTARG
-            ;;
         R)
             aptcache_needs_update='N'
             ;;
@@ -35,11 +31,6 @@ declare -rx Runner_shell_as=${Runner_shell_hold}
 
 address_len=0
 Get_Address_Len
-
-DISTRO=$fallback_distro
-Get_DISTRO $DISTRO;CDC_RC=$?
-Confirm_DISTRO_CPU $CDC_RC;CDC_RC=$?
-[[ $CDC_RC -gt 0 ]] && prettyprint '5,31,47,M,n,0' $DISTRO' Wha?'
 
 Pauze 'Checking/Confirming removal of UUID reference in fstab'
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\

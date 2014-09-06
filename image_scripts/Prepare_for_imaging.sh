@@ -1,58 +1,112 @@
 #!/bin/bash
-if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
+if [ 0 -ne $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
 then
-    echo 'ERROR, Please rerun with sudo or as root'
-    exit 4
+    Pauze 'if any problems rerun with sudo or as root'
 fi
 
-# Establish root of version-controlled code tree.
+# Establish base of version-controlled code tree.
 sourcebase="${HOME}/freeitathenscode"
-if [ ! -d $sourcebase ]
-then
-    declare -a prompted_sourcebase
-    echo 'Normally FreeIT code is in '$sourcebase
-    read -p 'Your Location? ' -a prompted_sourcebase
-    hold_sourcebase=${prompted_sourcebase[@]}
+
+UserSet_sourcebase() {
+    declare -a prompted_sourcebase_a
+    echo 'Normally FreeIT Code is in '$sourcebase
+    read -p 'Your Code Location? ' -a prompted_sourcebase_a
+    hold_sourcebase=${prompted_sourcebase_a[@]}
     if [[ "$hold_sourcebase" =~ 'EXIT' ]]
     then
         exit 2
     fi
 
-    hold_sourcebase=${prompted_sourcebase[0]}
+    hold_sourcebase=${prompted_sourcebase_a[0]}
     [[ -d $hold_sourcebase ]] || exit 13
     sourcebase=hold_sourcebase
-fi
+}
+
+[[ -d $sourcebase ]] || UserSet_sourcebase
+
+# Make the version-controlled tree - sourcebase --
+#  -- an unchangable value (-r)
+#  -- let child processes inherit (-x)
 declare -rx sourcebase
 
-# Make the version-controlled tree root - sourcebase - an unchangable value,
-#   and let children inherit.
-
-# Establish directory of Common Functions within sourcebase (vc root)
-temp_codebase=${sourcebase}'/image_scripts'
-#echo 'Checking for existence of directory called '$temp_codebase
+# Establish location of Common Functions within sourcebase
+codebase=${sourcebase}'/image_scripts'
 [[ -d $temp_codebase ]] || exit 14
-
-declare -rx codebase=$temp_codebase
+declare -rx codebase
 source ${codebase}/Common_functions || exit 15
 
 declare -r HOLDIFS=$IFS
+declare -x Runner_shell_hold=$-
 declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
 declare -x aptcache_needs_update='Y'
-fallback_distro=''
-FreeIT_image='FreeIT.png'
 declare -x refresh_git='Y'
 refresh_updatedb='N'
 refresh_svn='N'
+
+FreeIT_image='FreeIT.png'
+distro_name=''
+
+sys_rpts_distro_name_Set() {
+
+    sys_rpts_distro_name=$(lsb_release -a 2>/dev/null\
+            |grep '^Distributor ID:'|cut -f2 -d:\
+            |sed -e 's/^[ \t]*//'|tr -d '\n')
+
+    if [ -n ${sys_rpts_distro_name} ]
+    then
+        Pauze "System reports distro as ${sys_rpts_distro_name}."
+        return 0
+    fi
+
+    # Try other methods
+    if [ "${SESSION}." == 'Lubuntu.' ]
+    then
+        sys_rpts_distro_name=$SESSION
+        Pauze 'Using session name '$distro_name' as distribution.'
+        return 0
+    fi
+
+    # Tell calling routing we can't system-set distro name.
+    return 12
+}
+
+Confirm_distro_name_Set() {
+    distro_name=$1
+    [[ -z $distro_name ]] && return 40
+
+    prettyprint 'n,1,32,40,M,n' "Evaluating your input: ${distro_name}"
+
+    sys_rpts_distro_name_Set;RCxS=$?
+    if [ $RCxS -gt 0 ]
+    then
+        Pauze 'Cant confirm your distro name '\
+        $distro_name' against the system name(s)'
+        return 2
+    fi
+
+    if [ "${distro_name}." == "${sys_rpts_distro_name}." ]
+    then
+        Pauze "System distro value (${sys_rpts_distro_name}) agrees with your input (${distro_name})."
+        return 0
+    fi
+
+    Pauze 'System distro value ('\
+        ${sys_rpts_distro_name}\
+          '): mismatch (however slight) with input: ('\
+        ${distro_name}').'
+    return 3
+}
 
 while getopts 'jRuVGhd:i:' OPT
 do
     case $OPT in
         j)
             Runner_shell_hold=${Runner_shell_hold}'i'
-        ;;
+            ;;
         d)
-            fallback_distro=$OPTARG
+            Confirm_distro_name_Set $OPTARG;RCx1=$?
+            [[ $RCx1 -gt 11 ]] && exit $RCx1
             ;;
         i)
             FreeIT_image=$OPTARG
@@ -70,7 +124,7 @@ do
             refresh_git='N'
             ;;
         h)
-            Pauze $(basename $0) 'valid options are -d Distro [-R|-u|-G|-i imagefile|-h|-j]'
+            echo $(basename $0)': Valid parms are -d Distro [-R|-u|-G|-i imagefile|-h|-j]'
             exit 0
         ;;
         *)
@@ -79,7 +133,9 @@ do
             ;;
     esac
 done
+
 declare -rx Runner_shell_as=${Runner_shell_hold}
+[[ "${refresh_updatedb}." == 'Y.' ]] && updatedb &
 
 Contact_server() {
     if [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]
@@ -140,29 +196,80 @@ Set_background() {
     fi
 }
 
-if [ "${refresh_updatedb}." == 'Y.' ]
-then
-    updatedb &
-fi
-
 address_len=0
 Get_Address_Len
 
-DISTRO=$fallback_distro
-Get_DISTRO $DISTRO;CDC_RC=$?
-Confirm_DISTRO_CPU $CDC_RC;CDC_RC=$?
-if [ $CDC_RC -gt 0 ]
-then
-    # prettyprint is sourced from Common_functions
-    prettyprint '5,31,47,M,n,0' 'Exiting'
-    Pauze "See you back soon!"
-    exit $CDC_RC
+distro_name_Set() {
+
+    Pauze 'No distro supplied in parms. (e.g., -d FRITAROX)...'
+    sys_rpts_distro_name_Set;RCxS=$?
+    [[ $RCxS -eq 0 ]] || return 30
+
+    Answer='N'
+    Pause_n_Answer 'Y|N' '...system value '${distro_name}' is used, OK? '
+    [[ "${Answer}." == 'Y.' ]] || return 12
+
+    distro_name=$sys_rpts_distro_name
+
+    return 0
+}
+
+if [[ -z $distro_name ]]
+then 
+    distro_name_Set;RCxD=$?
+    if [ $RCxD -ne 0 ]
+    then
+        prettyprint '1,31,40,M,n' 'Cannot Set Distro name'
+        Pauze 'Exiting....'
+        exit $RCxD
+    fi
 fi
 
-#Answer='Y'
-#Pause_n_Answer 'Y|N' 'INFO,Check (absence of) local UUID reference for swap in fstab.(Default '$Answer')?'
-#if [ "${Answer}." == 'Y.' ]
-    #egrep -v '^\s*(#|$)' /etc/fstab\
+# *--* Confirm Distro name with user *--*
+Confirm_DISTRO_CPU() {
+
+    distro_valid_flag='?'
+    prettyprint '1,32,40,M,0' $distro_name' is'
+    case $distro_name in
+    LinuxMint|mint)
+        distro_generia='mint'
+        distro_valid_flag='Y'
+        prettyprint '1,34,40,M' ' a valid'
+        ;;
+    lubuntu|Ubuntu)
+        distro_generia='ubuntu'
+        distro_valid_flag='Y'
+        prettyprint '1,34,40,M' ' a valid'
+        ;;
+    redhat|slackware|SuSE|crunchbang)
+        distro_generia='other'
+        distro_valid_flag='Y'
+        prettyprint '1,34,40,M' " a valid (but you're on your own...)"
+        ;;
+    *)
+        distro_generia='LINUX_DISTRO_not_appearing_in_this_film_WARE'
+        distro_valid_flag='N'
+        prettyprint '1,31,40,M' ' an INVALID'
+        ;;
+    esac
+    prettyprint '1,32,40,M,n' ' distribution name.'
+    [[ $distro_valid_flag != 'Y' ]] && return 16
+
+    prettyprint '0,1,32,40,M,n' 'Using general distro (category) name of '$distro_generia'.'
+    Pauze "INFO,Confirmed $distro_name on ${address_len}-bit box."
+
+    return 0
+
+}
+
+Confirm_DISTRO_CPU;RCxDC=$?
+if [ $RCxDC -gt 0 ]
+then
+    prettyprint '5,31,47,M,n,0' 'Exiting'
+    Pauze "See you back soon!"
+    exit $RCxDC
+fi
+
 Pauze 'Check (absence of) local UUID reference for swap in fstab.'
 RCxU=1
 grep -P 'UUID.+swap' /etc/fstab && RCxU=$?
@@ -220,8 +327,8 @@ then
     Pause_n_Answer 'Y|N' 'WARN,Install oem-config packages (Default '$Answer')?'
     if [ "${Answer}." == 'Y.' ]
     then
-	PK_OEM='oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].*'
-	apt-get install $PK_OEM
+    PK_OEM='oem-config oem-config-gtk oem-config-debconf ubiquity-frontend-[dgk].*'
+    apt-get install $PK_OEM
     fi
 fi
 
@@ -229,7 +336,7 @@ set -u
 
 Pauze 'Try to set Frita Backgrounds'
 backmess='Background Set?'
-case $DISTRO in
+case $distro_generia in
     lubuntu|ubuntu)
         Backgrounds_location='/usr/share/lubuntu/wallpapers'
         ;;
@@ -253,7 +360,7 @@ esac
 
 Pauze "Response from setting Frita Backgrounds was $backmess"
 
-case $DISTRO in
+case $distro_generia in
     mint)
         Pauze 'WARNING,Ensure backports in /etc/apt/sources.list (or sources.d/)' 
         ;;
@@ -291,7 +398,7 @@ fi
 Pauze 'mint and mate specials'
 if [ $address_len -eq 32 ]
 then
-    if [ $DISTRO == 'mint' ]
+    if [ $distro_generia == 'mint' ]
     # This is actually specific to xfce: mint (32?).
     then
         apt-get install gnome-system-tools 
@@ -303,7 +410,7 @@ else
     Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
 fi
 
-case $DISTRO in
+case $distro_generia in
     lubuntu|ubuntu|mint)
         Pauze 'Run BPR Code'
         [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
@@ -311,7 +418,7 @@ case $DISTRO in
         Pauze "Run BPR: Last return code: $?"
         ;;
     *)
-        Pauze "Don't need to run BPR additions for "$DISTRO
+        Pauze "Don't need to run BPR additions for "$distro_generia' ('$distro_name')'
         ;;
 esac
 
@@ -351,3 +458,7 @@ then
     (while [ ! -e $Mark_nouser_nogroup_fix_run ];do sleep 30;ps -ef |awk '{print $2}' |egrep "$PIDnu|$PIDng" >/dev/null||touch $Mark_nouser_nogroup_fix_run;done;chmod -c 600 $Mark_nouser_nogroup_fix_run || logger -t 'Prepare2Image' 'Problem concluding Nouser Nogroup fix') &
 fi
 
+#Answer='Y'
+#Pause_n_Answer 'Y|N' 'INFO,Check (absence of) local UUID reference for swap in fstab.(Default '$Answer')?'
+#if [ "${Answer}." == 'Y.' ]
+    #egrep -v '^\s*(#|$)' /etc/fstab\
