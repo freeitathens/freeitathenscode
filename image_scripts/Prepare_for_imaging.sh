@@ -31,7 +31,7 @@ declare -rx sourcebase
 
 # Establish location of Common Functions within sourcebase
 codebase=${sourcebase}'/image_scripts'
-[[ -d $temp_codebase ]] || exit 14
+[[ -d $codebase ]] || exit 14
 declare -rx codebase
 source ${codebase}/Common_functions || exit 15
 

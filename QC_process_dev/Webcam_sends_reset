@@ -1,0 +1,37 @@
+#!/bin/bash
+
+Window_killa() {
+    local PID=$1
+    [[ $PID -lt 2 ]] && return 5
+
+    Sleep_max_secs=${2:-10}
+    Sleep_counter=0
+
+    ps -p $PID -o command= 2>/dev/null && echo '('$PID '): Tracking CPU time used...'
+    while [ $PID -gt 0 ]
+    do
+        ((Sleep_counter++))
+        [[ $Sleep_counter -gt 100 ]] && return 2
+        if [[ $Sleep_counter -gt $Sleep_max_secs ]]
+        then
+            kill $PID 2>/dev/null
+            Sleep_counter=0
+        else
+            ps -p $PID -o time= 2>/dev/null || PID=-1
+        fi
+        sleep 1
+    done
+}
+
+ERRFILE=/tmp/Webstream.err
+path2firefox=$(which firefox 2>/dev/null |tr -d '\n')
+while [ 1 -eq 1 ]
+do
+    $path2firefox -no-remote http://192.168.1.10:8081 2>>$ERRFILE &
+    ice_PID=$!
+    echo $ice_PID 'process # for ff' >>$ERRFILE
+    Window_killa $ice_PID 20
+    if [ -f /tmp/STOP ];then exit;fi
+    sleep 2
+done
+
