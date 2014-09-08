@@ -1,0 +1,42 @@
+aptitude,0,ALL,
+dialog,0,ALL,
+ethtool,0,ALL,
+firefox,0,ALL,ppa=mozillateam/firefox-next
+flashplugin-installer,0,ALL,
+gimp,0,ALL,ppa=otto-kesselgulasch/gimp
+gparted,0,ALL,
+hardinfo,0,ALL,
+hddtemp,0,ALL,
+htop,0,ALL,
+inxi,0,ALL,
+libreoffice,0,ALL,
+lm-sensors,0,ALL,
+mintdrivers,0,mint,
+oem-config,32,ALL,
+oem-config-debconf,32,ALL,
+oem-config-gtk,32,ALL,
+terminator,0,ALL,
+ubiquity-frontend-[dgk].*,32,ALL,
+vim,0,ALL,
+vrms,0,ALL,
+xscreensaver-gl,0,ALL,
+# apt-get install (BPR)
+system-config-printer-gnome,0,ALL,
+libprinterconf-dev,0,ALL,
+# apt-get purge
+ace-of-penguins,0,NONE,
+abiword,0,NONE,
+abiword-common,0,NONE,
+libabiword-3.0,0,NONE,
+gnumeric,0,NONE,
+gnumeric-common,0,NONE,
+git,0,ALL,
+# Movies
+gnome-mplayer,0,NONE,INSTALL=vlc
+vlc,0,ALL,REMOVE=gnome-mplayer
+# Music
+audacious,0,NONE,INSTALL='libimobiledevice4 rhythmbox rhythmbox-plugins'
+libimobiledevice4 rhythmbox rhythmbox-plugins,0,ALL,REMOVE=audacious
+# Email
+sylpheed,0,NONE,INSTALL='claws-mail claws-mail-extra-plugins claws-mail-tools claws-mail-plugins'
+claws-mail claws-mail-extra-plugins claws-mail-tools claws-mail-plugins,0,ALL,REMOVE=sylpheed
