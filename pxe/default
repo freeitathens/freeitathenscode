@@ -27,12 +27,6 @@ LABEL Prod-mint17-64bit
     INITRD Czilla_20140331_saucy_amd64/live/initrd.img 
     APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint17N_64.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod64_Mint17N sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs 
 
-LABEL Mint64_mate_oem_config
-    MENU LABEL Install Mint13 MATE 64-bit oem (06-Jun Build - Final)
-    KERNEL clonezilla-amd64/live/vmlinuz
-    INITRD clonezilla-amd64/live/initrd.img 
-    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint13_64.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Mint13_64bit sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs 
-
 MENU END
 
 MENU BEGIN 64-bit: NOT Ready for Prime Time (Beta Tests)
@@ -80,11 +74,6 @@ LABEL mint32-legacy
   KERNEL clonezilla-i486/live/vmlinuz
   INITRD clonezilla-i486/live/initrd.img 
   APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
-
-LABEL Install Emmabuntus 32-bit oem-config
-  KERNEL clonezilla-i486/live/vmlinuz
-  INITRD clonezilla-i486/live/initrd.img 
-  APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home_boot.sh" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_emmabuntus sda1 sda2 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 MENU END
 
@@ -234,6 +223,17 @@ LABEL Kiosk Boot (text only, no gui)
 MENU END
 
 MENU BEGIN Ye Olde Legacie Scriptes
+
+LABEL Mint64_mate_oem_config
+    MENU LABEL Install Mint13 MATE 64-bit oem (06-Jun Build - Final)
+    KERNEL clonezilla-amd64/live/vmlinuz
+    INITRD clonezilla-amd64/live/initrd.img 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint13_64.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Mint13_64bit sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-amd64/live/filesystem.squashfs 
+
+LABEL Install Emmabuntus 32-bit oem-config
+  KERNEL clonezilla-i486/live/vmlinuz
+  INITRD clonezilla-i486/live/initrd.img 
+  APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home_boot.sh" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_emmabuntus sda1 sda2 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 #LABEL 
 #    MENU LABEL Install Mint17 MATE 64-bit (25-Jun Build)

@@ -25,7 +25,7 @@ Set_Confirm_distro_name() {
     if [ "${distro_name}." == "${sys_rpts_distro_name}." ]
     then
         echo 'System distro value ('${sys_rpts_distro_name}\
-	') agrees with your input ('${distro_name}').'
+    ') agrees with your input ('${distro_name}').'
         read -p'<ENTER>' -t3
         return 0
     fi
@@ -39,6 +39,7 @@ Set_Confirm_distro_name() {
     return 3
 }
 
+sys_rpts_distro_name=0
 Set_sys_rpts_distro_name() {
 
     sys_rpts_distro_name=$(lsb_release -a 2>/dev/null\
@@ -48,7 +49,7 @@ Set_sys_rpts_distro_name() {
     if [ -n ${sys_rpts_distro_name} ]
     then
         echo 'System reports distro as '${sys_rpts_distro_name}'.'
-	read -p'<ENTER>' -t3
+    read -p'<ENTER>' -t3
         return 0
     fi
 
@@ -57,7 +58,7 @@ Set_sys_rpts_distro_name() {
     then
         sys_rpts_distro_name=$SESSION
         echo 'Using session name '$sys_rpts_distro_name' as distribution.'
-	read -p'<ENTER>' -t3
+    read -p'<ENTER>' -t3
         return 0
     fi
 
@@ -97,7 +98,7 @@ do
             echo \$- 'captured as '$Runner_shell_hold
             Runner_shell_hold=${Runner_shell_hold}'i'
             echo '...now set to '$Runner_shell_hold
-	    read -p'<ENTER>' -t3
+        read -p'<ENTER>' -t3
             ;;
         d)
             Set_Confirm_distro_name $OPTARG;RCx1=$?
@@ -120,14 +121,14 @@ do
             ;;
         h)
             echo $This_script\
-		': Valid options are [ -j -V -R -u -G -d{Distro} -b{SrcBase} -h]'
+        ': Valid options are [ -j -V -R -u -G -d{Distro} -b{SrcBase} -h]'
             echo '(Matches up with '$Optvalid'?'
-	    read -p'<ENTER>' -t3
+        read -p'<ENTER>' -t3
             exit 0
             ;;
         *)
             echo 'Unknown option: '${OPT}'. Exiting.'
-	    read -p'<ENTER>' -t3
+        read -p'<ENTER>' -t3
             exit 8
             ;;
     esac
@@ -144,7 +145,8 @@ declare -rx sourcebase
 codebase=${sourcebase}'/image_scripts'
 [[ -d $codebase ]] || exit 14
 declare -rx codebase
-source ${codebase}/Common_functions || exit 15
+source ${codebase}/Common_functions || exit 135
+source ${codebase}/Prepare_functions || exit 136
 
 declare -r HOLDIFS=$IFS
 declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
@@ -275,7 +277,7 @@ User_no_distro_bye() {
 }
 [[ $RCxDC -eq 0 ]] || User_no_distro_bye
 
-P1auze 'Check (absence of) local UUID reference for swap in fstab.'
+echo 'Check (absence of) local UUID reference for swap in fstab.'
 RCxU=1
 grep -P 'UUID.+swap' /etc/fstab && RCxU=$?
 if [ $RCxU -eq 0 ]
@@ -285,7 +287,7 @@ then
 fi
 Pauze '(DONE) Check (absence of) local UUID reference for swap in fstab.'
 
-P1auze 'Checking swap'
+echo 'Checking swap'
 Run_Cap_Out swapoff --all --verbose
 Run_Cap_Out swapon --all --verbose
 Pauze '(DONE) Checking swap'
@@ -293,26 +295,16 @@ Pauze '(DONE) Checking swap'
 #Pauze 'Confirm no medibuntu in apt sources'
 #egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
 
-P1auze "apt update ( COND: $aptcache_needs_update )"
-if [ $aptcache_needs_update == 'Y' ]
-then
-    apt-get update &>>${Messages_O} &
-    Time_to_kill $! "Running apt-get update. Details in $Messages_O"
-    export aptcache_needs_update='N'
-fi
+echo "Checking if apt update is needed( COND: $aptcache_needs_update )"
+Run_apt_update
 Pauze "(DONE) apt update ( COND: $aptcache_needs_update )"
 
 echo "Check that server address is correct and is contactable ( COND: $refresh_svn )"
 Contact_server() {
-    [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]\
-        && Pauze 'Checked Server is valid: 192.168.1.9' && return 0
-
-    return 1
-}
-Sub_lcl_stat() {
+    Sub_lcl_stat() {
     echo 'Check on subversion local repo status'
     if [ -d ${sourcebase}/.svn ]
-    then
+                then
         cd ${sourcebase}/
         svn update
     else
@@ -323,71 +315,133 @@ Sub_lcl_stat() {
     fi
     Pauze '(DONE) Check on subversion local repo status'
 }
-[[ "${refresh_svn}." == 'Y.' ]] && Contact_server && Sub_lcl_stat
+    [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]\
+        && Pauze 'Checked Server is valid: 192.168.1.9' && Sub_lcl_stat && return $?
+
+    return 1
+}
+[[ "${refresh_svn}." == 'Y.' ]] && Contact_server
 Pauze "(DONE) Check that server address is correct and is contactable ( COND: $refresh_svn )"
 
-Import_needed_ppa() {
+Establish_ppa_repo_sourcefile() {
+    local pkg_name=$1
+    ppa_name=$@
+    search_ppa_name=$(echo $ppa_name|tr '/' '-')
     RCxRo=1
-    find /etc/apt/sources.list.d/ -type f|grep $ppa_name && RCxRo=$?
-    if [ $RCxRo -ne 0 ]
-    then
-	read -p'PPA: for '$pkg_name -a ANS
-	case ${ANS[0]} in
-        y|Y)
-            add-apt-repository 'ppa:'$ppa_name
-            ;;
-        *)
-            echo 'ok moving on...'
-            ;;
-        esac
-    fi
+    find /etc/apt/sources.list.d/ -type f|grep $search_ppa_name && RCxRo=$?
+    read -p'<Found ppa?(NA,T=10)>' -t10
+    [[ $RCxRo -eq 0 ]] && return 0
+    apt_repo_name='ppa:'$ppa_name
+    echo $apt_repo_name
+    read -p'<Add to APT Repos?>' -a ANS
+    add-apt-repository $apt_repo_name || return 15
+    return 0
 }
-
-RCxP=-1
+RCxPK=-1
 echo 'Install necessary packages'
+Install_packages_from_file_list() {
+    local pkg_file=$1
+    RCz=0
+    Process_package() {
+	IFS=','
+	declare -ra pkg_info_a=($1)
+	IFS=$HOLDIFS
+	declare -r pkg_info_L=${#pkg_info_a[*]}
+
+	pkg_name=${pkg_info_a[0]}
+	pkg_by_addr=${pkg_info_a[1]}
+	[[ pkg_by_addr -eq 0 ]] && pkg_by_addr=$address_len
+	if [ $pkg_by_addr != $address_len ]
+	then
+	    echo 'Skipping package '$pkg_name' on '$address_len' box.'
+	    return 4
+	fi
+
+	Check_extra() {
+	    local pkg_name=$1
+	    pkg_extra=$@
+	    [[ -z $pkg_extra ]] && return 4
+	    IFS='\='
+	    declare -a extra_a=($pkg_extra)
+	    IFS=$HOLDIFS
+	    declare extra_L=${#extra_a[*]}
+	    [[ $extra_L -gt 1 ]] || return 5
+	    case ${extra_a[0]} in
+		ppa)
+		    Establish_ppa_repo_sourcefile $pkg_name ${extra_a[1]}
+		    RCxPPA=$?
+		    if [ $RCxPPA -gt 10 ]
+		    then
+			return $RCxPPA
+		    fi
+		    if [ $RCxPPA -gt 0 ]
+		    then
+			return 0
+		    fi 
+		    ;;
+		*)
+		    echo 'Unknown Extra Code:'$pkg_extra' for '$pkg_name
+		    return 6
+		    ;;
+	    esac
+	    return 115
+	}
+	RCxE=0
+	[[ $pkg_info_L -gt 3 ]] && Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?
+	[[ $RCxE -gt 10 ]] && return $RCxE
+	Pkg_by_distro_session() {
+	    distro_session=$1
+	    Pkg_purge() {
+		echo -n $pkg_name
+		read -p'<Purge?>' -a ANS
+		if [ ${ANS[0]} == 'Y' ]
+		then
+		    Apt_purge $pkg_name || return $?
+		fi
+	    }
+	    Pkg_add() {
+		echo -n $pkg_name
+		read -p'<Install/Upgrad3?>' -a ANS
+		if [ ${ANS[0]} == 'Y' ]
+		then
+		    Apt_install $pkg_name || return $?
+		fi
+	    }
+	    case $distro_session in
+		NONE)
+		    Pkg_purge ||return 20
+		    ;;
+		ALL)
+		    Pkg_add || return 21
+		    ;;
+		$distro_generia)
+		    Pkg_add || return 21
+		    ;;
+	    esac
+	    return 1
+	}
+	Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
+    }
+    for pkg_info_csv in $(grep -v '^#' $pkg_file)
+    do
+        Process_package $pkg_info_csv;RCa=$?
+        if [ $RCa -gt 0 ]
+        then
+            echo 'Problem with package '$pkg_name
+	    ((RCz+=$RCa))
+        fi 
+    done
+    return $RCz
+}
 for pkg_file in $(find $This_script_dir -maxdepth 1 -type f -name 'Packages*')
 do
-    RCxP=0
-    Process_package_file() {
-	local pkg_file=$1
-	for pkg_info in $(grep -v '^#' $pkg_file)
-	do
-	    IFS=',';declare -a pkg_info_a=($Pkg_info);IFS=$HOLDIFS
-	    Check_addr ${pkg_info_a[1]}\
-		&& Check_distro_session ${pkg_info_a[2]} ${pkg_info_a[3]}
-    pkg_addr=
-    pkg_distro_session=
-    pkg_extra=${pkg_info_a[3]}
-}
-    Process_package_file $pkg_file
-
-    Install_Update() {
-	local pkg_name=$1
-	Check_extra_steps
-        apt-get install -V --show-progress $pkg_name
-	read -p'<Finished Install/Upgrade of '$pkg_name'>' -t2
-	echo -e "\n\n"
-    }
-    case ${pkg_info_a[1]} in
-	0)
-	    Install_Update ${pkg_info_a[0]}
-	    ;;
-	$address_len)
-	    Install_Update ${pkg_info_a[0]}
-	    ;;
-	*)
-	    Pauze 'Install '${pkg_info_a[0]}' Manually if needed...Skipping'
-	    ;;
-    esac
-    if [ $distro_generia == 'mint' ]
-    # This is actually specific to xfce: mint (32?).
-    then
-        Pauze 'Running xfce? Have gnome-system-tools?'
-    fi
-[[ $RCxP -eq 0 ]] && Pauze '(DONE) Install necessary packages: '
+    RCxPK=0
+    Install_packages_from_file_list $pkg_file || RCxPK=$?
+done
+[[ $RCxPK -ne 0 ]] && echo 'Problems Installing Packages:'$RCxPK
+Pauze '(DONE) Install necessary packages'
 
 set -u
-
 Pauze 'Try to set Frita Backgrounds'
 backmess='Background Set?'
 case $distro_generia in
@@ -400,7 +454,7 @@ case $distro_generia in
 esac
 Pauze 'DONE: set Frita Backgrounds'
 
-P1auze "Checking background file location: $Image_dir / $Image_file"
+echo 'Checking background file location: $Image_dir / $Image_file'
 Set_background $FreeIT_image $Backgrounds_location
 bg_RC=$?
 case $bg_RC in
@@ -425,7 +479,7 @@ case $distro_generia in
         ;;
 esac
 
-#echo 'mint and mate specials'
+echo 'mint and mate specials'
 if [ $address_len -eq 64 ]
 else
     grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 
@@ -435,7 +489,7 @@ Pauze '(DONE) mint and mate specials'
 
 case $distro_generia in
     lubuntu|ubuntu|mint)
-        Pauze 'Run BPR Code'
+        echo 'Run BPR Code'
         [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
             ${codebase}/BPR_custom_prep.sh
         Pauze "Run BPR: Last return code: $?"

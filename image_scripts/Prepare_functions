@@ -2,10 +2,11 @@
 
 Run_apt_update() {
 
-    Pauze 'apt-get update'
+    [[ $aptcache_needs_update == 'Y' ]] || return 0
+
     sudo apt-get update &>>${Messages_O} &
     Time_to_kill $! "Running apt-get update. Details in $Messages_O"
-    aptcache_needs_update='N'
+    export aptcache_needs_update='N'
 
 }
 
@@ -24,7 +25,7 @@ Apt_install() {
     [[ -z $packages ]] && return 4
 
     local RC=0
-    sudo apt-get install $packages 2>>${Messages_O} || RC=$?
+    sudo apt-get install -V --show-progress $packages 2>>${Messages_O} || RC=$?
 
     return $RC
 }
