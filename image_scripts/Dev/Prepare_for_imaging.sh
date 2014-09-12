@@ -17,7 +17,7 @@ Set_Confirm_distro_name() {
     if [ $RCxS -gt 0 ]
     then
         echo 'Cant confirm your distro name '\
-        $distro_name' against the system name(s)'
+            $distro_name' against the system name(s)'
         read -p'<ENTER>' -t3
         return 2
     fi
@@ -49,7 +49,7 @@ Set_sys_rpts_distro_name() {
     if [ -n ${sys_rpts_distro_name} ]
     then
         echo 'System reports distro as '${sys_rpts_distro_name}'.'
-    read -p'<ENTER>' -t3
+        read -p'<ENTER>' -t3
         return 0
     fi
 
@@ -58,7 +58,7 @@ Set_sys_rpts_distro_name() {
     then
         sys_rpts_distro_name=$SESSION
         echo 'Using session name '$sys_rpts_distro_name' as distribution.'
-    read -p'<ENTER>' -t3
+        read -p'<ENTER>' -t3
         return 0
     fi
 
@@ -219,7 +219,6 @@ distro_name_Set() {
     Answer='N'
     Pause_n_Answer 'Y|N' '...system value '${distro_name}' is used, OK? '
     [[ "${Answer}." == 'Y.' ]] || return 12
-
     distro_name=$sys_rpts_distro_name
 
     return 0
@@ -327,15 +326,25 @@ Establish_ppa_repo_sourcefile() {
     local pkg_name=$1
     ppa_name=$@
     search_ppa_name=$(echo $ppa_name|tr '/' '-')
+    Pauze 'Beginning search for source.d ppa '$search_ppa_name'...'
     RCxRo=1
     find /etc/apt/sources.list.d/ -type f|grep $search_ppa_name && RCxRo=$?
-    read -p'<Found ppa?(NA,T=10)>' -t10
-    [[ $RCxRo -eq 0 ]] && return 0
+    if [ $RCxRo -eq 0 ]
+    then
+        read -p'Found ppa, returning. <ENTER(t=8)>' -t8
+        return 0
+    fi
     apt_repo_name='ppa:'$ppa_name
-    echo $apt_repo_name
-    read -p'<Add to APT Repos?>' -a ANS
-    add-apt-repository $apt_repo_name || return 15
-    return 0
+    echo -n $apt_repo_name
+    read -p' <Add to APT Repos?>' -a ANS || return 4
+    [[ ${#ANS[*]} -eq 0 ]] && return 0
+    if [ ${ANS[0]} == 'Y' ]
+    then
+        add-apt-repository $apt_repo_name || return $?
+	return 0
+    fi
+
+    return $?
 }
 RCxPK=-1
 echo 'Install necessary packages'
@@ -343,84 +352,86 @@ Install_packages_from_file_list() {
     local pkg_file=$1
     RCz=0
     Process_package() {
-	IFS=','
-	declare -ra pkg_info_a=($1)
-	IFS=$HOLDIFS
-	declare -r pkg_info_L=${#pkg_info_a[*]}
+    IFS=','
+    declare -ra pkg_info_a=($1)
+    IFS=$HOLDIFS
+    declare -r pkg_info_L=${#pkg_info_a[*]}
 
-	pkg_name=${pkg_info_a[0]}
-	pkg_by_addr=${pkg_info_a[1]}
-	[[ pkg_by_addr -eq 0 ]] && pkg_by_addr=$address_len
-	if [ $pkg_by_addr != $address_len ]
-	then
-	    echo 'Skipping package '$pkg_name' on '$address_len' box.'
-	    return 4
-	fi
+    pkg_name=${pkg_info_a[0]}
+    pkg_by_addr=${pkg_info_a[1]}
+    [[ pkg_by_addr -eq 0 ]] && pkg_by_addr=$address_len
+    if [ $pkg_by_addr != $address_len ]
+    then
+        echo 'Skipping package '$pkg_name' on '$address_len' box.'
+        return 4
+    fi
 
-	Check_extra() {
-	    local pkg_name=$1
-	    pkg_extra=$@
-	    [[ -z $pkg_extra ]] && return 4
-	    IFS='\='
-	    declare -a extra_a=($pkg_extra)
-	    IFS=$HOLDIFS
-	    declare extra_L=${#extra_a[*]}
-	    [[ $extra_L -gt 1 ]] || return 5
-	    case ${extra_a[0]} in
-		ppa)
-		    Establish_ppa_repo_sourcefile $pkg_name ${extra_a[1]}
-		    RCxPPA=$?
-		    if [ $RCxPPA -gt 10 ]
-		    then
-			return $RCxPPA
-		    fi
-		    if [ $RCxPPA -gt 0 ]
-		    then
-			return 0
-		    fi 
-		    ;;
-		*)
-		    echo 'Unknown Extra Code:'$pkg_extra' for '$pkg_name
-		    return 6
-		    ;;
-	    esac
-	    return 115
-	}
-	RCxE=0
-	[[ $pkg_info_L -gt 3 ]] && Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?
-	[[ $RCxE -gt 10 ]] && return $RCxE
-	Pkg_by_distro_session() {
-	    distro_session=$1
-	    Pkg_purge() {
-		echo -n $pkg_name
-		read -p'<Purge?>' -a ANS
-		if [ ${ANS[0]} == 'Y' ]
-		then
-		    Apt_purge $pkg_name || return $?
-		fi
-	    }
-	    Pkg_add() {
-		echo -n $pkg_name
-		read -p'<Install/Upgrad3?>' -a ANS
-		if [ ${ANS[0]} == 'Y' ]
-		then
-		    Apt_install $pkg_name || return $?
-		fi
-	    }
-	    case $distro_session in
-		NONE)
-		    Pkg_purge ||return 20
-		    ;;
-		ALL)
-		    Pkg_add || return 21
-		    ;;
-		$distro_generia)
-		    Pkg_add || return 21
-		    ;;
-	    esac
-	    return 1
-	}
-	Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
+    Check_extra() {
+        local pkg_name=$1
+        pkg_extra=$@
+        [[ -z $pkg_extra ]] && return 4
+        IFS='\='
+        declare -a extra_a=($pkg_extra)
+        IFS=$HOLDIFS
+        declare extra_L=${#extra_a[*]}
+        [[ $extra_L -gt 1 ]] || return 5
+        case ${extra_a[0]} in
+        ppa)
+            Establish_ppa_repo_sourcefile $pkg_name ${extra_a[1]}
+            RCxPPA=$?
+            if [ $RCxPPA -gt 10 ]
+            then
+            return $RCxPPA
+            fi
+            if [ $RCxPPA -gt 0 ]
+            then
+            return 0
+            fi 
+            ;;
+        *)
+            echo 'Unknown Extra Code:'$pkg_extra' for '$pkg_name
+            return 6
+            ;;
+        esac
+        return 115
+    }
+    RCxE=0
+    [[ $pkg_info_L -gt 3 ]] && Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?
+    [[ $RCxE -gt 10 ]] && return $RCxE
+    Pkg_by_distro_session() {
+        distro_session=$1
+        Pkg_purge() {
+            echo -n $pkg_name' '
+            read -p'<Purge?>' -a ANS || return 0
+    	    [[ ${#ANS[*]} -eq 0 ]] && return 0
+            if [ ${ANS[0]} == 'Y' ]
+            then
+                Apt_purge $pkg_name || return $?
+            fi
+        }
+        Pkg_add() {
+            echo -n $pkg_name' '
+	    read -p'<Install/Upgrad3(Y|n)?>' -a ANS || return 0
+	    [[ ${#ANS[*]} -eq 0 ]] && return 0
+            if [ ${ANS[0]} == 'Y' ]
+            then
+                Apt_install $pkg_name || return $?
+            fi
+        }
+        case $distro_session in
+        NONE)
+            Pkg_purge ||return 20
+            ;;
+        ALL)
+            Pkg_add || return 21
+            ;;
+        $distro_generia)
+            Pkg_add || return 21
+            ;;
+        esac
+        return 1
+    }
+    Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
     }
     for pkg_info_csv in $(grep -v '^#' $pkg_file)
     do
@@ -428,7 +439,7 @@ Install_packages_from_file_list() {
         if [ $RCa -gt 0 ]
         then
             echo 'Problem with package '$pkg_name
-	    ((RCz+=$RCa))
+        ((RCz+=$RCa))
         fi 
     done
     return $RCz
