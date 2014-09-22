@@ -41,7 +41,7 @@ Pauze "apt update ( COND: $aptcache_needs_update )"
 if [ $aptcache_needs_update == 'Y' ]
 then
     sudo apt-get update &>>${Messages_O} &
-    sudo Time_to_kill $! "Running apt-get update. Details in $Messages_O"
+    Time_to_kill $! "Running apt-get update. Details in $Messages_O"
     export aptcache_needs_update='N'
 fi
 sudo apt-get dist-upgrade
@@ -70,12 +70,50 @@ free
 lsb_release -a
 
 Pauze 'Remove Cache files'
-select Cachedir in $(find ${HOME}/.cache -depth -mindepth 1 -maxdepth 3 -type d -not -empty)
+select Cachedir in $(find ${HOME}/.cache -depth -mindepth 1 -type d -not -empty) 'RETURN'
 do
-    find $Cachedir -type f -ok rm -v {} \;
+    if [ $Cachedir == 'RETURN' ];then break;fi
+    select Cachefile in $(find $Cachedir -type f) 'first10' 'first100' 'first1000' 'rEtUrN'
+    do
+        case $Cachefile in
+	    rEtUrN) 
+                break
+            ;;
+            first10)
+                find $Cachedir -type f |head -n10 |xargs -r -I {} rm -v {}
+            ;;
+            first100)
+                find $Cachedir -type f |head -n100 |xargs -r -I {} rm -v {}
+            ;;
+            first1000) 
+                find $Cachedir -type f |head -n1000 |xargs -r -I {} rm -v {}
+            ;;
+            *) 
+                rm -v $Cachefile
+            ;;
+        esac
+    done
 done
 
+Pauze 'Extra effort to get all local files off'
+cd || return 4
+find . -maxdepth 1 -type f -ok rm -v {} \;
+find .cache -type f -delete
+
+find .config/chromium/ -type f -delete
+find ./Desktop/ -type f -ok rm -v {} \;
+find ./Documents/ -type f -delete
+find ./Downloads/ -type f -delete
+find .local/share/Trash/ -type f -delete
+find ./.mozilla/firefox -type f -delete
+find ./.ssh -type f -delete
+
 Pauze 'Manually remove remaining oem-owned with rm -riv /var/lib/sudo/oem/*'
+
+#find 
+# -type f -delete
+#find
+#-type f -ok rm -v {} \;
 
 #Bilt-images reminders (Cust_srt)
 #- 32-bit
