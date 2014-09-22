@@ -1,53 +1,51 @@
 #/bin/bash
-cd || exit 3
-
-# Check whether this was run from the command line on a Master build
+# *--* Check whether this was run from the command line on a Master build
 Master_test=${1-'N'}
 
+# *--* Exit with error code 3 if we can't find or change to our own home dir.
+cd || exit 3
+
 # *--* (set -u) = Treat references to undeclared variables as an error
+# *--* Capture Internal Field Separator (IFS) for possible resets.
 set -u
-HOLD_IFS=$IFS
+declare -rx HOLD_IFS=$IFS
+
+#TODO *--* Set display (but if it's not already set...?)
+[[ -z "$DISPLAY" ]] && export DISPLAY=:0
 # *--* Ensure dialog program is installed.
 type dialog &>/dev/null || {
     echo "The 'dialog' program must be installed for the QC script to work: will attempt to install ...";
     sudo apt-get update && sudo apt-get install dialog || exit 4
 }
-
-if test -z "$DISPLAY";then
-    export DISPLAY=:0
-fi
-
 # *--* Identify box as 32 or 64 bit capable.
 CPU_ADDRESS=32
-CPUFLAGS=$(cat /proc/cpuinfo |grep '^flags')
-for GL in $CPUFLAGS ;do if [ $GL == 'lm' ];then CPU_ADDRESS=64;fi;done
+[[ $(cat /proc/cpuinfo |grep '^flags'|sort --uniq) =~ ' lm ' ]] && CPU_ADDRESS=64
 
+# *--* Create backup of hostname-related files since we will change hostname.
 sudo cp -v --backup=t /etc/hostname /tmp/hostname.bak
 sudo cp -v --backup=t /etc/hosts /tmp/hosts.bak
+# *--* Capture current HOSTNAME *--*
 Found_hostname=$(hostname 2>/dev/null)
-[[ -z $Found_hostname ]] && Found_hostname='BOOBOOBAABAA'
-
+# *--* If we have no hostname then we've got bigger problems than some silly name assignment
+[[ -z $Found_hostname ]] && Found_hostname='fullyBogusName'
+# *--* For Master Box, Manually update the Hostname to 'FritaAA-MMMdd', where AA is 32 or 64.
 if [ $Master_test == 'M' ]
 then
-    declare -a Answer=('N')
-    read -p'Change Hostname (update build stamp on Master)(20 sec timeout to default '${Answer[0]}'?' -t20 -a Answer;echo ''
-    if [ "${Answer[0]}." == 'Y.' ]
-    then
-        read -p"Today's date is $(date)" -t3;echo ''
-        sudo vi /etc/hostname /etc/hosts
-    fi
+    echo $0':Running Master QC Mode' >&2
+    echo '#Today is '$(date) >>/etc/hostname
+    sudo vi /etc/hostname
 else
+    # *--* For Cloning Client, update the Hostname to 'FritaAA-date_in_seconds_since_1970'
     echo 'Frita'${CPU_ADDRESS}-$(date +'%s') |sudo tee /etc/hostname
 fi
-New_hostname=$(cat /etc/hostname |tr -d '\n')
-[[ -z $New_hostname ]] && New_hostname='MOOMOOMIIMII'
+New_hostname=$(cat /etc/hostname)
+[[ -z $New_hostname ]] && New_hostname='AnotherFullyBogusName'
 sudo sed -i "s/$Found_hostname/$New_hostname/" /etc/hosts
 sudo hostname -F /etc/hostname 2>/dev/null
 
 # *--* Create log and error text destination files *--*
 declare -r LOGFILE=${HOME}/QC.log
 declare -r ERRFILE=${HOME}/QC_errors.log
-
 set +o noclobber
 sudo rm ${HOME}/QC*.log 2>/dev/null
 for Output_file in $LOGFILE $ERRFILE
@@ -159,7 +157,7 @@ Work_on_Optical() {
     fi
 }
 
-Set_min_max_per_hardware_type() {
+Establish_hardware_parameters_per_machine_type() {
     # Set up MAX and MIN for Memory
 
     PROCESSORS=$(grep 'physical id' /proc/cpuinfo | sort -u | wc -l)
@@ -235,7 +233,7 @@ Set_RAM_max_min_single_core() {
 }
 
 # *--* Hard Drive Count *--*
-Get_harddrive_count() {
+Set_primedisk_tot_bytes() {
     prime_disk=''
     prime_sectors=0
     sdx_sectors=0
@@ -260,8 +258,8 @@ Get_harddrive_count() {
     then
         Append_to_log 'PROB' 'Hard drive count' 'Huh? No Hard drives'
     fi
-    total_bytes=$(echo "${prime_sectors}*$(cat $prime_disk/queue/hw_sector_size)" |bc)
-    echo $total_bytes
+    primedisk_tot_bytes=$(echo "${prime_sectors}*$(cat $prime_disk/queue/hw_sector_size)" |bc)
+    #echo $total_bytes
     return 0
 }
 
@@ -295,6 +293,8 @@ Wrapup_report() {
             Summary_report_legacy $logfile
             ;;
     esac
+
+    clear
 
     return $RC
 }
@@ -349,7 +349,7 @@ IFS=$' \t\n'
 }
 
 Test_ff_flash() {
-    path2firefox=$(which firefox 2>/dev/null |tr -d '\n')
+    path2firefox=$(which firefox 2>/dev/null)
     if [ -n "$path2firefox" ]
     then
         dialog --keep-tite --clear --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
@@ -460,20 +460,22 @@ else
     Append_to_log 'PASS' 'CPU clockspeed test' 'Clockspeed 1 Ghz or greater'
 fi
 
-Set_min_max_per_hardware_type
-total_disk_bytes=$(Get_harddrive_count)
+Establish_hardware_parameters_per_machine_type
+#total_disk_bytes=$(Get_harddrive_count)
+primedisk_tot_bytes=0
+Set_primedisk_tot_bytes
 
 #TEST
-echo 'Total Disk (Bytes)='$total_disk_bytes >>$ERRFILE
+echo 'Total Disk (Bytes)='$primedisk_tot_bytes >>$ERRFILE
 #ENDT
-QCVAR=$(echo "((($total_disk_bytes/1024)/1024)/1024)" |bc)
+QCVAR=$(echo "((($primedisk_tot_bytes/1024)/1024)/1024)" |bc)
 #TEST
 echo 'Disk Gibibytes='$QCVAR >>$ERRFILE
 #ENDT
-if [ $total_disk_bytes -lt $FS_LOW_VALUE ]
+if [ $primedisk_tot_bytes -lt $FS_LOW_VALUE ]
 then
     Append_to_log 'PROB' 'Hard drive size test' 'Hard drive should be at least' ${FS_LOW_TEXT}
-elif [ $total_disk_bytes -gt $FS_HIGH_VALUE ]
+elif [ $primedisk_tot_bytes -gt $FS_HIGH_VALUE ]
 then
     Append_to_log 'NOTE' 'Hard drive size test'\
         'Hard drive should be not more than' ${FS_HIGH_TEXT}
@@ -522,6 +524,7 @@ fi
 if [ ! -e $Lock_file ]
 then
     if [ -f /usr/lib/xscreensaver/antspotlight ];then
+    echo 'Starting 3D test' >&2
     echo "10 second 3D test started" | tee $Lock_file
       # run a 3D screensaver in a window for 10 seconds then stop it
     /usr/lib/xscreensaver/antspotlight -window 2>>$ERRFILE &
@@ -538,16 +541,11 @@ then
 fi
 
 # *--* Test playing flash content
-if [ $CPU_ADDRESS -eq 32 ]
-then
-    Test_ff_flash
-fi
+[[ $CPU_ADDRESS -eq 32 ]] && Test_ff_flash
 
 Wrapup_report 1 $LOGFILE
 
 #dialog --keep-tite --colors --title "In Addition..." --msgbox 'Remember to setup lm-sensors' 25 80
-
-clear
 
 # *--* QC_Backend.sh Finished *--*
 
@@ -563,4 +561,7 @@ clear
 #ram_lo=$(((1024*2)-256)*1024))
 #=$(expr 1792 \* 1024)
 #=$(expr 2048 \* 1024)
+
+#if [[ $(cat /proc/cpuinfo |grep '^flags'|sort --uniq) =~ 'pae' ]];then echo '64bit';else echo '32bit';fi
+#if [[ $(cat /proc/cpuinfo |grep '^flags'|sort --uniq) =~ 'pxx' ]];then echo '64bit';else echo '32bit';fi
 
