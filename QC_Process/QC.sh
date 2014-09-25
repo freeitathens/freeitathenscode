@@ -14,15 +14,15 @@ echo 'Start QC.sh on '$hostname' '$(date +%s) |sudo tee $Merrors
 if [ $Down_late == 'Y' ]
 then
     echo "Downloading latest QC / imaging scripts" |sudo tee -a $Merrors
-    svn update ~/freeitathenscode/{QC_Process,image_scripts} &>>$Merrors
+    svn update ~/freeitathenscode/{QC_Process,image_scripts} & 2>&1 |sudo tee -a $Merrors
     # redirect (>) output to bitbucket (/dev/null) keeps user 
     # from being overwhelmed with not-so-relevent messages.
     if [ $? == 0 ]; then
         # $? is the exit status of the previous command
         # svn returns 0 on success and 1 on failure
-        echo "Download succeeded" |tee -a $Merrors
+        echo "Download succeeded" |sudo tee -a $Merrors
     else
-        echo "Download failed, using existing version" |tee -a $Merrors
+        echo "Download failed, using existing version" |sudo tee -a $Merrors
     fi
 fi
 
@@ -30,7 +30,7 @@ fi
 # If launched as 'QCM.sh' (from Master Box), prepare to update the hostname with Month and Day.
 QCMast='N'
 if [[ $0 =~ 'QCM' ]];then QCMast='M';fi
-~/freeitathenscode/QC_Process/QC_Backend.sh $QCMast 2>>$Merrors
+~/freeitathenscode/QC_Process/QC_Backend.sh $QCMast 2>&1 |sudo tee -a $Merrors
 
 # *--*  Disabling 3D is very rare these days. But it still happens... *--*
 [[ -e ~/Desktop/Disable_3D.desktop ]]\

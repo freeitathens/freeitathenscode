@@ -32,6 +32,12 @@ declare -rx Runner_shell_as=${Runner_shell_hold}
 address_len=0
 Get_Address_Len
 
+Pauze 'Checking swap area, memory available, and distro release'
+swapon --summary --verbose
+free
+lsb_release -a
+echo -e "\n\n\n"
+
 Pauze 'Checking/Confirming removal of UUID reference in fstab'
 egrep -v '^\s*(#|$)' /etc/fstab |grep swap |grep UUID &&\
     prettyprint 'n,1,31,47,M,0,n'\
@@ -47,13 +53,16 @@ fi
 sudo apt-get dist-upgrade
 sudo apt-get autoremove
 sudo apt-get clean
+sudo apt-get autoclean
 
 Pauze 'Clearing out ssh secrets (and sort-of sec*)'
-find /home/oem/.ssh -not -type d -ls -delete
+find ${HOME}/.ssh -type f -ls -delete
+find ${HOME}/.ssh -not -type d -ls -delete
 
 Pauze 'Cleaning up root files that oem used...'
-sudo find /root/.pulse /root/.dbus/session-bus -ls -delete
-sudo find /root/ -name ".pulse*" -ls -delete
+#sudo find /root/.pulse /root/.dbus/session-bus -ls -delete
+#sudo find /root/ -name ".pulse*" -ls -delete
+sudo find /root/.{pulse,cache,dbus,config}/ -depth ! -type d -ok rm -v {} \;
 
 Pauze 'Removing QC Test Logs'
 find ${HOME} -type f -name 'QC*log' -ok rm -v {} \;
@@ -61,13 +70,8 @@ find ${HOME} -type f -name 'QC*log' -ok rm -v {} \;
 Pauze 'Clearing cups local printer settings (if any)'
 sudo find /etc/cups -type f -name 'printers.conf*' -ok sudo rm -v {} \;
 
-Pauze 'Purge udev rules'
-rm -v /etc/udev/rules.d/*
-
-Pauze 'Checking swap area, memory available, and distro release'
-swapon --summary --verbose
-free
-lsb_release -a
+#Pauze 'Purge udev rules'
+#rm -v /etc/udev/rules.d/*
 
 Pauze 'Remove Cache files'
 select Cachedir in $(find ${HOME}/.cache -depth -mindepth 1 -type d -not -empty) 'RETURN'
@@ -96,17 +100,26 @@ do
 done
 
 Pauze 'Extra effort to get all local files off'
-cd || return 4
-find . -maxdepth 1 -type f -ok rm -v {} \;
-find .cache -type f -delete
+find ${HOME}/ -maxdepth 1 -type f -ok rm -v {} \;
+find ${HOME}/Desktop/ -type f -ok rm -v {} \;
+find ${HOME}/.cache -type f |less
+find ${HOME}/.config/chromium/ -type f -delete
+find ${HOME}/Documents/ -type f -delete
+find ${HOME}/Downloads/ -type f -delete
+find ${HOME}/.local/share/Trash/ -type f -delete
+find ${HOME}/.mozilla/firefox -type f -delete
 
-find .config/chromium/ -type f -delete
-find ./Desktop/ -type f -ok rm -v {} \;
-find ./Documents/ -type f -delete
-find ./Downloads/ -type f -delete
-find .local/share/Trash/ -type f -delete
-find ./.mozilla/firefox -type f -delete
-find ./.ssh -type f -delete
+sort -k3 -n -t: /etc/passwd
+read -p'Enter UID of QC user' -a ANS
+if [ ${#ANS[*]} -gt 0 ]
+then
+    userid=${ANS[0]}
+    echo 'Using UID of '$userid' as Quality Control User oem'
+    read -p'<ENTER>'
+    #luser=$(echo $userid |perl -ne '' /etc/passwd)
+    luser='oem'
+    sudo find /home/$luser -not -uid $userid -exec chown -c $luser {} \;
+fi
 
 Pauze 'Manually remove remaining oem-owned with rm -riv /var/lib/sudo/oem/*'
 

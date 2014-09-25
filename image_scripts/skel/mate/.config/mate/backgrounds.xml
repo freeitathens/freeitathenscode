@@ -1,0 +1,164 @@
+<?xml version="1.0"?>
+<!DOCTYPE wallpapers SYSTEM "mate-wp-list.dtd">
+<wallpapers>
+  <wallpaper deleted="false">
+    <name>Ancient</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/ancient.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Road 2</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/road2.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>No Desktop Background</name>
+    <filename>(none)</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Inch Beach 2</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/inch_beach2.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Road</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/road.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Valley</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/valley.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Linux Mint Maya</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya/gelsan_green.png</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Linux Mint 13</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya/gelsan_green_13.png</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Panama</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/panama.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Inch Beach</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/inch_beach.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Salt Plains</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/saltplains.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Default background</name>
+    <filename>/usr/share/backgrounds/linuxmint/default_background.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Storm</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/storm.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Inch Beach 3</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/inch_beach3.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Iguazu Falls</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/iguazu.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Fiji</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/fiji.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Pebbles</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/pebbles.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>FreeIT.png</name>
+    <filename>/usr/share/backgrounds/FreeIT.png</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Boat</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/boat.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Storm is Coming</name>
+    <filename>/usr/share/backgrounds/linuxmint-maya-extra/stormcoming.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#000000000000</pcolor>
+    <scolor>#000000000000</scolor>
+  </wallpaper>
+</wallpapers>
