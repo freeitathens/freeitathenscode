@@ -26,22 +26,31 @@ sudo cp -v --backup=t /etc/hostname /tmp/hostname.bak
 sudo cp -v --backup=t /etc/hosts /tmp/hosts.bak
 # *--* Capture current HOSTNAME *--*
 Found_hostname=$(hostname 2>/dev/null)
-# *--* If we have no hostname then we've got bigger problems than some silly name assignment
+# *--* If we have no hostname then we've got bigger problems 
+#  than some silly name assignment
 [[ -z $Found_hostname ]] && Found_hostname='fullyBogusName'
-# *--* For Master Box, Manually update the Hostname to 'FritaAA-MMMdd', where AA is 32 or 64.
+# *--* For Master Box, update the Hostname to 
+#       'FritaAA-MMMdd', where AA is 32 or 64.
 if [ $Master_test == 'M' ]
 then
     echo $0':Running Master QC Mode' >&2
-    echo '#Today is '$(date) >>/etc/hostname
-    sudo vi /etc/hostname
+    echo 'Frita'${CPU_ADDRESS}-$(date +'%b%d') |sudo tee /etc/hostname
+    sleep 3
 else
-    # *--* For Cloning Client, update the Hostname to 'FritaAA-date_in_seconds_since_1970'
+    # *--* For Cloning Client, update the Hostname to 
+    #   'FritaAA-date_in_seconds_since_1970'
     echo 'Frita'${CPU_ADDRESS}-$(date +'%s') |sudo tee /etc/hostname
 fi
 New_hostname=$(cat /etc/hostname)
 [[ -z $New_hostname ]] && New_hostname='AnotherFullyBogusName'
 sudo sed -i "s/$Found_hostname/$New_hostname/" /etc/hosts
 sudo hostname -F /etc/hostname 2>/dev/null
+if [ $Master_test == 'M' ]
+then
+    echo 'New hostname is '$(hostname)' ('$(cat /etc/hostname)')'
+    echo '   and from /etc/hosts: '$(grep '^127\.' /etc/hosts |grep -v 'localhost')
+    read -p'<OK?>'
+fi
 
 # *--* Create log and error text destination files *--*
 declare -r LOGFILE=${HOME}/QC.log
