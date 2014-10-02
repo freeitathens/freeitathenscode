@@ -250,6 +250,17 @@ LABEL System Rescue CD "Live Image" (Command Line Interface)
     LINUX systemrescuecd/isolinux/rescue32
     INITRD systemrescuecd/isolinux/initram.igz
     APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us
+
+LABEL Debian_7p6_netinstall
+  MENU LABEL Debian 7.6 64-bit netinstall
+  KERNEL Debian64_7.6_netinstall/install.amd/vmlinuz
+  INITRD Debian64_7.6_netinstall/install.amd/initrd.gz
+  APPEND boot=install.amd netboot=nfs nfsroot=192.168.1.9:/tftpboot/Debian64_7.6_netinstall lang=en_US keymap=en_US ip=dhcp noipv6
+
+#Debian64_7.6_netinstall/install.amd/ /initrd.gz 
+#.amd/gtk/vmlinuz Debian64_7.6_netinstall/install.amd/gtk/initrd.gz 
+
+
 MENU END
 
 LABEL DBAN_OLD
