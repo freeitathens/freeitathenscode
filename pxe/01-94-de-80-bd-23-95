@@ -144,6 +144,12 @@ MENU BEGIN TRY LINUX ("Live CD", installs to RAM only)
 
 MENU BEGIN "Live CD" : 64-bit
 
+label Solyd64
+  MENU LABEL TRY Solydx 201407 64-bit
+  KERNEL Solydx64_201407/casper/vmlinuz
+  INITRD Solydx64_201407/casper/initrd.gz 
+  APPEND boot=live netboot=nfs nfsroot=192.168.1.9:/tftpboot/Solydx64_201407 
+
 label LinuxLite-64-2
   MENU LABEL TRY Linux Lite 2.0 (64bit)
   KERNEL LinuxLite20/casper/vmlinuz

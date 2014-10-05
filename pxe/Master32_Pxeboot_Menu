@@ -34,7 +34,7 @@ label clonezilla_32
   MENU label Clone (32-bit)
   KERNEL Czilla_20140331_saucy_amd64/live/vmlinuz
   INITRD Czilla_20140331_saucy_amd64/live/initrd.img 
-  APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts Mint17_Mate_32_oem_20140808.img sda1 sda3 sda5" ocs_live_extra_param="" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs
+  APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts Mint17_Mate_32_oem_20141005.img sda1 sda3 sda5"  ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs
 
 MENU BEGIN INSTALL LINUX (Image with Clonezilla)
 
