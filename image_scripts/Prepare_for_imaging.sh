@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash +x
 [[ 0 -ne $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]] &&\
     read -p'NOTE: Permission Problems? Rerun with sudo (i.e., as root).<ENTER>' -t5
 
@@ -68,15 +68,17 @@ Set_sys_rpts_distro_name() {
 
 UserSet_sourcebase() {
 
-    declare -a prompted_sourcebase_a
+    declare -a sourcb_read_arr
     echo 'Normally FreeIT Code is in '$sourcebase
-    read -p 'Your Code Location? ' -a prompted_sourcebase_a
-    hold_sourcebase=${prompted_sourcebase_a[@]}
+    read -p 'Your Code Location? ' -a sourcb_read_arr
+    sourcb_read_LEN=${#sourcb_read_arr[@]}
+    [[ sourcb_read_LEN -eq 0 ]] && return 0
+
+    hold_sourcebase=${sourcb_read_arr[0]}
     [[ "$hold_sourcebase" =~ 'EXIT' ]] && exit 2
 
-    hold_sourcebase=${prompted_sourcebase_a[0]}
     [[ -d $hold_sourcebase ]] || exit 13
-    sourcebase=hold_sourcebase
+    sourcebase=$hold_sourcebase
 
     return 0
 }
@@ -88,7 +90,7 @@ refresh_svn='N'
 declare -x refresh_git='Y'
 
 # Establish base of version-controlled code tree.
-sourcebase="${HOME}/freeitathenscode"
+sourcebase="/home/oem/freeitathenscode"
 
 Optvalid='jVRuGhd:b:'
 while getopts $Optvalid OPT
@@ -242,6 +244,11 @@ Confirm_DISTRO_CPU() {
         distro_valid_flag='Y'
         prettyprint '1,34,40,M' ' a valid'
         ;;
+    debian|SolydXK)
+        distro_generia='debian'
+        distro_valid_flag='Y'
+        prettyprint '1,34,40,M' ' a valid'
+        ;;
     lubuntu|Ubuntu)
         distro_generia='ubuntu'
         distro_valid_flag='Y'
@@ -391,6 +398,12 @@ Install_packages_from_file_list() {
                     return 0
                     fi 
                     ;;
+		INSTALL)
+		    echo 'Check that '${extra_a[1]}' replaces '$pkg_name
+		    ;;
+		REMOVE)
+		    echo 'Check that '$pkg_name' replaces '${extra_a[1]}
+		    ;;
                 *)
                     echo 'Unknown Extra Code:'$pkg_extra' for '$pkg_name
                     return 6
@@ -497,7 +510,7 @@ esac
 
 echo 'mint and mate specials'
 if [ $address_len -eq 64 ]
-else
+then
     grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 
     Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
 fi
