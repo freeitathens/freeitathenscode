@@ -12,4 +12,5 @@ Name=Quality Control
 Comment=Ensure machine meets Free I.T. requirements
 Icon=/usr/share/icons/Mint-X/apps/scalable/mame.svg
 GenericName=Quality Control
+GenericName[en_US.UTF-8]=Free I.T. Athens Quality Control Tests
 

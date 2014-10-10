@@ -150,6 +150,12 @@ label Solyd64
   INITRD Solydx64_201407/casper/initrd.gz 
   APPEND boot=live netboot=nfs nfsroot=192.168.1.9:/tftpboot/Solydx64_201407 
 
+label Centos7
+  MENU LABEL TRY Centos 7
+  KERNEL Centos7/images/pxeboot/vmlinuz
+  INITRD Centos7/images/pxeboot/initrd.img 
+  APPEND boot=LiveOS netboot=nfs nfsroot=192.168.1.9:/tftpboot/Centos7
+
 label LinuxLite-64-2
   MENU LABEL TRY Linux Lite 2.0 (64bit)
   KERNEL LinuxLite20/casper/vmlinuz

@@ -46,10 +46,10 @@ MENU BEGIN Image with Clonezilla: 32-bit
 MENU BEGIN 32-bit: Ready for Prime Time
 
 LABEL Prod-mint17-normalfs
-    MENU LABEL Install Mint17 MATE 32-bit (08-Aug Build, Normal FS)
+    MENU LABEL Install Mint 17 MATE 32-bit (07-Oct Build)
     KERNEL clonezilla-i486/live/vmlinuz
     INITRD clonezilla-i486/live/initrd.img 
-    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint17N_32.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod32_Mint17N sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod32_Mint17_PARTI.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod32_Mint17 sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs 
 
 LABEL lubuntu32-oem-config
     MENU LABEL Install Lubuntu 14.04 32-bit oem-config (28-Apr Build)
@@ -72,6 +72,12 @@ LABEL mint32-legacy
 MENU END
 
 MENU BEGIN 32-bit: NOT Ready for Prime Time (Beta Tests)
+
+LABEL Beta-mint17-32bit
+    MENU LABEL Install Mint17 MATE 32-bit (Beta, 07-Oct Build)
+    KERNEL clonezilla-i486/live/vmlinuz
+    INITRD clonezilla-i486/live/initrd.img 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=en_US edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod32_Mint17_PARTI.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta32_Mint17 sda1 sda3 sda5" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs 
 
 MENU END
 

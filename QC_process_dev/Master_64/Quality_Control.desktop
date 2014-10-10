@@ -1,12 +1,17 @@
+#!/usr/bin/env xdg-open
+
 [Desktop Entry]
 Version=1.0
 Type=Application
 Terminal=false
-Icon[en_US]=eom
+Icon[en_US]=/usr/share/icons/Mint-X/apps/scalable/amnesia-dark-decent.svg
+#Icon[en_US]=eom
 Name[en_US]=Quality Control
 Exec=/etc/alternatives/x-terminal-emulator -e /home/oem/freeitathenscode/QC_Process/QC.sh
 Comment[en_US]=Ensure machine meets Free I.T. requirements
 Name=Quality Control
 Comment=Ensure machine meets Free I.T. requirements
-Icon=eom
+Icon=/usr/share/icons/Mint-X/apps/scalable/mame.svg
+#Icon=eom
+GenericName=Quality Control
 GenericName[en_US.UTF-8]=Free I.T. Athens Quality Control Tests
