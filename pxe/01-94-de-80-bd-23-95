@@ -35,7 +35,7 @@ LABEL local
     localboot 0x80
     timeout 60
 
-MENU BEGIN INSTALL LINUX (Image with Clonezilla)
+MENU BEGIN INSTALL GNU/Linux (Image with Clonezilla)
 
 MENU BEGIN Image with Clonezilla: 64-bit
 
@@ -140,7 +140,7 @@ MENU END
 
 MENU END
 
-MENU BEGIN TRY LINUX ("Live CD", installs to RAM only)
+MENU BEGIN TRY GNU+Linux ("Live CD", installs to RAM only)
 
 MENU BEGIN "Live CD" : 64-bit
 
@@ -157,7 +157,7 @@ label Centos7
   APPEND boot=LiveOS netboot=nfs nfsroot=192.168.1.9:/tftpboot/Centos7
 
 label LinuxLite-64-2
-  MENU LABEL TRY Linux Lite 2.0 (64bit)
+  MENU LABEL TRY "Linux Lite" 2.0 (64bit)
   KERNEL LinuxLite20/casper/vmlinuz
   INITRD LinuxLite20/casper/initrd.gz 
   APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/LinuxLite20 file=/cdrom/preseed/custom.seed
