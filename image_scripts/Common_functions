@@ -228,11 +228,7 @@ Pauze() {
 
     Log_mess $@
     # !Print to terminal only if this session is interactive.
-    [[ -z Runner_shell_as ]] && Runner_shell_as='?'
-    if [[ $Runner_shell_as != *i* ]]
-    then
-        return 4
-    fi
+    [[ "${Not_Batch_Run}." == 'N.' ]] && return 0
 
     set +u
     IFS=$' \t\n'

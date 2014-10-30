@@ -8,17 +8,19 @@ declare -rx codebase="${HOME}/freeitathenscode"
 source ${codebase}/image_scripts/Common_functions || exit 12
 
 declare -r HOLDIFS=$IFS
-declare -x Runner_shell_hold=$-
+
+Not_Batch_Run='N'
+
 declare -rx Messages_O=$(mktemp -t "Prep2Clonze_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep2Clonze_err.XXXXX")
 declare -x aptcache_needs_update='Y'
 
-while getopts 'jd:Rh' OPT
+while getopts 'Bd:Rh' OPT
 do
     case $OPT in
-        j)
-            Runner_shell_hold=${Runner_shell_hold}'i'
-	        ;;
+        B)
+            Not_Batch_Run='Y'
+	    ;;
         R)
             aptcache_needs_update='N'
             ;;
@@ -34,7 +36,7 @@ do
             ;;
     esac
 done
-declare -rx Runner_shell_as=${Runner_shell_hold}
+declare -rx Not_Batch_Run
 
 address_len=0
 Get_Address_Len
@@ -138,4 +140,3 @@ read -p'Manually remove remaining oem-owned with rm -riv /var/lib/sudo/oem/*'
 #    <property name="SessionName" type="string" value="Default"/>
 
 # udevadm info --query=env --name=/dev/sda1 |grep UUID
-

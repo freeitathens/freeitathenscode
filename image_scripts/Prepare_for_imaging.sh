@@ -34,7 +34,8 @@ Set_Confirm_distro_name() {
         ${sys_rpts_distro_name}\
           '): mismatch (however slight) with input: ('\
         ${distro_name}').'
-    read -p'<ENTER>' -t3
+    read -p'<ACCEPT(=Y)?>' -a ANS_ARR
+    [[ ${#ANS_ARR[*]} -gt 0 ]] && [[ ${ANS_ARR[0]} == 'Y' ]] && distro_name=$sys_rpts_distro_name && return 0
 
     return 3
 }
@@ -49,7 +50,7 @@ Set_sys_rpts_distro_name() {
     if [ -n ${sys_rpts_distro_name} ]
     then
         echo 'System reports distro as '${sys_rpts_distro_name}'.'
-        read -p'<ENTER>' -t3
+        read -p'<ENTER>'
         return 0
     fi
 
@@ -83,24 +84,31 @@ UserSet_sourcebase() {
     return 0
 }
 
-declare -x Runner_shell_hold=$-
+Not_Batch_Run='N'
 declare -x aptcache_needs_update='Y'
 refresh_updatedb='N'
 refresh_svn='N'
 declare -x refresh_git='Y'
+declare ADD_ALL='Y'
+declare PUR_ALL='Y'
 
 # Establish base of version-controlled code tree.
 sourcebase="/home/oem/freeitathenscode"
 
-Optvalid='jVRuGhd:b:'
+Optvalid='APjVRuGhd:b:'
 while getopts $Optvalid OPT
 do
     case $OPT in
-        j)
-            echo \$- 'captured as '$Runner_shell_hold
-            Runner_shell_hold=${Runner_shell_hold}'i'
-            echo '...now set to '$Runner_shell_hold
-        read -p'<ENTER>' -t3
+        A)
+            ADD_ALL='N'
+            ;;
+        P)
+            PUR_ALL='N'
+            ;;
+        B)
+            Not_Batch_Run='Y'
+	    echo 'Interactive Run Selected'
+	    read -p'<ENTER>' -t3
             ;;
         d)
             Set_Confirm_distro_name $OPTARG;RCx1=$?
@@ -156,7 +164,8 @@ declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
 
 FreeIT_image='FreeIT.png'
 
-declare -rx Runner_shell_as=${Runner_shell_hold}
+#declare -rx Runner_shell_as=${Runner_shell_hold}
+declare -rx Not_Batch_Run
 
 [[ "${refresh_updatedb}." == 'Y.' ]] && updatedb &
 
@@ -226,7 +235,7 @@ distro_name_Set() {
     return 0
 }
 RCxD=0
-[[ -z $distro_name ]] && distro_name_Set || RCxD=$?
+[[ -z $distro_name ]] && (distro_name_Set || RCxD=$?)
 No_distro_name_bye() {
     prettyprint '1,31,40,M,n' 'Cannot Set Distro name'
     Pauze 'Exiting....'
@@ -343,9 +352,9 @@ Establish_ppa_repo_sourcefile() {
     fi
     apt_repo_name='ppa:'$ppa_name
     echo -n $apt_repo_name
-    read -p' <Add to APT Repos?>' -a ANS || return 4
-    [[ ${#ANS[*]} -eq 0 ]] && return 0
-    if [ ${ANS[0]} == 'Y' ]
+    read -p' <Add to APT Repos?>' -a ADD_PPA_ARR || return 4
+    [[ ${#ADD_PPA_ARR[*]} -eq 0 ]] && return 0
+    if [ ${ADD_PPA_ARR[0]} == 'Y' ]
     then
         add-apt-repository $apt_repo_name || return $?
 	return 0
@@ -395,7 +404,7 @@ Install_packages_from_file_list() {
                     fi
                     if [ $RCxPPA -gt 0 ]
                     then
-                    return 0
+                        return 0
                     fi 
                     ;;
 		INSTALL)
@@ -412,7 +421,7 @@ Install_packages_from_file_list() {
                 return 115
        }
        RCxE=0
-       [[ $pkg_info_L -gt 3 ]] && Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?
+       [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
        [[ $RCxE -gt 10 ]] && return $RCxE
 
        Pkg_by_distro_session() {
@@ -420,31 +429,39 @@ Install_packages_from_file_list() {
 
            Pkg_purge() {
                echo -n $pkg_name' '
-               read -p'<Purge?>' -a ANS || return 0
-    	       [[ ${#ANS[*]} -eq 0 ]] && return 0
-               if [ ${ANS[0]} == 'Y' ]
+               declare -a PUR_ARR=('Y')
+               if [ $PUR_ALL == 'N' ]
+               then
+                   read -p'<Purge?>' -a PUR_ARR || return $?
+               fi
+    	       [[ ${#PUR_ARR[*]} -eq 0 ]] && return 1
+               if [ ${PUR_ARR[0]} == 'Y' ]
                then
                    Apt_purge $pkg_name || return $?
                fi
            }
            Pkg_add() {
                echo -n $pkg_name' '
-	       read -p'<Install/Upgrad3(Y|n)?>' -a ANS || return 0
-	       [[ ${#ANS[*]} -eq 0 ]] && return 0
-               if [ ${ANS[0]} == 'Y' ]
+               declare -a ADD_ARR=('Y')
+               if [ $ADD_ALL == 'N' ]
+               then
+	           read -p'<Install/Upgrad3(Y|n)?>' -a ADD_ARR || return $?
+               fi
+	       [[ ${#ADD_ARR[*]} -eq 0 ]] && return 1
+               if [ ${ADD_ARR[0]} == 'Y' ]
                then
                    Apt_install $pkg_name || return $?
                fi
            }
            case $distro_session in
               NONE)
-                  Pkg_purge ||return 20
+                  Pkg_purge ||return $?
                   ;;
               ALL)
-                  Pkg_add || return 21
+                  Pkg_add || return $?
                   ;;
               $distro_generia)
-                  Pkg_add || return 21
+                  Pkg_add || return $?
                   ;;
            esac
            return 1
@@ -566,3 +583,4 @@ fi
 
 #PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms mintdrivers gparted terminator hardinfo'
 
+#Not_Batch_Run=

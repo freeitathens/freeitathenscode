@@ -1,6 +1,4 @@
 #!/bin/bash
-#[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$3
-#[[ -z "${Runner_shell_as}" ]] && Runner_shell_as=$-
 
 [[ -z $codebase ]] && codebase="${HOME}/freeitathenscode/image_scripts"
 source ${codebase}/Common_functions || exit 12
@@ -310,3 +308,4 @@ Pauze "INFO,Finished with BPR custom code. last RC: $?"
 # NOT! Messes with keyboard! Remove Ibus
 #sudo apt-get purge --auto-remove ibus
 
+#Not_Batch_Run=

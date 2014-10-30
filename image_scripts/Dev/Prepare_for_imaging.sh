@@ -81,7 +81,6 @@ UserSet_sourcebase() {
     return 0
 }
 
-declare -x Runner_shell_hold=$-
 declare -x aptcache_needs_update='Y'
 refresh_updatedb='N'
 refresh_svn='N'
@@ -90,15 +89,12 @@ declare -x refresh_git='Y'
 # Establish base of version-controlled code tree.
 sourcebase="${HOME}/freeitathenscode"
 
-Optvalid='jVRuGhd:b:'
+Optvalid='BVRuGhd:b:'
 while getopts $Optvalid OPT
 do
     case $OPT in
-        j)
-            echo \$- 'captured as '$Runner_shell_hold
-            Runner_shell_hold=${Runner_shell_hold}'i'
-            echo '...now set to '$Runner_shell_hold
-        read -p'<ENTER>' -t3
+        B)
+            Not_Batch_Run='Y'
             ;;
         d)
             Set_Confirm_distro_name $OPTARG;RCx1=$?
@@ -148,13 +144,12 @@ declare -rx codebase
 source ${codebase}/Common_functions || exit 135
 source ${codebase}/Prepare_functions || exit 136
 
+declare -rx Not_Batch_Run
 declare -r HOLDIFS=$IFS
 declare -rx Messages_O=$(mktemp -t "Prep_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep_err.XXXXX")
 
 FreeIT_image='FreeIT.png'
-
-declare -rx Runner_shell_as=${Runner_shell_hold}
 
 [[ "${refresh_updatedb}." == 'Y.' ]] && updatedb &
 
@@ -548,3 +543,4 @@ fi
 
 #PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms mintdrivers gparted terminator hardinfo'
 
+#Not_Batch_Run=
