@@ -1,8 +1,8 @@
 #!/bin/bash +x
 
 mr_man=$SUDO_USER
-[ -z "$mr_man" ] || exit 5
-luser=$(whoami)
+#[ -z "$mr_man" ] || exit 5
+luser='oem'
 
 declare -rx codebase="${HOME}/freeitathenscode"
 source ${codebase}/image_scripts/Common_functions || exit 12
@@ -118,7 +118,8 @@ find ${HOME}/.local/share/Trash/ -type f -delete
 #then
 #    userid=${ANS[0]}
 #    echo 'Using UID of '$userid' as Quality Control User oem'
-sort -k3 -n -t: /etc/passwd |tail -n4
+userid=$(grep "^$luser" /etc/passwd |cut -f3 -d:)
+echo 'Userid is '$userid'. OK?'
 read -p'<ENTER>'
 sudo find /home/$luser -not -uid $userid -ok chown -c $luser {} \;
 read -p'<ENTER>'
@@ -140,3 +141,4 @@ read -p'Manually remove remaining oem-owned with rm -riv /var/lib/sudo/oem/*'
 #    <property name="SessionName" type="string" value="Default"/>
 
 # udevadm info --query=env --name=/dev/sda1 |grep UUID
+#for TEMPFILE in $(find . -not -type d); do echo -n $TEMPFILE':';fuser -vu $TEMPFILE|| sudo rm -iv $TEMPFILE;echo ''; done

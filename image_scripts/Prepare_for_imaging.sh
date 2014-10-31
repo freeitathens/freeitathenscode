@@ -25,7 +25,7 @@ Set_Confirm_distro_name() {
     if [ "${distro_name}." == "${sys_rpts_distro_name}." ]
     then
         echo 'System distro value ('${sys_rpts_distro_name}\
-    ') agrees with your input ('${distro_name}').'
+        ') agrees with your input ('${distro_name}').'
         read -p'<ENTER>' -t3
         return 0
     fi
@@ -68,18 +68,26 @@ Set_sys_rpts_distro_name() {
 }
 
 UserSet_sourcebase() {
+    User_sourcebase=$1
+    [[ -z $User_sourcebase ]] && exit 88
 
-    declare -a sourcb_read_arr
     echo 'Normally FreeIT Code is in '$sourcebase
-    read -p 'Your Code Location? ' -a sourcb_read_arr
-    sourcb_read_LEN=${#sourcb_read_arr[@]}
-    [[ sourcb_read_LEN -eq 0 ]] && return 0
+    echo 'You have indicated '$User_sourcebase
+    if [[ -e $User_sourcebase ]]
+    then
+        ls -ld $User_sourcebase
+    else
+        echo "Don't exist!"
+        RCxb=88
+    fi
+    read -p '<ENTER>' -t10
+    #declare -a sourcb_read_arr
+    #read -p 'Your Code Location? ' -a sourcb_read_arr
+    #sourcb_read_LEN=${#sourcb_read_arr[@]}
+    #[[ sourcb_read_LEN -eq 0 ]] && return 0
+    #hold_sourcebase=${sourcb_read_arr[0]}
 
-    hold_sourcebase=${sourcb_read_arr[0]}
-    [[ "$hold_sourcebase" =~ 'EXIT' ]] && exit 2
-
-    [[ -d $hold_sourcebase ]] || exit 13
-    sourcebase=$hold_sourcebase
+    sourcebase=$User_sourcebase
 
     return 0
 }
@@ -95,7 +103,7 @@ declare PUR_ALL='Y'
 # Establish base of version-controlled code tree.
 sourcebase="/home/oem/freeitathenscode"
 
-Optvalid='APjVRuGhd:b:'
+Optvalid='APBd:RuVGb:h'
 while getopts $Optvalid OPT
 do
     case $OPT in
@@ -107,8 +115,8 @@ do
             ;;
         B)
             Not_Batch_Run='Y'
-	    echo 'Interactive Run Selected'
-	    read -p'<ENTER>' -t3
+            echo 'Interactive Run Selected'
+            read -p'<ENTER>' -t3
             ;;
         d)
             Set_Confirm_distro_name $OPTARG;RCx1=$?
@@ -127,18 +135,28 @@ do
             refresh_git='N'
             ;;
         b)
-            UserSet_sourcebase
+            RCxb=0
+            UserSet_sourcebase $OPTARG
+            [[ RCxb -gt 0 ]] && exit $RCxb
             ;;
         h)
             echo $This_script\
-        ': Valid options are [ -j -V -R -u -G -d{Distro} -b{SrcBase} -h]'
-            echo '(Matches up with '$Optvalid'?'
-        read -p'<ENTER>' -t3
+            ': Valid options are [ -A -P -B -d{distro} -R -u -V -G -b{SrcBase} -h]'
+            echo "A SET ADD_ALL='N'"
+            echo "P SET PUR_ALL='N'"
+            echo "B SET Not_Batch_Run='Y'"
+            echo "d SET :Distro Name:"
+            echo "R SET aptcache_needs_update='N'"
+            echo "u SET refresh_updatedb='Y'"
+            echo "V SET refresh_svn='Y'"
+            echo "G SET refresh_git='N'"
+            echo "b SET :Sourcebase:"
+
+            echo '(Match up with '$Optvalid')'
             exit 0
             ;;
         *)
             echo 'Unknown option: '${OPT}'. Exiting.'
-        read -p'<ENTER>' -t3
             exit 8
             ;;
     esac
@@ -200,7 +218,9 @@ Set_background() {
     local Image_dir=$2
     [[ -z "$Image_dir" ]] && return 9
     [[ -d "$Image_dir" ]] || return 5
+
     shift 2
+    echo 'Checking background file location: $Image_dir / $Image_file'
 
     Have_BG=$(ls -l ${Image_dir}/$Image_file)
     if [ $? -gt 0 ]
@@ -357,7 +377,7 @@ Establish_ppa_repo_sourcefile() {
     if [ ${ADD_PPA_ARR[0]} == 'Y' ]
     then
         add-apt-repository $apt_repo_name || return $?
-	return 0
+    return 0
     fi
 
     return $?
@@ -384,11 +404,11 @@ Install_packages_from_file_list() {
             return 4
         fi
 
-	Check_extra() {
+    Check_extra() {
             local pkg_name=$1
             shift 1
-	    pkg_extra=$@
-	    [[ -z $pkg_extra ]] && return 4
+        pkg_extra=$@
+        [[ -z $pkg_extra ]] && return 4
             IFS='\='
             declare -a extra_a=($pkg_extra)
             IFS=$HOLDIFS
@@ -400,19 +420,19 @@ Install_packages_from_file_list() {
                     RCxPPA=$?
                     if [ $RCxPPA -gt 10 ]
                     then
-                    return $RCxPPA
+                        return $RCxPPA
                     fi
                     if [ $RCxPPA -gt 0 ]
                     then
                         return 0
                     fi 
                     ;;
-		INSTALL)
-		    echo 'Check that '${extra_a[1]}' replaces '$pkg_name
-		    ;;
-		REMOVE)
-		    echo 'Check that '$pkg_name' replaces '${extra_a[1]}
-		    ;;
+        INSTALL)
+            echo 'Check that '${extra_a[1]}' replaces '$pkg_name
+            ;;
+        REMOVE)
+            echo 'Check that '$pkg_name' replaces '${extra_a[1]}
+            ;;
                 *)
                     echo 'Unknown Extra Code:'$pkg_extra' for '$pkg_name
                     return 6
@@ -434,7 +454,7 @@ Install_packages_from_file_list() {
                then
                    read -p'<Purge?>' -a PUR_ARR || return $?
                fi
-    	       [[ ${#PUR_ARR[*]} -eq 0 ]] && return 1
+               [[ ${#PUR_ARR[*]} -eq 0 ]] && return 1
                if [ ${PUR_ARR[0]} == 'Y' ]
                then
                    Apt_purge $pkg_name || return $?
@@ -445,9 +465,9 @@ Install_packages_from_file_list() {
                declare -a ADD_ARR=('Y')
                if [ $ADD_ALL == 'N' ]
                then
-	           read -p'<Install/Upgrad3(Y|n)?>' -a ADD_ARR || return $?
+                   read -p'<Install/Upgrad3(Y|n)?>' -a ADD_ARR || return $?
                fi
-	       [[ ${#ADD_ARR[*]} -eq 0 ]] && return 1
+               [[ ${#ADD_ARR[*]} -eq 0 ]] && return 1
                if [ ${ADD_ARR[0]} == 'Y' ]
                then
                    Apt_install $pkg_name || return $?
@@ -474,7 +494,7 @@ Install_packages_from_file_list() {
         if [ $RCa -gt 0 ]
         then
             echo 'Problem with package '$pkg_name
-        ((RCz+=$RCa))
+            ((RCz+=$RCa))
         fi 
     done
     return $RCz
@@ -500,7 +520,6 @@ case $distro_generia in
 esac
 Pauze 'DONE: set Frita Backgrounds'
 
-echo 'Checking background file location: $Image_dir / $Image_file'
 Set_background $FreeIT_image $Backgrounds_location
 bg_RC=$?
 case $bg_RC in
@@ -513,8 +532,8 @@ case $bg_RC in
     *) backmess="Serious problems with setting background. RC=${bg_RC}"
     ;;
 esac
-echo "Response from setting Frita Backgrounds was $backmess"
-Pauze "(DONE) Checking background file location: $Image_dir / $Image_file"
+echo 'Response from setting Frita Backgrounds was '$backmess
+read -p'<ENTER>' -t10
 
 case $distro_generia in
     mint)
