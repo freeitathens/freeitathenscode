@@ -36,6 +36,15 @@ LABEL DBAN_CUR_NOOPT
     KERNEL dban_test/dban.bzi
     APPEND initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
 
+#LABEL DBAN_Short
+#    MENU LABEL DBAN v2.2.6 [DoD 5220.22-M: short] 
+#    TEXT HELP 
+#       Warning: This software irrecoverably destroys data. 
+#       Security Level: Medium (3 passes) 
+#    ENDTEXT 
+#    KERNEL images/disk_tools/dban_v2.2.6_i586/DBAN.BZI 
+#    APPEND nuke="dwipe --autonuke --method dodshort" silent
+
 LABEL DBAN_OLD
     menu label DBAN 2.2.7 (Old Version)
     kernel dban2/dban.bzi
@@ -69,11 +78,6 @@ LABEL System Rescue CD "Live Image" Test 2
     KERNEL systemrescuecd/isolinux/rescue32
     APPEND initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5
 MENU END
-
-#label dban
-# menu label (DEPRECATED, OLD DBAN) Wipe hard drive
-#  kernel memdisk
-#  append initrd=dban_OLD/dban.img floppy
 
 # does not work, says invalid ar_source.  possibly problem with sysrcd.  also sysrcd takes a long time to get to this point, is there any faster option?
 #label install-1004
