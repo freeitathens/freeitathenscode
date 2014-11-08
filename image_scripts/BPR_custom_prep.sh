@@ -89,32 +89,31 @@ Chromium_stuff() {
 Chromium_master_pref() {
     Answer='N'
     Pause_n_Answer 'Y|N' 'Git-Load Chromium Master Preferences?'
-    if [ $Answer == 'Y' ]
-    then
-        cd $DOWNLOADS
-        # Download master_preferences config file for chromium
-        wget -O master_preferences\
-            https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
-            && sudo cp -iv master_preferences /etc/chromium-browser/
-        cd -
-    fi
+    [[ $Answer == 'Y' ]] || return 0
+
+    cd $DOWNLOADS
+    # Download master_preferences config file for chromium
+    wget -O master_preferences\
+        https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
+        && sudo cp -iv master_preferences /etc/chromium-browser/
+    cd -
 
     return $?
 }
 
 Chromium_defaults() {
+
     Answer='N'
     Pause_n_Answer 'Y|N' 'Set chrome defaults?'
-    # *--* Poodle fix et.al. cf. https://disablessl3.com/ *--*
-    if [ $Answer == 'Y' ]
-    then
-        # Ensure certain Chromium Flags settings are in place.
-        sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
-            --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1\
-            --disable-google-now-integration"/g' /etc/chromium-browser/default
-    fi
+    [[ $Answer == 'Y' ]] || return 0
+
+    # Ensure certain Chromium Flags settings are in place.
+    sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
+        --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1\
+        --disable-google-now-integration"/g' /etc/chromium-browser/default
 
     return $?
+    # *--* Poodle fix et.al. cf. https://disablessl3.com/ *--*
 }
 
 Chromium_bookmarks() {
