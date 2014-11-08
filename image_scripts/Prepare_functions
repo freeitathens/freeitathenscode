@@ -4,6 +4,9 @@ Run_apt_update() {
 
     [[ $aptcache_needs_update == 'Y' ]] || return 0
 
+    Check_report_dest $Messages_O || return $?
+
+    Pauze 'apt-get update'
     sudo apt-get update &>>${Messages_O} &
     Time_to_kill $! "Running apt-get update. Details in $Messages_O"
     export aptcache_needs_update='N'
@@ -13,6 +16,7 @@ Run_apt_update() {
 Apt_purge() {
     local packages=$1
     [[ -z $packages ]] && return 4
+    Check_report_dest $Messages_O || return $?
 
     local RC=0
     sudo apt-get purge --auto-remove $packages 2>>${Messages_O} || RC=$?
@@ -23,11 +27,25 @@ Apt_purge() {
 Apt_install() {
     local packages=$1
     [[ -z $packages ]] && return 4
+    Check_report_dest $Messages_O || return $?
 
     local RC=0
     sudo apt-get install -V --show-progress $packages 2>>${Messages_O} || RC=$?
 
     return $RC
+}
+
+Check_report_dest() {
+    local report_file_out=$1
+
+    [[ -z $report_file_out ]] && report_file_out=/tmp/prep_mess_dflt
+    if [ ! -w $report_file_out ]
+    then
+        echo 'Problem writing to '$report_file_out
+        return 12
+    fi
+
+    return 0
 }
 
 Apt_action_replace() {

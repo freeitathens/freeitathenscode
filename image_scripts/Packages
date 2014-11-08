@@ -40,5 +40,5 @@ vlc,0,ALL,REMOVE=gnome-mplayer
 audacious,0,NONE,INSTALL='libimobiledevice4 rhythmbox rhythmbox-plugins'
 libimobiledevice4 rhythmbox rhythmbox-plugins,0,ALL,REMOVE=audacious
 # Email
-sylpheed,0,NONE,INSTALL='claws-mail claws-mail-extra-plugins claws-mail-tools claws-mail-plugins'
+sylpheed,0,NONE,INSTALL='claws-mail'
 claws-mail claws-mail-extra-plugins claws-mail-tools claws-mail-plugins,0,ALL,REMOVE=sylpheed
