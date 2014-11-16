@@ -215,6 +215,7 @@ Set_backgrounds() {
 
 [[ -z $codebase ]] && codebase="${HOME}/freeitathenscode/image_scripts"
 source ${codebase}/Common_functions || exit 12
+source ${codebase}/Prepare_functions || exit 13
 
 Mainline
 
