@@ -1,6 +1,14 @@
 #!/bin/bash
 set -u
 declare -r HOLDIFS=$IFS 2>/dev/null
+declare -r uri_chromium_mast_pref=\
+'https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/'
+declare -r uri_chromium_default_bookmarks='\
+https://gist.github.com/bpr97050/b6b5679f94d344879328/raw'
+declare -r uri_pepperflash_codex_installer='\
+https://gist.githubusercontent.com/bpr97050/9899740/raw'
+Git_name=FRITAdot
+declare -r uri_bpr_desktop_files='https://github.com/bpr97050/'${Git_name}'.git'
 
 Mainline() {
 
@@ -10,13 +18,16 @@ Mainline() {
     [[ -d ${DOWNLOADS} ]] || mkdir ${HOME}/Downloads
     [[ -d ${DOWNLOADS} ]] || exit 13
 
-    Answer='N'
-    Pause_n_Answer 'Y|N(default='$Answer')' 'WARN,Firefox custom config'
-    [[ "${Answer}." == 'Y.' ]] && (Firefox_stuff || echo 'Firefox Config?')
-    Chromium_stuff || echo 'Chromium Config?'
+    if [ $refresh_git == 'Y' ]
+    then
+        Download_custom_desktop_files\
+            || echo 'Download_custom_desktop_files: Problem?'
+    else
+        Pauze 'Refresh from github not in the cards this run...'
+    fi
 
-    Pauze 'refresh_git? '${refresh_git}
-    [[ $refresh_git == 'Y' ]] && (Configs_from_github || echo 'Configs_from_github?')
+    Firefox_stuff || echo 'Firefox Config: Problem?'
+    Chromium_stuff || echo 'Chromium Config: Problem?'
 
     #Set LightDM wallpaper
     Set_backgrounds
@@ -34,13 +45,44 @@ Mainline() {
     return 0
 }
 
+Download_custom_desktop_files() {
+    local RC=0
+    Pauze 'BPR Download_custom_desktop_files'
+    cd $DOWNLOADS || return $?
+
+    Activate_shopts
+    [[ -n $Git_name ]] && [[ -d $Git_name ]] && rm -rf ${Git_name}
+    git clone $uri_bpr_desktop_files || return $?
+    cd -
+
+    Pauze 'Preparing for Manual Moves from '${PWD}/${Git_name}' to /etc/skel/'
+    bash
+    #sudo rsync -aRv --exclude '.git' --delete-excluded ${Git_name}/ /etc/skel/
+    Reset_shopts
+
+    return $RC
+}
+
+Activate_shopts() {
+    orig_shopt_nullglob=$(shopt -p nullglob)
+    orig_shopt_dotglob=$(shopt -p dotglob)
+    shopt -s nullglob
+    shopt -s dotglob
+}
+
+Reset_shopts() {
+    [[ $orig_shopt_nullglob =~ ' -u ' ]] && shopt -u nullglob
+    [[ $orig_shopt_dotglob =~ ' -u ' ]] && shopt -u dotglob
+}
+
 Firefox_stuff() {
 
     local RC=0
 
     apt-get install firefox || return 16
 
-    # *--* Poodle et.al.,cf.https://addons.mozilla.org/en-US/firefox/addon/ssl-version-control/
+    # *--* Poodle et.al.,
+    #   cf.https://addons.mozilla.org/en-US/firefox/addon/ssl-version-control/
     # Options for Firefox bookmarks and settings
     Answer='N'
     Pause_n_Answer 'Y|N' 'INFO,Install default settings for Firefox?'
@@ -67,7 +109,8 @@ Chromium_stuff() {
 
     # Ensure "/etc/chromium-browser" is a directory (not a file)
     [[ -e /etc/chromium-browser ]]\
-        && ( [[ -d /etc/chromium-browser ]] || sudo mv -iv /etc/chromium-browser /tmp/ )
+        && ( [[ -d /etc/chromium-browser ]]\
+        || sudo mv -iv /etc/chromium-browser /tmp/ )
     [[ -d /etc/chromium-browser ]] || sudo mkdir /etc/chromium-browser
 
     Chromium_master_pref
@@ -94,7 +137,7 @@ Chromium_master_pref() {
     cd $DOWNLOADS
     # Download master_preferences config file for chromium
     wget -O master_preferences\
-        https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/\
+        $uri_chromium_mast_pref\
         && sudo cp -iv master_preferences /etc/chromium-browser/
     cd -
 
@@ -124,7 +167,7 @@ Chromium_bookmarks() {
         cd $DOWNLOADS
         # Download default bookmarks for Chromium
         wget -O default_bookmarks.html\
-            https://gist.github.com/bpr97050/b6b5679f94d344879328/raw\
+            $uri_chromium_default_bookmarks\
             && sudo cp -iv default_bookmarks.html /etc/chromium-browser/
         cd -
     fi
@@ -139,8 +182,8 @@ Chromium_prep_setup() {
     cd $DOWNLOADS
     check_install_RC=1
     #Pepperflash/Multimedia codecs installer
-    wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw\
-        && sudo mv check /usr/local/bin/\
+    wget -O check ${uri_pepperflash_codex_installer}\
+        && sudo cp -iv check /usr/local/bin/\
         && sudo chmod +x /usr/local/bin/check\
         && check_install_RC=0
     [[ $check_install_RC -eq 0 ]] || return $check_install_RC
@@ -157,40 +200,6 @@ Chromium_prep_setup() {
     cd -
 
     return 0
-}
-
-Configs_from_github() {
-    local RC=0
-    Pauze 'BPR Configs_from_github'
-
-    Activate_shopts
-
-    Git_name=FRITAdot
-    cd $DOWNLOADS || RC=$?
-    [[ $RC -eq 0 ]]\
-        && ( rm -rf ${Git_name}/ 2>/dev/null\
-        && git clone https://github.com/bpr97050/${Git_name}.git || RC=$? )
-
-    [[ $RC -eq 0 ]]\
-        && ( sudo rsync -aRv --exclude '.git' --delete-excluded\
-        ${Git_name}/\
-        /etc/skel || RC=$? )
-    cd -
-
-    Reset_shopts
-    return $RC
-}
-
-Activate_shopts() {
-    orig_shopt_nullglob=$(shopt -p nullglob)
-    orig_shopt_dotglob=$(shopt -p dotglob)
-    shopt -s nullglob
-    shopt -s dotglob
-}
-
-Reset_shopts() {
-    [[ $orig_shopt_nullglob =~ ' -u ' ]] && shopt -u nullglob
-    [[ $orig_shopt_dotglob =~ ' -u ' ]] && shopt -u dotglob
 }
 
 Set_backgrounds() {
@@ -223,4 +232,3 @@ Mainline
 #sudo apt-get install wine winetricks
 #sudo do-release-upgrade
 #sudo apt-get install ibus
-
