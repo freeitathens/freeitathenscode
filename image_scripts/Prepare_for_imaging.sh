@@ -288,7 +288,7 @@ Housekeeping() {
     address_len=0
     Get_Address_Len
 
-    if [[ "${refresh_updatedb}." == 'Y.' ]];then updatedb &;fi
+    [[ "${refresh_updatedb}." == 'Y.' ]] && updatedb &
     [[ "${refresh_svn}." == 'Y.' ]] && Contact_server
 
     Pauze 'Checking if apt update is requested( COND: '$aptcache_needs_update ')'
