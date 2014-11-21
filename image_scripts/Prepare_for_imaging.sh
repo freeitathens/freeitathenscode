@@ -279,10 +279,20 @@ Set_background() {
 
 Housekeeping() {
 
-    RCxD=0
     sys_rpts_distro_name=''
-    [[ -z $DISTRO_NAME ]] && (Distro_name_Set || RCxD=$?)
-    [[ $RCxD -eq 0 ]] || No_distro_name_bye
+    if [ -z $DISTRO_NAME ] 
+    then
+	Distro_name_Set;RCxDnS=$?
+        if [ $RCxDnS -gt 0 ]
+	then
+	    echo 'Distro_name_set ='$RCxDnS
+	    read -p'<ENTER>'
+	    No_distro_name_bye $RCxDnS
+	else
+	    Pauze 'Good Selection!:'$DISTRO_NAME
+	fi
+    fi
+
     Confirm_DISTRO_CPU || User_no_distro_bye $?
 
     address_len=0
@@ -306,10 +316,11 @@ Distro_name_Set() {
     Set_sys_rpts_distro_name;RCxS=$?
     [[ $RCxS -eq 0 ]] || return 30
 
+    DISTRO_NAME=$sys_rpts_distro_name
+    echo 'set' \$DISTRO_NAME '= '$DISTRO_NAME
     Answer='N'
     Pause_n_Answer 'Y|N' '...system value '${DISTRO_NAME}' is used, OK? '
     [[ "${Answer}." == 'Y.' ]] || return 12
-    DISTRO_NAME=$sys_rpts_distro_name
 
     return 0
 }
@@ -375,11 +386,12 @@ Set_sys_rpts_distro_name() {
 }
 
 No_distro_name_bye() {
+    local RCxDC=${1:-98}
 
     prettyprint '1,31,40,M,n' 'Cannot Set Distro name'
     Pauze 'Exiting....'
 
-    exit $RCxD
+    exit $RCxDC
 }
 
 Confirm_DISTRO_CPU() {
@@ -424,7 +436,7 @@ Confirm_DISTRO_CPU() {
 }
 
 User_no_distro_bye() {
-    RCxDC=${1:-99}
+    local RCxDC=${1:-99}
 
     prettyprint '5,31,47,M,n,0' 'No Known Distro Name, Exiting.'
     Pauze "See you back soon!"
