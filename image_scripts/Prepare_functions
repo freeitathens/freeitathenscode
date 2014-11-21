@@ -11,6 +11,7 @@ Run_apt_update() {
     Time_to_kill $! "Running apt-get update. Details in $Messages_O"
     export aptcache_needs_update='N'
 
+    return 0
 }
 
 Apt_purge() {
