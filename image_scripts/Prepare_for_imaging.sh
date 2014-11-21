@@ -293,10 +293,9 @@ Housekeeping() {
 	fi
     fi
 
-    Confirm_DISTRO_CPU || User_no_distro_bye $?
-
     address_len=0
     Get_Address_Len
+    Confirm_DISTRO_CPU || User_no_distro_bye $?
 
     [[ "${refresh_updatedb}." == 'Y.' ]] && updatedb &
     [[ "${refresh_svn}." == 'Y.' ]] && Contact_server
@@ -446,7 +445,7 @@ User_no_distro_bye() {
 
 Contact_server() {
 
-    echo "Check that server address is correct and is contactable ( COND: $refresh_svn )"
+    Pauze "Check that server address is correct and is contactable ( COND: $refresh_svn )"
 
     Sub_lcl_stat() {
 	echo 'Check on subversion local repo status'
@@ -463,7 +462,7 @@ Contact_server() {
 	Pauze '(DONE) Check on subversion local repo status'
     }
 
-    [[ $(ssh -p8222 frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]\
+    [[ $(ssh frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]\
         && Pauze 'Checked Server is valid: 192.168.1.9' && Sub_lcl_stat && return $?
 
     return 1
