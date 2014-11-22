@@ -3,12 +3,20 @@
     read -p'NOTE: Permission Problems? Rerun with sudo (i.e., as root).<ENTER>' -t5
 
 # Establish base of version-controlled code tree.
-if [[ -z $SOURCEBASE ]]
-then
-    SOURCEBASE='/home/oem/freeitathenscode'
-    declare -x SOURCEBASE
-fi
+[[ -z $SOURCEBASE ]] && declare -x SOURCEBASE='/home/oem/freeitathenscode'
 [[ -d $SOURCEBASE ]] || exit 25
+
+# Establish location of Common Functions within SOURCEBASE
+codebase=${SOURCEBASE}'/image_scripts'
+[[ -d $codebase ]] || exit 14
+declare -x codebase
+source ${codebase}/Common_functions || exit 135
+source ${codebase}/Prepare_functions || exit 136
+package_list_path_I=${codebase}'/Packages'
+wallpaper_filename='FreeIT.png'
+wallpaper_source_pathname=${codebase}/$wallpaper_filename
+wallpaper_system_dirname='/usr/share/backgrounds'
+wallpaper_was_setup='N'
 
 aptcache_needs_update='Y'
 refresh_updatedb='N'
@@ -18,6 +26,9 @@ ADD_ALL='Y'
 PUR_ALL='Y'
 Not_Batch_Run='N'
 
+This_script=$(basename $0)
+declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
+declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
 Optvalid='APBd:RuVGh'
 
 Mainline() {
@@ -31,7 +42,11 @@ Mainline() {
 	grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 
 	Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
     fi
-    Setup_desktop_wallpaper
+
+    set -u
+    Check_Setup_wallpaper;RCxW=$?
+    Report_Check_Setup_wallpaper $RCxW
+    set +u
 
     Pauze 'Lauching Virtual Greybeard'
     vrms
@@ -40,241 +55,6 @@ Mainline() {
     Cleanup_nouser_nogroup ${HOME}'/Ran_nouser_nogroup_fix'
 
     return 0
-}
-
-Install_Remove_requested_packages() {
-
-    case $distro_generia in
-	mint)
-	    Pauze 'WARNING,Ensure backports in /etc/apt/sources.list (or sources.d/)' 
-	    ;;
-	*)
-	    Pauze 'Assuming Backports are automatically included'
-	    ;;
-    esac
-
-    Pauze 'Install necessary packages'
-    RCxPK=-1
-    for pkg_file in $(find $This_script_dir -maxdepth 1 -type f -name 'Packages*')
-    do
-	RCxPK=0
-	Install_packages_from_file_list $pkg_file || ((RCxPK+=$?))
-    done
-    [[ $RCxPK -ne 0 ]] && Pauze 'Problems Installing Packages:'$RCxPK
-
-    case $distro_generia in
-	lubuntu|ubuntu|mint)
-	    echo 'Run BPR Code'
-	    [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
-		${codebase}/BPR_custom_prep.sh
-	    Pauze "Run BPR: Last return code: $?"
-	    ;;
-	*)
-	    Pauze "Don't need to run BPR additions for "$distro_generia' ('$DISTRO_NAME')'
-	    ;;
-    esac
-
-    return 0
-}
-
-Install_packages_from_file_list() {
-    local pkg_file=$1
-    RCz=0
-
-    Process_package() {
-        IFS=','
-        declare -ra pkg_info_a=($1)
-        IFS=$HOLDIFS
-
-        declare -r pkg_info_L=${#pkg_info_a[*]}
-        pkg_name=${pkg_info_a[0]}
-        pkg_by_addr=${pkg_info_a[1]}
-        [[ pkg_by_addr -eq 0 ]] && pkg_by_addr=$address_len
-        if [ $pkg_by_addr != $address_len ]
-        then
-            echo 'Skipping package '$pkg_name' on '$address_len' box.'
-            return 4
-        fi
-
-    Check_extra() {
-            local pkg_name=$1
-            shift 1
-        pkg_extra=$@
-        [[ -z $pkg_extra ]] && return 4
-            IFS='\='
-            declare -a extra_a=($pkg_extra)
-            IFS=$HOLDIFS
-            declare extra_L=${#extra_a[*]}
-            [[ $extra_L -gt 1 ]] || return 5
-            case ${extra_a[0]} in
-                ppa)
-                    Establish_ppa_repo_sourcefile $pkg_name ${extra_a[1]}
-                    RCxPPA=$?
-                    if [ $RCxPPA -gt 10 ]
-                    then
-                        return $RCxPPA
-                    fi
-                    if [ $RCxPPA -gt 0 ]
-                    then
-                        return 0
-                    fi 
-                    ;;
-        INSTALL)
-            echo 'Check that '${extra_a[1]}' replaces '$pkg_name
-            ;;
-        REMOVE)
-            echo 'Check that '$pkg_name' replaces '${extra_a[1]}
-            ;;
-                *)
-                    echo 'Unknown Extra Code:'$pkg_extra' for '$pkg_name
-                    return 6
-                    ;;
-                esac
-                return 115
-       }
-       RCxE=0
-       [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
-       [[ $RCxE -gt 10 ]] && return $RCxE
-
-       Pkg_by_distro_session() {
-           distro_session=$1
-
-           Pkg_purge() {
-               echo -n $pkg_name' '
-               declare -a PUR_ARR=('Y')
-               if [ $PUR_ALL == 'N' ]
-               then
-                   read -p'<Purge?>' -a PUR_ARR || return $?
-               fi
-               [[ ${#PUR_ARR[*]} -eq 0 ]] && return 1
-               if [ ${PUR_ARR[0]} == 'Y' ]
-               then
-                   Apt_purge $pkg_name || return $?
-               fi
-           }
-           Pkg_add() {
-               echo -n $pkg_name' '
-               declare -a ADD_ARR=('Y')
-               if [ $ADD_ALL == 'N' ]
-               then
-                   read -p'<Install/Upgrad3(Y|n)?>' -a ADD_ARR || return $?
-               fi
-               [[ ${#ADD_ARR[*]} -eq 0 ]] && return 1
-               if [ ${ADD_ARR[0]} == 'Y' ]
-               then
-                   Apt_install $pkg_name || return $?
-               fi
-           }
-           case $distro_session in
-              NONE)
-                  Pkg_purge ||return $?
-                  ;;
-              ALL)
-                  Pkg_add || return $?
-                  ;;
-              $distro_generia)
-                  Pkg_add || return $?
-                  ;;
-           esac
-           return 1
-        }
-        Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
-    }
-    for pkg_info_csv in $(grep -v '^#' $pkg_file)
-    do
-        Process_package $pkg_info_csv;RCa=$?
-        if [ $RCa -gt 0 ]
-        then
-            echo 'Problem with package '$pkg_name
-            ((RCz+=$RCa))
-        fi 
-    done
-    return $RCz
-}
-
-Establish_ppa_repo_sourcefile() {
-    local pkg_name=$1
-    shift;ppa_name=$@
-    search_ppa_name=$(echo $ppa_name|tr '/' '-')
-    Pauze 'Beginning search for source.d ppa '$search_ppa_name'...'
-    RCxRo=1
-    find /etc/apt/sources.list.d/ -type f|grep $search_ppa_name && RCxRo=$?
-    if [ $RCxRo -eq 0 ]
-    then
-        read -p'Found ppa, returning. <ENTER(t=8)>' -t8
-        return 0
-    fi
-    apt_repo_name='ppa:'$ppa_name
-    echo -n $apt_repo_name
-    read -p' <Add to APT Repos?>' -a ADD_PPA_ARR || return 4
-    [[ ${#ADD_PPA_ARR[*]} -eq 0 ]] && return 0
-    if [ ${ADD_PPA_ARR[0]} == 'Y' ]
-    then
-        add-apt-repository $apt_repo_name || return $?
-    return 0
-    fi
-
-    return $?
-}
-
-Setup_desktop_wallpaper() {
-
-    set -u
-    Pauze 'Try to set Frita Backgrounds'
-    backmess='Background Set?'
-    case $distro_generia in
-	lubuntu|ubuntu)
-	    Backgrounds_location='/usr/share/lubuntu/wallpapers'
-	    ;;
-	*)
-	    Backgrounds_location='/usr/share/backgrounds'
-	    ;;
-    esac
-    Pauze 'DONE: set Frita Backgrounds'
-
-    Set_background $FreeIT_image $Backgrounds_location
-    bg_RC=$?
-    case $bg_RC in
-	0) backmess='Background setting ok'
-	    ;;
-	5) backmess="Invalid backgrounds directory ${Backgrounds_location}. Set background manually"
-	    ;;
-	6) backmess='Invalid background filename '$FreeIT_image
-	    ;;
-	*) backmess="Serious problems with setting background. RC=${bg_RC}"
-	    ;;
-    esac
-    echo 'Response from setting Frita Backgrounds was '$backmess
-    read -p'<ENTER>' -t10
-
-    set +u
-    return 0
-}
-
-Set_background() {
-    local Image_file=$1
-    [[ -z "$Image_file" ]] && return 6
-    local Image_dir=$2
-    [[ -z "$Image_dir" ]] && return 9
-    [[ -d "$Image_dir" ]] || return 5
-
-    shift 2
-    echo 'Checking background file location: $Image_dir / $Image_file'
-
-    Have_BG=$(ls -l ${Image_dir}/$Image_file)
-    if [ $? -gt 0 ]
-    then
-        Pauze 'WARNING,OK, Background needs setup. First, searching all subdirs...'
-        find ${Image_dir}/ -name "$Image_file" &
-        Answer='Y'
-        Pause_n_Answer 'Y|N' 'INFO,Shall I try to retrieve '$Image_file' (Default '$Answer')?'
-        if [ "${Answer}." == 'Y.' ]
-        then
-            sudo cp -iv ${codebase}/$Image_file ${Image_dir}/ || return 15
-        else
-            Pauze 'WARNING,OK, Handle it later...'
-        fi
-    fi
 }
 
 Housekeeping() {
@@ -522,6 +302,233 @@ Integrity_check() {
 
 }
 
+Install_Remove_requested_packages() {
+
+    case $distro_generia in
+	mint)
+	    Pauze 'WARNING,Ensure backports in /etc/apt/sources.list (or sources.d/)' 
+	    ;;
+	*)
+	    Pauze 'Assuming Backports are automatically included'
+	    ;;
+    esac
+
+    Pauze 'Install necessary packages'
+    RCxPK=0
+    Install_packages_from_file_list $package_list_path_I || RCxPK=$?
+    [[ $RCxPK -ne 0 ]] && Pauze 'Problems Installing Packages:'$RCxPK
+
+    case $distro_generia in
+	ubuntu|mint)
+	    echo 'Run BPR Code'
+	    [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
+		${codebase}/BPR_custom_prep.sh
+	    Pauze "Run BPR: Last return code: $?"
+	    ;;
+	*)
+	    Pauze "Don't need to run BPR additions for "$distro_generia' ('$DISTRO_NAME')'
+	    ;;
+    esac
+
+    return 0
+}
+#for pkg_file in $(find $This_script_dir -maxdepth 1 -type f -name 'Packages*')
+
+Install_packages_from_file_list() {
+    local package_list_file=$1
+    RCz=0
+
+    Process_package() {
+        IFS=','
+        declare -ra pkg_info_a=($1)
+        IFS=$HOLDIFS
+
+        declare -r pkg_info_L=${#pkg_info_a[*]}
+        pkg_name=${pkg_info_a[0]}
+        pkg_by_addr=${pkg_info_a[1]}
+        [[ pkg_by_addr -eq 0 ]] && pkg_by_addr=$address_len
+        if [ $pkg_by_addr != $address_len ]
+        then
+            echo 'Skipping package '$pkg_name' on '$address_len' box.'
+            return 4
+        fi
+
+    Check_extra() {
+            local pkg_name=$1
+            shift 1
+        pkg_extra=$@
+        [[ -z $pkg_extra ]] && return 4
+            IFS='\='
+            declare -a extra_a=($pkg_extra)
+            IFS=$HOLDIFS
+            declare extra_L=${#extra_a[*]}
+            [[ $extra_L -gt 1 ]] || return 5
+            case ${extra_a[0]} in
+                ppa)
+                    Establish_ppa_repo_sourcefile $pkg_name ${extra_a[1]}
+                    RCxPPA=$?
+                    if [ $RCxPPA -gt 10 ]
+                    then
+                        return $RCxPPA
+                    fi
+                    if [ $RCxPPA -gt 0 ]
+                    then
+                        return 0
+                    fi 
+                    ;;
+        INSTALL)
+            echo 'Check that '${extra_a[1]}' replaces '$pkg_name
+            ;;
+        REMOVE)
+            echo 'Check that '$pkg_name' replaces '${extra_a[1]}
+            ;;
+                *)
+                    echo 'Unknown Extra Code:'$pkg_extra' for '$pkg_name
+                    return 6
+                    ;;
+                esac
+                return 115
+       }
+       RCxE=0
+       [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
+       [[ $RCxE -gt 10 ]] && return $RCxE
+
+       Pkg_by_distro_session() {
+           distro_session=$1
+
+           Pkg_purge() {
+               echo -n $pkg_name' '
+               declare -a PUR_ARR=('Y')
+               if [ $PUR_ALL == 'N' ]
+               then
+                   read -p'<Purge?>' -a PUR_ARR || return $?
+               fi
+               [[ ${#PUR_ARR[*]} -eq 0 ]] && return 1
+               if [ ${PUR_ARR[0]} == 'Y' ]
+               then
+                   Apt_purge $pkg_name || return $?
+               fi
+           }
+           Pkg_add() {
+               echo -n $pkg_name' '
+               declare -a ADD_ARR=('Y')
+               if [ $ADD_ALL == 'N' ]
+               then
+                   read -p'<Install/Upgrad3(Y|n)?>' -a ADD_ARR || return $?
+               fi
+               [[ ${#ADD_ARR[*]} -eq 0 ]] && return 1
+               if [ ${ADD_ARR[0]} == 'Y' ]
+               then
+                   Apt_install $pkg_name || return $?
+               fi
+           }
+           case $distro_session in
+              NONE)
+                  Pkg_purge ||return $?
+                  ;;
+              ALL)
+                  Pkg_add || return $?
+                  ;;
+              $distro_generia)
+                  Pkg_add || return $?
+                  ;;
+           esac
+           return 1
+        }
+        Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
+    }
+    for pkg_info_csv in $(grep -v '^#' $package_list_file)
+    do
+        Process_package $pkg_info_csv;RCa=$?
+        if [ $RCa -gt 0 ]
+        then
+            echo 'Problem with package '$pkg_name
+            ((RCz+=$RCa))
+        fi 
+    done
+    return $RCz
+}
+
+Establish_ppa_repo_sourcefile() {
+    local pkg_name=$1
+    shift;ppa_name=$@
+    search_ppa_name=$(echo $ppa_name|tr '/' '-')
+    Pauze 'Beginning search for source.d ppa '$search_ppa_name'...'
+    RCxRo=1
+    find /etc/apt/sources.list.d/ -type f|grep $search_ppa_name && RCxRo=$?
+    if [ $RCxRo -eq 0 ]
+    then
+        read -p'Found ppa, returning. <ENTER(t=8)>' -t8
+        return 0
+    fi
+    apt_repo_name='ppa:'$ppa_name
+    echo -n $apt_repo_name
+    read -p' <Add to APT Repos?>' -a ADD_PPA_ARR || return 4
+    [[ ${#ADD_PPA_ARR[*]} -eq 0 ]] && return 0
+    if [ ${ADD_PPA_ARR[0]} == 'Y' ]
+    then
+        add-apt-repository $apt_repo_name || return $?
+    return 0
+    fi
+
+    return $?
+}
+
+Check_Setup_wallpaper() {
+
+    [[ $DISTRO_NAME == 'lubuntu' ]] && wallpaper_system_dirname='/usr/share/lubuntu/wallpapers'
+    wallpaper_system_path=${wallpaper_system_dirname}/$wallpaper_filename
+    if [[ -e $wallpaper_system_path ]]
+    then
+        wallpaper_was_setup='Y'
+        return 0
+    fi
+
+    [[ -d $wallpaper_system_dirname ]] || return 5
+    
+    [[ -f $wallpaper_source_pathname ]] || return 6
+
+    Answer='Y'
+    Pause_n_Answer 'Y|N' 'INFO,Copy '$wallpaper_filename' to '$wallpaper_system_dirname'?'
+    if [ "${Answer}." == 'Y.' ]
+    then
+        sudo cp -iv $wallpaper_source_pathname ${wallpaper_system_dirname}/ || return 7
+        return 0
+    fi
+
+    return 1
+}
+# First, searching all subdirs...
+# find ${wallpaper_system_dir}/ -name "$wallpaper_file" &
+
+Report_Check_Setup_wallpaper() {
+    local RCi=$1
+
+    case $RCi in
+        0)
+            [[ $wallpaper_was_setup == 'N' ]] && echo 'Wallpaper successfully setup'
+            Pauze 'Wallpaper is in place:'$wallpaper_system_path
+            ;;
+        1)
+            Pauze 'WARNING, wallpaper setup will be done later...'
+            ;;
+        6)
+	    Pauze 'Invalid wallpaper source pathname '$wallpaper_source_pathname
+            ;;
+        5)
+            Pauze 'Invalid wallpaper System Location: '$wallpaper_system_dirname
+            ;;
+        7)
+            Pauze 'Cannot copy wallpaper to '$wallpaper_system_dirname
+            ;;
+        *)
+            Pauze 'Invalid code:'${RCi}' Wallpaper report'
+            ;;
+    esac
+    set +u
+    return 0
+}
+
 Cleanup_nouser_nogroup() {
     Mark_nouser_nogroup_fix_run=$1
     [[ -e $Mark_nouser_nogroup_fix_run ]] && return 0
@@ -534,18 +541,6 @@ Cleanup_nouser_nogroup() {
 
     return 0
 }
-
-This_script=$(basename $0)
-This_script_dir=$(dirname $0)
-declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
-declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
-
-# Establish location of Common Functions within SOURCEBASE
-codebase=${SOURCEBASE}'/image_scripts'
-[[ -d $codebase ]] || exit 14
-declare -x codebase
-source ${codebase}/Common_functions || exit 135
-source ${codebase}/Prepare_functions || exit 136
 
 while getopts $Optvalid OPT
 do
@@ -606,7 +601,7 @@ declare -r PUR_ALL
 declare -rx Not_Batch_Run
 
 declare -r HOLDIFS=$IFS
-FreeIT_image='FreeIT.png'
+This_script_dir=$(dirname $0)
 
 Mainline
 
