@@ -162,7 +162,7 @@ Set_RAM_max_min_single_core() {
                 echo 'have sdram' >>$ERRFILE
                 ;;
             *)
-                echo 'have RAM type' $Memtype
+                echo 'have RAM type' $Memtype>>$ERRFILE
                 ;;
         esac
     done
@@ -388,8 +388,7 @@ QCtest_disks() {
     echo 'Total Disk (Bytes)='$primedisk_tot_bytes >>$ERRFILE
     #ENDT
     #TEST
-    echo 'Disk Gibibytes='$((($primedisk_tot_bytes/1024)/1024)/1024)
-    >>$ERRFILE
+    echo 'Disk Gibibytes='$(((($primedisk_tot_bytes/1024)/1024)/1024)) >>$ERRFILE
     #ENDT
     if [ $primedisk_tot_bytes -lt $FS_LOW_VALUE ]
     then
@@ -438,7 +437,7 @@ Set_primedisk_tot_bytes() {
 
 QCtest_ram() {
 
-    QCVAR=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+    local QCVAR=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
     if test $QCVAR -lt $RAM_LOW_VALUE
     then
 	Append_to_log 'PROB' 'Memory size test' 'Add more so you have at least' ${RAM_LOW_TEXT}
@@ -636,8 +635,6 @@ Mainline || exit $?
 
 #TODO (for build) include tty fonts on libreoffice (or instructions)
 
-#QCVAR=$(df -m / | awk '/dev/ {print $4}')
-#=$(expr 2048 \* 1024)
 #if [[ $(cat /proc/cpuinfo |grep '^flags'|sort --uniq) =~ 'pae' ]];then echo '64bit';else echo '32bit';fi
 #if [[ $(cat /proc/cpuinfo |grep '^flags'|sort --uniq) =~ 'pxx' ]];then echo '64bit';else echo '32bit';fi
 
