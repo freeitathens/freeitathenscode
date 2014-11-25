@@ -37,7 +37,7 @@ Mainline() {
 	sudo dpkg-reconfigure -plow unattended-upgrades
 
     Pauze 'apt-get dist-upgrade'
-    apt-get dist-upgrade
+    sudo apt-get dist-upgrade
     Pauze 'apt-get purge autoremove and autoclean'
     sudo apt-get --purge autoremove
     sudo apt-get autoclean
