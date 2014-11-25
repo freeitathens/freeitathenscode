@@ -13,9 +13,11 @@ declare -r uri_firefox_prefs=\
 'https://gist.github.com/bpr97050/eb37e9850e2d951bc676/raw'
 declare -r uri_firefox_bookmarks='http://a.pomf.se/kyiput.sqlite'
 
+active_live_run=${live_run:-'N'}
+
 Mainline() {
 
-    Run_apt_update
+    Run_apt_update || return $?
 
     if [ $refresh_git == 'Y' ]
     then
@@ -28,7 +30,6 @@ Mainline() {
     Firefox_stuff || echo 'Firefox Config: Problem?'
     Chromium_stuff || echo 'Chromium Config: Problem?'
 
-    #Set LightDM wallpaper
     Set_backgrounds
 
     #Auto security upgrades
@@ -88,13 +89,16 @@ Firefox_stuff() {
     wget -O ${DOWNLOADS}/syspref.js $uri_firefox_prefs
     wget -O ${DOWNLOADS}/places.sqlite $uri_firefox_bookmarks
     Answer='N'
-    Pause_n_Answer 'Y|N' 'INFO,Customize Default Settings for Firefox?'
+    [[ $active_live_run == 'Y' ]] &&\
+        Pause_n_Answer 'Y|N' 'INFO,Customize Default Settings for Firefox?'
     if [ "${Answer}." == 'Y.' ]
     then
-        cp -iv ${DOWNLOADS}/syspref.js /etc/firefox/syspref.js
+        cp -iv ${DOWNLOADS}/syspref.js /etc/firefox/syspref.js ||RC=$?
         #rm -iv ${HOME}/.mozilla/firefox/*.default/places.sqlite{,-*} 
         #cp -iv ${DOWNLOADS}/places.sqlite ${HOME}/.mozilla/firefox/*.default/places.sqlite
         timeout -k 1m 5s firefox
+    else
+        Pauze 'DRY RUN?: action is cp -iv '${DOWNLOADS}'/syspref.js /etc/firefox/syspref.js'
     fi
 
     return $RC
@@ -115,7 +119,7 @@ Chromium_stuff() {
     Chromium_master_pref
     Chromium_defaults
     Chromium_bookmarks
-    Chromium_prep_setup
+    Chromium_nonfree_codex_prep
 
     #sudo add-apt-repository ppa:skunk/pepper-flash
     #sudo apt-get install pepflashplugin-installer\
@@ -126,27 +130,35 @@ Chromium_stuff() {
 }
 
 Chromium_master_pref() {
-    Answer='N'
-    Pause_n_Answer 'Y|N' 'Git-Load Chromium Master Preferences?'
-    [[ "${Answer}." == 'Y.' ]] || return 0
 
     # Download master_preferences config file for chromium
-    wget -O ${DOWNLOADS}/master_preferences $uri_chromium_prefs\
-        && sudo cp -iv ${DOWNLOADS}/master_preferences /etc/chromium-browser/
+    wget -O ${DOWNLOADS}/master_preferences $uri_chromium_prefs
+
+    if [[ $active_live_run == 'Y' ]]
+    then
+        sudo cp -iv ${DOWNLOADS}/master_preferences /etc/chromium-browser/
+    else
+        Pauze 'DRY RUN: cp -iv '${DOWNLOADS}'/master_preferences /etc/chromium-browser/'
+    fi
 
     return $?
 }
+#Answer='N'
+#Pause_n_Answer 'Y|N' 'Git-Load Chromium Master Preferences?'
 
 Chromium_defaults() {
 
-    Answer='N'
-    Pause_n_Answer 'Y|N' 'Set chromium defaults?'
-    [[ "${Answer}." == 'Y.' ]] || return 0
-
     # Ensure certain Chromium Flags settings are in place.
-    sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
+    if [[ $active_live_run == 'Y' ]]
+    then
+        sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
         --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1\
         --disable-google-now-integration"/g' /etc/chromium-browser/default
+    else
+        Pauze 'DRY RUN: '
+    fi
+    grep 'CHROMIUM_FLAGS' /etc/chromium-browser/default
+    read -p'Chromium Flags Listed' -t20
 
     return $?
     # *--* Poodle fix et.al. cf. https://disablessl3.com/ *--*
@@ -154,56 +166,48 @@ Chromium_defaults() {
 
 Chromium_bookmarks() {
 
-    wget -O ${DOWNLOADS}/default_bookmarks.html $uri_chromium_bookmarks\
-	&& sudo cp -iv\
-	${DOWNLOADS}/default_bookmarks.html /etc/chromium-browser/
+    wget -O ${DOWNLOADS}/default_bookmarks.html $uri_chromium_bookmarks
+    if [[ $active_live_run == 'Y' ]]
+    then
+        sudo cp -iv\
+            ${DOWNLOADS}/default_bookmarks.html /etc/chromium-browser/
+    else
+        Pauze 'DRY RUN: copy '${DOWNLOADS}'/default_bookmarks.html /etc/chromium-browser/'
+    fi
 
     return $?
 }
 
-Chromium_prep_setup() {
+Chromium_nonfree_codex_prep() {
 
-    Answer='N'
-    Pause_n_Answer 'Y|N' 'Git-Load one-time Proprietary setup script?'
-    [[ "${Answer}." == 'Y.' ]] || return 0
-
-    check_install_RC=1
+    RCxPSS=1
     #Pepperflash/Multimedia codecs installer
-    wget -O ${DOWNLOADS}/pepperflash_installer ${uri_pepperflash_codex_installer}\
-	&& sudo cp -iv ${DOWNLOADS}/pepperflash_installer /usr/local/bin/\
-	&& sudo chmod +x /usr/local/bin/pepperflash_installer\
-        && check_install_RC=0
-    [[ $check_install_RC -eq 0 ]] || return $check_install_RC
+    wget -O ${DOWNLOADS}/install_nonfree_codex ${uri_pepperflash_codex_installer}\
+        && sudo cp -iv ${DOWNLOADS}/install_nonfree_codex /usr/local/bin/\
+        && sudo chmod +x /usr/local/bin/install_nonfree_codex\
+        && RCxPSS=0
 
-    Answer='N'
-    Pause_n_Answer 'Y|N' 'WARN,Setup firstboot option to offer non-free Multimedia?'
-    [[ "${Answer}." == 'Y.' ]] || return 0
+    Pauze 'Make icon on desktop that runs /usr/local/bin/install_nonfree_codex'
 
-    Mess='non-free Multimedia install '
-    tackon='OK'
-    #sudo /usr/local/bin/pepperflash_installer || tackon='NOT OK'
-    #Pauze "$Mess$tackon"
-    Pauze 'Make icon on desktop that runs /usr/local/bin/pepperflash_installer'
-
-    return 0
+    return $RCxPSS
 }
 
 Set_backgrounds() {
     if [ -d /etc/lightdm/ ]
     then
-	for greetings in $(find /etc/lightdm/ -mindepth 1 -maxdepth 1 -type f -name 'lightdm-gtk-greeter*')
-	do
+        for greetings in $(find /etc/lightdm/ -mindepth 1 -maxdepth 1 -type f -name 'lightdm-gtk-greeter*')
+        do
             Answer='N'
             Pause_n_Answer 'Y|N' 'INFO,reset background in '$greetings'?'
             if [ "${Answer}." == 'Y.' ]
             then 
-		sudo sed -i 's/^background=/#background=/g' $greetings
-		echo "background=#88ff00" | sudo tee -a $greetings
+                sudo sed -i 's/^background=/#background=/g' $greetings
+                echo "background=#88ff00" | sudo tee -a $greetings
             fi
-	done
+        done
     elif [ -d /etc/mdm/ ]
     then
-	Pauze '/etc/mdm/conf: Set BackgroundColor in [ greeter ] stanza to #00e5a0'
+        Pauze '/etc/mdm/conf: Set BackgroundColor in [ greeter ] stanza to #00e5a0'
     fi
     #sudo sed -i 's/^background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
 }

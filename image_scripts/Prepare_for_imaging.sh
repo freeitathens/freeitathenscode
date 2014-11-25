@@ -5,13 +5,13 @@
 # Establish base of version-controlled code tree.
 [[ -z $SOURCEBASE ]] && declare -x SOURCEBASE='/home/oem/freeitathenscode'
 [[ -d $SOURCEBASE ]] || exit 25
-
-# Establish location of Common Functions within SOURCEBASE
+# Establish location of these scripts within SOURCEBASE
 codebase=${SOURCEBASE}'/image_scripts'
 [[ -d $codebase ]] || exit 14
+
 declare -x codebase
-source ${codebase}/Common_functions || exit 135
 source ${codebase}/Prepare_functions || exit 136
+
 package_list_path_I=${codebase}'/Packages'
 wallpaper_filename='FreeIT.png'
 wallpaper_source_pathname=${codebase}/$wallpaper_filename
@@ -24,12 +24,13 @@ refresh_svn='N'
 refresh_git='Y'
 ADD_ALL='Y'
 PUR_ALL='Y'
+live_run='N'
 Not_Batch_Run='N'
 
 This_script=$(basename $0)
 declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
-Optvalid='APBd:RuVGh'
+Optvalid='APBDn:RuVGh'
 
 Mainline() {
 
@@ -39,8 +40,8 @@ Mainline() {
 
     if [ $address_len -eq 64 ]
     then
-	grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 
-	Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
+        grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 
+        Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
     fi
 
     set -u
@@ -49,10 +50,12 @@ Mainline() {
     set +u
 
     Pauze 'Lauching Virtual Greybeard'
+    clear
     vrms
     Pauze '/\Please Purge Non-Free Stuff IF NEEDED/\'
 
-    Cleanup_nouser_nogroup ${HOME}'/Ran_nouser_nogroup_fix'
+    [[ $live_run == 'Y' ]] &&\
+        Cleanup_nouser_nogroup ${HOME}'/Ran_nouser_nogroup_fix'
 
     return 0
 }
@@ -62,15 +65,15 @@ Housekeeping() {
     sys_rpts_distro_name=''
     if [ -z $DISTRO_NAME ] 
     then
-	Distro_name_Set;RCxDnS=$?
+        Distro_name_Set;RCxDnS=$?
         if [ $RCxDnS -gt 0 ]
-	then
-	    echo 'Distro_name_set ='$RCxDnS
-	    read -p'<ENTER>'
-	    No_distro_name_bye $RCxDnS
-	else
-	    Pauze 'Good Selection!:'$DISTRO_NAME
-	fi
+        then
+            echo 'Distro_name_set ='$RCxDnS
+            read -p'<ENTER>'
+            No_distro_name_bye $RCxDnS
+        else
+            Pauze 'Good Selection!:'$DISTRO_NAME
+        fi
     fi
 
     address_len=0
@@ -80,7 +83,7 @@ Housekeeping() {
     [[ "${refresh_updatedb}." == 'Y.' ]] && updatedb &
     [[ "${refresh_svn}." == 'Y.' ]] && Contact_server
 
-    Pauze 'Checking if apt update is requested( COND: '$aptcache_needs_update ')'
+    Pauze 'Will update apt-metadata if requested (COND:'$aptcache_needs_update')'
     [[ $aptcache_needs_update == 'Y' ]] && Run_apt_update
 
     #Pauze 'Confirm no medibuntu in apt sources'
@@ -228,18 +231,18 @@ Contact_server() {
     Pauze "Check that server address is correct and is contactable ( COND: $refresh_svn )"
 
     Sub_lcl_stat() {
-	echo 'Check on subversion local repo status'
-	if [ -d ${SOURCEBASE}/.svn ]
-	then
-	    cd ${SOURCEBASE}/
-	    svn update
-	else
-	    apt-get install subversion
-	    cd
-	    Correct_subversion_ssh
-	    svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
-	fi
-	Pauze '(DONE) Check on subversion local repo status'
+        echo 'Check on subversion local repo status'
+        if [ -d ${SOURCEBASE}/.svn ]
+        then
+            cd ${SOURCEBASE}/
+            svn update
+        else
+            apt-get install subversion
+            cd
+            Correct_subversion_ssh
+            svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
+        fi
+        Pauze '(DONE) Check on subversion local repo status'
     }
 
     [[ $(ssh frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]\
@@ -249,26 +252,28 @@ Contact_server() {
 }
 
 Correct_subversion_ssh() {
-    for subv_home in ${HOME}/.subversion /etc/subversion
-    do
-        [[ -d ${subv_home} ]] || break
 
-        subv_conf="${subv_home}/config"
-        if [ -f ${subv_conf} ]
-        then
-            Answer='N'
-            Pause_n_Answer 'Y|N' "Fix $subv_conf for Frita's ssh connection (Y|N)? "
-            case $Answer in
-                Y)
-                    sudo perl -pi'.bak' -e 's/#\s*ssh\b(.+?ssh)\s+-q(.+)$/ssh${1} -v${2}/' ${subv_conf}
-                    [[ $? -eq 0 ]] && break
-                    ;;
-                *)
-                    prettyprint 'n,t,34,47,M,0' 'No changes made...'
-                    ;;
-            esac
-        fi
+    subv_conf=''
+    for subversion_meta_dir in $(find '/home/'$(grep ':'$UID':' /etc/passwd |cut -f1 -d:) -maxdepth 1 -type d -name '.subversion';find /etc/ -maxdepth 1 -type d -name 'subversion')
+    do
+        subv_conf="${subversion_meta_dir}/config"
+        echo 'Checking subversion config path '$subv_conf
+        [[ -f ${subv_conf} ]] && break
+        subv_conf=''
     done
+    [[ -z $subv_conf ]] && return 4
+
+    grep 'ssh' $subv_conf
+    Answer='N'
+    Pause_n_Answer 'Y|N' "Fix $subv_conf for Frita's ssh connection (Y|N)? "
+    case $Answer in
+        Y)
+            sudo perl -pi'.bak' -e 's/#\s*ssh\b(.+?ssh)\s+-q(.+)$/ssh${1} -v${2}/' ${subv_conf}
+            ;;
+        *)
+            Pauze 'OK, NO changes made...'
+            ;;
+    esac
 
     return 0
 }
@@ -279,8 +284,8 @@ Integrity_check() {
     grep -P 'UUID.+swap' /etc/fstab && RCxU=$?
     if [ $RCxU -eq 0 ]
     then
-	Pauze 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference. Entering editor...'
-	sudo vi /etc/fstab
+        Pauze 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference. Entering editor...'
+        sudo vi /etc/fstab
     fi
 
     Pauze 'Checking swap'
@@ -293,24 +298,24 @@ Integrity_check() {
     chown -c oem $local_scripts_DIR
     [[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${SOURCEBASE}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
     [[ -e ${local_scripts_DIR}/revert_prep_for_shipping_to_eu ]]\
-	|| ln -s ${codebase}/revert_prep_for_shipping_to_eu ${local_scripts_DIR}/revert_prep_for_shipping_to_eu 
+        || ln -s ${codebase}/revert_prep_for_shipping_to_eu ${local_scripts_DIR}/revert_prep_for_shipping_to_eu 
 
     Pauze 'Confirming that the correct Run Quality Control icon is in place...'
     (find ${SOURCEBASE}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
-	find ${SOURCEBASE}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
-	find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort
+        find ${SOURCEBASE}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
+        find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort
 
 }
 
 Install_Remove_requested_packages() {
 
     case $distro_generia in
-	mint)
-	    Pauze 'WARNING,Ensure backports in /etc/apt/sources.list (or sources.d/)' 
-	    ;;
-	*)
-	    Pauze 'Assuming Backports are automatically included'
-	    ;;
+        mint)
+            Pauze 'WARNING,Ensure backports in /etc/apt/sources.list (or sources.d/)' 
+            ;;
+        *)
+            Pauze 'Assuming Backports are automatically included'
+            ;;
     esac
 
     Pauze 'Install necessary packages'
@@ -319,15 +324,15 @@ Install_Remove_requested_packages() {
     [[ $RCxPK -ne 0 ]] && Pauze 'Problems Installing Packages:'$RCxPK
 
     case $distro_generia in
-	ubuntu|mint)
-	    echo 'Run BPR Code'
-	    [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
-		${codebase}/BPR_custom_prep.sh
-	    Pauze "Run BPR: Last return code: $?"
-	    ;;
-	*)
-	    Pauze "Don't need to run BPR additions for "$distro_generia' ('$DISTRO_NAME')'
-	    ;;
+        ubuntu|mint)
+            echo 'Run BPR Code'
+            [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
+                ${codebase}/BPR_custom_prep.sh
+            Pauze "Run BPR: Last return code: $?"
+            ;;
+        *)
+            Pauze "Don't need to run BPR additions for "$distro_generia' ('$DISTRO_NAME')'
+            ;;
     esac
 
     return 0
@@ -353,89 +358,11 @@ Install_packages_from_file_list() {
             return 4
         fi
 
-    Check_extra() {
-            local pkg_name=$1
-            shift 1
-        pkg_extra=$@
-        [[ -z $pkg_extra ]] && return 4
-            IFS='\='
-            declare -a extra_a=($pkg_extra)
-            IFS=$HOLDIFS
-            declare extra_L=${#extra_a[*]}
-            [[ $extra_L -gt 1 ]] || return 5
-            case ${extra_a[0]} in
-                ppa)
-                    Establish_ppa_repo_sourcefile $pkg_name ${extra_a[1]}
-                    RCxPPA=$?
-                    if [ $RCxPPA -gt 10 ]
-                    then
-                        return $RCxPPA
-                    fi
-                    if [ $RCxPPA -gt 0 ]
-                    then
-                        return 0
-                    fi 
-                    ;;
-        INSTALL)
-            echo 'Check that '${extra_a[1]}' replaces '$pkg_name
-            ;;
-        REMOVE)
-            echo 'Check that '$pkg_name' replaces '${extra_a[1]}
-            ;;
-                *)
-                    echo 'Unknown Extra Code:'$pkg_extra' for '$pkg_name
-                    return 6
-                    ;;
-                esac
-                return 115
-       }
-       RCxE=0
-       [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
-       [[ $RCxE -gt 10 ]] && return $RCxE
+    RCxE=0
+    [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
+    [[ $RCxE -gt 10 ]] && return $RCxE
 
-       Pkg_by_distro_session() {
-           distro_session=$1
-
-           Pkg_purge() {
-               echo -n $pkg_name' '
-               declare -a PUR_ARR=('Y')
-               if [ $PUR_ALL == 'N' ]
-               then
-                   read -p'<Purge?>' -a PUR_ARR || return $?
-               fi
-               [[ ${#PUR_ARR[*]} -eq 0 ]] && return 1
-               if [ ${PUR_ARR[0]} == 'Y' ]
-               then
-                   Apt_purge $pkg_name || return $?
-               fi
-           }
-           Pkg_add() {
-               echo -n $pkg_name' '
-               declare -a ADD_ARR=('Y')
-               if [ $ADD_ALL == 'N' ]
-               then
-                   read -p'<Install/Upgrad3(Y|n)?>' -a ADD_ARR || return $?
-               fi
-               [[ ${#ADD_ARR[*]} -eq 0 ]] && return 1
-               if [ ${ADD_ARR[0]} == 'Y' ]
-               then
-                   Apt_install $pkg_name || return $?
-               fi
-           }
-           case $distro_session in
-              NONE)
-                  Pkg_purge ||return $?
-                  ;;
-              ALL)
-                  Pkg_add || return $?
-                  ;;
-              $distro_generia)
-                  Pkg_add || return $?
-                  ;;
-           esac
-           return 1
-        }
-        Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
+    Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
     }
     for pkg_info_csv in $(grep -v '^#' $package_list_file)
     do
@@ -449,9 +376,51 @@ Install_packages_from_file_list() {
     return $RCz
 }
 
+Check_extra() {
+    local pkg_name=$1
+    shift 1
+    pkg_extra=$@
+    [[ -z $pkg_extra ]] && return 4
+
+    IFS='\='
+    declare -a extra_a=($pkg_extra)
+    IFS=$HOLDIFS
+    declare extra_L=${#extra_a[*]}
+    [[ $extra_L -gt 1 ]] || return 5
+    case ${extra_a[0]} in
+        ppa)
+            RCxPPA=0
+            Establish_ppa_repo_sourcefile $pkg_name ${extra_a[1]}
+            RCxPPA=$?
+            [[ $RCxPPA -gt 10 ]] && return $RCxPPA
+            if [ $RCxPPA -gt 0 ]
+            then
+                Pauze 'Return code for ppa setup ='$RCxPPA
+                RCxPPA=0
+            fi 
+            return $RCxPPA
+            ;;
+        INSTALL)
+            echo 'Check that '${extra_a[1]}' replaces '$pkg_name
+            return 0
+            ;;
+        REMOVE)
+            echo 'Check that '$pkg_name' replaces '${extra_a[1]}
+            return 0
+            ;;
+        *)
+            echo 'Unknown Extra Code:'$pkg_extra' for '$pkg_name
+            return 60
+            ;;
+    esac
+
+    return 115
+}
+
 Establish_ppa_repo_sourcefile() {
     local pkg_name=$1
     shift;ppa_name=$@
+
     search_ppa_name=$(echo $ppa_name|tr '/' '-')
     Pauze 'Beginning search for source.d ppa '$search_ppa_name'...'
     RCxRo=1
@@ -467,11 +436,65 @@ Establish_ppa_repo_sourcefile() {
     [[ ${#ADD_PPA_ARR[*]} -eq 0 ]] && return 0
     if [ ${ADD_PPA_ARR[0]} == 'Y' ]
     then
+        if [ $live_run != 'Y' ]
+        then
+            Pauze 'DRY RUN: adding repo '$apt_repo_name
+            return 0
+        fi
+
         add-apt-repository $apt_repo_name || return $?
-    return 0
+        return 0
+
+    else
+        Pauze 'Add repo '$apt_repo_name' later...'
+        return 1
     fi
 
     return $?
+}
+
+Pkg_by_distro_session() {
+    distro_session=$1
+
+    Pkg_purge() {
+       echo -n $pkg_name' '
+       declare -a PUR_ARR=('Y')
+       if [ $PUR_ALL == 'N' ]
+       then
+           read -p'<Purge?>' -a PUR_ARR || return $?
+       fi
+       [[ ${#PUR_ARR[*]} -eq 0 ]] && return 1
+       if [ ${PUR_ARR[0]} == 'Y' ]
+       then
+           Apt_purge $pkg_name || return $?
+       fi
+   }
+   Pkg_add() {
+       echo -n $pkg_name' '
+       declare -a ADD_ARR=('Y')
+       if [ $ADD_ALL == 'N' ]
+       then
+           read -p'<Install/Upgrad3(Y|n)?>' -a ADD_ARR || return $?
+       fi
+       [[ ${#ADD_ARR[*]} -eq 0 ]] && return 1
+       if [ ${ADD_ARR[0]} == 'Y' ]
+       then
+           Apt_install $pkg_name || return $?
+       fi
+   }
+   case $distro_session in
+       NONE)
+           Pkg_purge ||return $?
+           ;;
+       ALL)
+           Pkg_add || return $?
+           ;;
+       $distro_generia)
+           Pkg_add || return $?
+           ;;
+   esac
+
+   return 1
 }
 
 Check_Setup_wallpaper() {
@@ -492,17 +515,25 @@ Check_Setup_wallpaper() {
     Pause_n_Answer 'Y|N' 'INFO,Copy '$wallpaper_filename' to '$wallpaper_system_dirname'?'
     if [ "${Answer}." == 'Y.' ]
     then
+        if [ $live_run != 'Y' ]
+        then
+            Pauze 'DRY RUN: Would run cp -iv '$wallpaper_source_pathname ${wallpaper_system_dirname}'/'
+            return 0
+        fi
+
         sudo cp -iv $wallpaper_source_pathname ${wallpaper_system_dirname}/ || return 7
         return 0
+
     fi
 
     return 1
 }
-# First, searching all subdirs...
 # find ${wallpaper_system_dir}/ -name "$wallpaper_file" &
 
 Report_Check_Setup_wallpaper() {
     local RCi=$1
+
+    [[ $live_run == 'Y' ]] || return 0
 
     case $RCi in
         0)
@@ -513,7 +544,7 @@ Report_Check_Setup_wallpaper() {
             Pauze 'WARNING, wallpaper setup will be done later...'
             ;;
         6)
-	    Pauze 'Invalid wallpaper source pathname '$wallpaper_source_pathname
+            Pauze 'Invalid wallpaper source pathname '$wallpaper_source_pathname
             ;;
         5)
             Pauze 'Invalid wallpaper System Location: '$wallpaper_system_dirname
@@ -531,6 +562,7 @@ Report_Check_Setup_wallpaper() {
 
 Cleanup_nouser_nogroup() {
     Mark_nouser_nogroup_fix_run=$1
+
     [[ -e $Mark_nouser_nogroup_fix_run ]] && return 0
 
     find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -uid 1000\
@@ -551,12 +583,15 @@ do
         P)
             PUR_ALL='N'
             ;;
+        D)
+            live_run='Y'
+            Pauze 'LIVE RUN Selected. Control-C now to exit.'
+            ;;
         B)
             Not_Batch_Run='Y'
-            echo 'Interactive Run Selected'
-            read -p'<ENTER>' -t3
+            echo 'Interactive Run'
             ;;
-        d)
+        n)
             Set_Confirm_distro_name $OPTARG;RCx1=$?
             [[ $RCx1 -gt 11 ]] && exit $RCx1
             ;;
@@ -578,7 +613,7 @@ do
             echo "A SET ADD_ALL='N'"
             echo "P SET PUR_ALL='N'"
             echo "B SET Not_Batch_Run='Y'"
-            echo "d SET :Distro Name:"
+            echo "n SET :Distro Name:"
             echo "R SET aptcache_needs_update='N'"
             echo "u SET refresh_updatedb='Y'"
             echo "V SET refresh_svn='Y'"
@@ -604,6 +639,9 @@ declare -r HOLDIFS=$IFS
 This_script_dir=$(dirname $0)
 
 Mainline
+
+[[ -z $PIDnu ]] || echo 'Check on process '$PIDnu
+[[ -z $PIDng ]] || echo 'Check on process '$PIDng
 
 # Make the version-controlled tree - SOURCEBASE --
 #  -- let child processes inherit (-x)
