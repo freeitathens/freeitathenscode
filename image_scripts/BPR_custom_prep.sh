@@ -33,8 +33,8 @@ Mainline() {
     Set_backgrounds
 
     #Auto security upgrades
-    Pauze 'Offer dpkg auto non-harmful upgrades'
-    sudo dpkg-reconfigure -plow unattended-upgrades
+    [[ $active_live_run == 'Y' ]] &&\
+	sudo dpkg-reconfigure -plow unattended-upgrades
 
     Pauze 'apt-get dist-upgrade'
     apt-get dist-upgrade
@@ -50,10 +50,10 @@ Mainline() {
 Download_custom_desktop_files() {
     local RC=0
     Pauze 'BPR Download_custom_desktop_files'
-    cd $DOWNLOADS || return $?
+    cd $DOWNLOADS
 
     Activate_shopts
-    [[ -n $Git_name ]] && [[ -d $Git_name ]] && rm -rf ${Git_name}
+    [[ -n $Git_name ]] && [[ -d $Git_name ]] && sudo rm -rf ${Git_name}
     git clone $uri_desktop_files || return $?
     cd -
 
@@ -81,19 +81,20 @@ Firefox_stuff() {
 
     local RC=0
 
-    apt-get install firefox || return 16
+    sudo apt-get install firefox || return 16
 
     # *--* Poodle et.al.,
     #   cf.https://addons.mozilla.org/en-US/firefox/addon/ssl-version-control/
     # Options for Firefox bookmarks and settings
     wget -O ${DOWNLOADS}/syspref.js $uri_firefox_prefs
     wget -O ${DOWNLOADS}/places.sqlite $uri_firefox_bookmarks
+
     Answer='N'
     [[ $active_live_run == 'Y' ]] &&\
         Pause_n_Answer 'Y|N' 'INFO,Customize Default Settings for Firefox?'
     if [ "${Answer}." == 'Y.' ]
     then
-        cp -iv ${DOWNLOADS}/syspref.js /etc/firefox/syspref.js ||RC=$?
+        sudo cp -iv ${DOWNLOADS}/syspref.js /etc/firefox/syspref.js ||RC=$?
         #rm -iv ${HOME}/.mozilla/firefox/*.default/places.sqlite{,-*} 
         #cp -iv ${DOWNLOADS}/places.sqlite ${HOME}/.mozilla/firefox/*.default/places.sqlite
         timeout -k 1m 5s firefox
@@ -217,13 +218,15 @@ declare -r HOLDIFS=$IFS 2>/dev/null
 source ${codebase}/Common_functions || exit 12
 source ${codebase}/Prepare_functions || exit 13
 
-DOWNLOADS=${HOME}/Downloads
+DOWNLOADS=${HOME}'/Downloads'
 [[ -d ${DOWNLOADS} ]] || mkdir ${HOME}/Downloads
 [[ -d ${DOWNLOADS} ]] || exit 13
 
+find $DOWNLOADS -not -uid $UID -exec sudo chown -c $UID {} \;
 Mainline
 
-find ${DOWNLOADS} -mmin -10
+find $DOWNLOADS -not -uid $UID -exec sudo chown -c $UID {} \;
+find ${DOWNLOADS} -cmin -10 -ls
 
 #Wine stuff in case the user needs to run a Windows executable
 #sudo apt-get install wine winetricks

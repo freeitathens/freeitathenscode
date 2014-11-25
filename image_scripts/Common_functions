@@ -306,10 +306,18 @@ Zanned_response() {
 }
 
 Run_Cap_Out() {
-    cmd=$1
-    shift
+    cmd=$1;shift
+    dosu=''
+    if [ $cmd = 'sudo' ]
+    then
+        dosu='sudo'
+	cmd=$1
+	shift
+    fi
+    stuff=$@
+
     local RC=0
-    [[ -z $cmd ]] && return 8
+    [[ -z "$cmd" ]] && return 8
     typecmd=$(type -t $cmd)
     [[ -z $typecmd ]] && return 9
 
@@ -323,8 +331,10 @@ Run_Cap_Out() {
             cmd=$(which $cmd)
         fi
     fi
-    stuff=$@
-    $cmd $stuff 2>>${Errors_O} |tee -a ${Messages_O} || RC=$?
+    [[ -x $cmd ]] && return 4
+
+    $dosu $cmd $stuff 2>>${Errors_O} |tee -a ${Messages_O} || RC=$?
+
     return $RC
 }
 

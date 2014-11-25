@@ -289,22 +289,29 @@ Integrity_check() {
     fi
 
     Pauze 'Checking swap'
-    Run_Cap_Out swapoff --all --verbose
-    Run_Cap_Out swapon --all --verbose
+    Run_Cap_Out sudo swapoff --all --verbose
+    Run_Cap_Out sudo swapon --all --verbose
 
     Pauze "Ensuring that QC.sh and revert_prep... are properly linked in ${HOME}/bin" 
     local_scripts_DIR="${HOME}/bin"
     [[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
-    chown -c oem $local_scripts_DIR
+    sudo chown -c oem $local_scripts_DIR
+
     [[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${SOURCEBASE}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
     [[ -e ${local_scripts_DIR}/revert_prep_for_shipping_to_eu ]]\
         || ln -s ${codebase}/revert_prep_for_shipping_to_eu ${local_scripts_DIR}/revert_prep_for_shipping_to_eu 
+    find ${local_scripts_DIR} -ls
+    echo ''
 
     Pauze 'Confirming that the correct Run Quality Control icon is in place...'
     (find ${SOURCEBASE}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
         find ${SOURCEBASE}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
         find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort
+    echo ''
 
+    Pauze 'Done with Integrity Check'
+
+    return 0
 }
 
 Install_Remove_requested_packages() {
@@ -358,11 +365,11 @@ Install_packages_from_file_list() {
             return 4
         fi
 
-    RCxE=0
-    [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
-    [[ $RCxE -gt 10 ]] && return $RCxE
+        RCxE=0
+        [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
+        [[ $RCxE -gt 10 ]] && return $RCxE
 
-    Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
+        Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
     }
     for pkg_info_csv in $(grep -v '^#' $package_list_file)
     do
@@ -442,7 +449,7 @@ Establish_ppa_repo_sourcefile() {
             return 0
         fi
 
-        add-apt-repository $apt_repo_name || return $?
+        sudo add-apt-repository $apt_repo_name || return $?
         return 0
 
     else
@@ -565,9 +572,9 @@ Cleanup_nouser_nogroup() {
 
     [[ -e $Mark_nouser_nogroup_fix_run ]] && return 0
 
-    find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -uid 1000\
+    sudo find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -uid 1000\
         -nouser -exec chown -c root {} \; & PIDnu=$!
-    find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -gid 1000\
+    sudo find /var/ /home/ /usr/ /root/ /lib/ /etc/ /dev/ /boot/ -not -gid 1000\
         -nogroup -exec chgrp -c root {} \; & PIDng=$!
     (while [ ! -e $Mark_nouser_nogroup_fix_run ];do sleep 30;ps -ef |awk '{print $2}' |egrep "$PIDnu|$PIDng" >/dev/null||touch $Mark_nouser_nogroup_fix_run;done;chmod -c 600 $Mark_nouser_nogroup_fix_run || logger -t 'Prepare2Image' 'Problem concluding Nouser Nogroup fix') &
 
