@@ -641,6 +641,7 @@ declare -x refresh_git
 declare -r ADD_ALL
 declare -r PUR_ALL
 declare -rx Not_Batch_Run
+declare -rx live_run
 
 declare -r HOLDIFS=$IFS
 This_script_dir=$(dirname $0)
