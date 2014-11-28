@@ -134,9 +134,10 @@ Set_Confirm_distro_name() {
 
     echo 'System distro value ('\
         ${sys_rpts_distro_name}\
-          '): mismatch (however slight) with input: ('\
+          '): mismatch (however slight) with your supplied name: ('\
         ${DISTRO_NAME}').'
-    read -p'<ACCEPT(=Y)?>' -a ANS_ARR
+    echo ''
+    read -p'<ACCEPT System Value?>' -a ANS_ARR;echo ''
     [[ ${#ANS_ARR[*]} -gt 0 ]] && [[ ${ANS_ARR[0]} == 'Y' ]] && DISTRO_NAME=$sys_rpts_distro_name && return 0
 
     return 3
