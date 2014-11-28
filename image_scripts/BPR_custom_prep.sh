@@ -5,14 +5,20 @@ declare -r uri_desktop_files=\
 'https://github.com/bpr97050/'${Git_name}'.git'
 declare -r uri_chromium_prefs=\
 'https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/'
+#TO : /etc/chromium-browser/master_preferences 
+
 declare -r uri_chromium_bookmarks=\
 'https://gist.github.com/bpr97050/b6b5679f94d344879328/raw'
+#TO : /etc/chromium-browser/default_bookmarks.html
+
 declare -r uri_pepperflash_codex_installer=\
 'https://gist.githubusercontent.com/bpr97050/9899740/raw'
+
 declare -r uri_firefox_prefs=\
 'https://gist.github.com/bpr97050/eb37e9850e2d951bc676/raw'
-declare -r uri_firefox_bookmarks='http://a.pomf.se/kyiput.sqlite'
+#TO : /etc/firefox/syspref.js/syspref.js
 
+declare -r uri_firefox_bookmarks='http://a.pomf.se/kyiput.sqlite'
 active_live_run=${live_run:-'N'}
 
 Mainline() {
@@ -32,10 +38,11 @@ Mainline() {
 
     Set_backgrounds
 
-    #Auto security upgrades
+    # -*- Auto security upgrades -*-
     [[ $active_live_run == 'Y' ]] &&\
 	sudo dpkg-reconfigure -plow unattended-upgrades
 
+    # -*- Install / update patches now -*-
     Pauze 'apt-get dist-upgrade'
     sudo apt-get dist-upgrade
     Pauze 'apt-get purge autoremove and autoclean'
@@ -43,7 +50,6 @@ Mainline() {
     sudo apt-get autoclean
 
     Pauze "INFO,Finished with BPR custom code. last RC: $?"
-
     return 0
 }
 
@@ -57,7 +63,8 @@ Download_custom_desktop_files() {
     git clone $uri_desktop_files || return $?
     cd -
 
-    Pauze 'Preparing for Manual Moves from '${PWD}/${Git_name}' to /etc/skel/'
+    find ${PWD}/${Git_name} -type f -exec head -n4 {} \;
+    Pauze 'Now do Manual Moves from '${PWD}/${Git_name}' to /etc/skel/'
     bash
     #sudo rsync -aRv --exclude '.git' --delete-excluded ${Git_name}/ /etc/skel/
     Reset_shopts

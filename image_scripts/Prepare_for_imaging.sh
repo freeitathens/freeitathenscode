@@ -1,6 +1,7 @@
 #!/bin/bash +x
-[[ 0 -ne $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]] &&\
-    read -p'NOTE: Permission Problems? Rerun with sudo (i.e., as root).<ENTER>' -t5
+[[ 0 -eq $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]] &&\
+    read -p'NOTE: Please run as normal user with sudo privledges.<CONTROL-C>'
+#    read -p'NOTE: Permission Problems? Rerun with sudo (i.e., as root).<ENTER>' -t5
 
 # Establish base of version-controlled code tree.
 [[ -z $SOURCEBASE ]] && declare -x SOURCEBASE='/home/oem/freeitathenscode'
@@ -12,10 +13,10 @@ codebase=${SOURCEBASE}'/image_scripts'
 declare -x codebase
 source ${codebase}/Prepare_functions || exit 136
 
-package_list_path_I=${codebase}'/Packages'
-wallpaper_filename='FreeIT.png'
-wallpaper_source_pathname=${codebase}/$wallpaper_filename
-wallpaper_system_dirname='/usr/share/backgrounds'
+pathname_packages_list=${codebase}'/Packages'
+filename_wallpaper='FreeIT.png'
+pathname_wallpaper_source=${codebase}/$filename_wallpaper
+dirname_wallpaper_syshome='/usr/share/backgrounds'
 wallpaper_was_setup='N'
 
 aptcache_needs_update='Y'
@@ -327,7 +328,7 @@ Install_Remove_requested_packages() {
 
     Pauze 'Install necessary packages'
     RCxPK=0
-    Install_packages_from_file_list $package_list_path_I || RCxPK=$?
+    Install_packages_from_file_list $pathname_packages_list || RCxPK=$?
     [[ $RCxPK -ne 0 ]] && Pauze 'Problems Installing Packages:'$RCxPK
 
     case $distro_generia in
@@ -506,36 +507,39 @@ Pkg_by_distro_session() {
 
 Check_Setup_wallpaper() {
 
-    [[ $DISTRO_NAME == 'lubuntu' ]] && wallpaper_system_dirname='/usr/share/lubuntu/wallpapers'
-    wallpaper_system_path=${wallpaper_system_dirname}/$wallpaper_filename
-    if [[ -e $wallpaper_system_path ]]
+    [[ $DISTRO_NAME == 'lubuntu' ]] && dirname_wallpaper_syshome='/usr/share/lubuntu/wallpapers'
+    pathname_wallpaper_syshome=${dirname_wallpaper_syshome}/$filename_wallpaper
+    if [[ -e $pathname_wallpaper_syshome ]]
     then
         wallpaper_was_setup='Y'
         return 0
     fi
 
-    [[ -d $wallpaper_system_dirname ]] || return 5
+    [[ -d $dirname_wallpaper_syshome ]] || return 5
     
-    [[ -f $wallpaper_source_pathname ]] || return 6
+    [[ -f $pathname_wallpaper_source ]] || return 6
 
     Answer='Y'
-    Pause_n_Answer 'Y|N' 'INFO,Copy '$wallpaper_filename' to '$wallpaper_system_dirname'?'
+    Pause_n_Answer 'Y|N' 'INFO,Copy '$filename_wallpaper' to '$dirname_wallpaper_syshome'?'
     if [ "${Answer}." == 'Y.' ]
     then
         if [ $live_run != 'Y' ]
         then
-            Pauze 'DRY RUN: Would run cp -iv '$wallpaper_source_pathname ${wallpaper_system_dirname}'/'
+            Pauze 'DRY RUN: Would run cp -iv '$pathname_wallpaper_source\
+	    ${dirname_wallpaper_syshome}'/'
             return 0
         fi
 
-        sudo cp -iv $wallpaper_source_pathname ${wallpaper_system_dirname}/ || return 7
+        sudo cp -iv $pathname_wallpaper_source ${dirname_wallpaper_syshome}/ || return 7
+	set -e
+        echo 'Potential change to file '$pathname_wallpaper_syshome >>$Errors_O
+	set +e
         return 0
 
     fi
 
     return 1
 }
-# find ${wallpaper_system_dir}/ -name "$wallpaper_file" &
 
 Report_Check_Setup_wallpaper() {
     local RCi=$1
@@ -545,19 +549,19 @@ Report_Check_Setup_wallpaper() {
     case $RCi in
         0)
             [[ $wallpaper_was_setup == 'N' ]] && echo 'Wallpaper successfully setup'
-            Pauze 'Wallpaper is in place:'$wallpaper_system_path
+            Pauze 'Wallpaper is in place:'$pathname_wallpaper_syshome
             ;;
         1)
             Pauze 'WARNING, wallpaper setup will be done later...'
             ;;
         6)
-            Pauze 'Invalid wallpaper source pathname '$wallpaper_source_pathname
+            Pauze 'Invalid wallpaper source pathname '$pathname_wallpaper_source
             ;;
         5)
-            Pauze 'Invalid wallpaper System Location: '$wallpaper_system_dirname
+            Pauze 'Invalid wallpaper System Location: '$dirname_wallpaper_syshome
             ;;
         7)
-            Pauze 'Cannot copy wallpaper to '$wallpaper_system_dirname
+            Pauze 'Cannot copy wallpaper to '$dirname_wallpaper_syshome
             ;;
         *)
             Pauze 'Invalid code:'${RCi}' Wallpaper report'
