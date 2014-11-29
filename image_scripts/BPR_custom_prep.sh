@@ -10,6 +10,7 @@ declare -r uri_chromium_prefs=\
 declare -r uri_chromium_bookmarks=\
 'https://gist.github.com/bpr97050/b6b5679f94d344879328/raw'
 #TO : /etc/chromium-browser/default_bookmarks.html
+declare -r chromium_default_settings='/etc/chromium-browser/default'
 
 declare -r uri_pepperflash_codex_installer=\
 'https://gist.githubusercontent.com/bpr97050/9899740/raw'
@@ -19,7 +20,9 @@ declare -r uri_firefox_prefs=\
 #TO : /etc/firefox/syspref.js/syspref.js
 
 declare -r uri_firefox_bookmarks='http://a.pomf.se/kyiput.sqlite'
-active_live_run=${live_run:-'N'}
+[[ -z $live_run ]] || live_run='N'
+[[ -z $refresh_git ]] || refresh_git='N'
+[[ -z $codebase ]] && codebase="${HOME}/freeitathenscode/image_scripts"
 
 Mainline() {
 
@@ -39,7 +42,7 @@ Mainline() {
     Set_backgrounds
 
     # -*- Auto security upgrades -*-
-    [[ $active_live_run == 'Y' ]] &&\
+    [[ $live_run == 'Y' ]] &&\
 	sudo dpkg-reconfigure -plow unattended-upgrades
 
     # -*- Install / update patches now -*-
@@ -54,6 +57,7 @@ Mainline() {
 }
 
 Download_custom_desktop_files() {
+
     local RC=0
     Pauze 'BPR Download_custom_desktop_files'
     cd $DOWNLOADS
@@ -97,7 +101,7 @@ Firefox_stuff() {
     wget -O ${DOWNLOADS}/places.sqlite $uri_firefox_bookmarks
 
     Answer='N'
-    [[ $active_live_run == 'Y' ]] &&\
+    [[ $live_run == 'Y' ]] &&\
         Pause_n_Answer 'Y|N' 'INFO,Customize Default Settings for Firefox?'
     if [ "${Answer}." == 'Y.' ]
     then
@@ -116,6 +120,7 @@ Chromium_stuff() {
 
     local RC=0
 
+    Pauze 'Ensure latest chromium-browser is installed'
     sudo apt-get install chromium-browser
 
     # Ensure "/etc/chromium-browser" is a directory (not a file)
@@ -124,15 +129,10 @@ Chromium_stuff() {
         || sudo mv -iv /etc/chromium-browser /tmp/ )
     [[ -d /etc/chromium-browser ]] || sudo mkdir /etc/chromium-browser
 
-    Chromium_master_pref
+    [[ $refresh_git == 'Y' ]] && Chromium_master_pref
     Chromium_defaults
     Chromium_bookmarks
     Chromium_nonfree_codex_prep
-
-    #sudo add-apt-repository ppa:skunk/pepper-flash
-    #sudo apt-get install pepflashplugin-installer\
-    #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
-    #   |sudo tee -a /etc/chromium-browser/default
 
     return $RC
 }
@@ -140,9 +140,11 @@ Chromium_stuff() {
 Chromium_master_pref() {
 
     # Download master_preferences config file for chromium
-    wget -O ${DOWNLOADS}/master_preferences $uri_chromium_prefs
+    Pauze 'Download and install chromium master prefs'
 
-    if [[ $active_live_run == 'Y' ]]
+    wget -O ${DOWNLOADS}/master_preferences $uri_chromium_prefs || return $?
+
+    if [[ $live_run == 'Y' ]]
     then
         sudo cp -iv ${DOWNLOADS}/master_preferences /etc/chromium-browser/
     else
@@ -157,16 +159,21 @@ Chromium_master_pref() {
 Chromium_defaults() {
 
     # Ensure certain Chromium Flags settings are in place.
-    if [[ $active_live_run == 'Y' ]]
+    if [[ $live_run == 'Y' ]]
     then
-        sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
-        --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1\
-        --disable-google-now-integration"/g' /etc/chromium-browser/default
+
+sudo rm -f /tmp/chromium_flags
+grep 'CHROMIUM_FLAGS' /etc/chromium-browser/default |grep -v '\$CHROMIUM_FLAGS' |perl -ne 'chomp;$cfl=$_;$cfl =~ s/^\s+//;print $cfl."\n";' |tee /tmp/chromium_flags
+source /tmp/chromium_flags
+echo $CHROMIUM_FLAGS 
+Pauze 'Setup Chromium Flags (Append to above)'
+    CHROMIUM_FLAGS=${CHROMIUM_FLAGS}' --start-maximized --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1 --disable-google-now-integration'
+    echo 'CHROMIUM_FLAGS='$CHROMIUM_FLAGS >>$chromium_default_settings
+    vim $chromium_default_settings
+
     else
         Pauze 'DRY RUN: '
     fi
-    grep 'CHROMIUM_FLAGS' /etc/chromium-browser/default
-    read -p'Chromium Flags Listed' -t20
 
     return $?
     # *--* Poodle fix et.al. cf. https://disablessl3.com/ *--*
@@ -175,7 +182,7 @@ Chromium_defaults() {
 Chromium_bookmarks() {
 
     wget -O ${DOWNLOADS}/default_bookmarks.html $uri_chromium_bookmarks
-    if [[ $active_live_run == 'Y' ]]
+    if [[ $live_run == 'Y' ]]
     then
         sudo cp -iv\
             ${DOWNLOADS}/default_bookmarks.html /etc/chromium-browser/
@@ -195,6 +202,7 @@ Chromium_nonfree_codex_prep() {
         && sudo chmod +x /usr/local/bin/install_nonfree_codex\
         && RCxPSS=0
 
+    [[ $RCxPSS -eq 0 ]] &&\
     Pauze 'Make icon on desktop that runs /usr/local/bin/install_nonfree_codex'
 
     return $RCxPSS
@@ -221,7 +229,6 @@ Set_backgrounds() {
 }
 
 declare -r HOLDIFS=$IFS 2>/dev/null
-[[ -z $codebase ]] && codebase="${HOME}/freeitathenscode/image_scripts"
 source ${codebase}/Common_functions || exit 12
 source ${codebase}/Prepare_functions || exit 13
 
@@ -233,10 +240,19 @@ find $DOWNLOADS -not -uid $UID -exec sudo chown -c $UID {} \;
 Mainline
 
 find $DOWNLOADS -not -uid $UID -exec sudo chown -c $UID {} \;
-find ${DOWNLOADS} -cmin -10 -ls
+Pauze 'Downloaded files this run:'
+find ${DOWNLOADS} -cmin -12
 
 #Wine stuff in case the user needs to run a Windows executable
 #sudo apt-get install wine winetricks
 #sudo do-release-upgrade
 #sudo apt-get install ibus
+   #     sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
+   #     --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1\
+   #     --disable-google-now-integration"/g' /etc/chromium-browser/default
+
+    #sudo add-apt-repository ppa:skunk/pepper-flash
+    #sudo apt-get install pepflashplugin-installer\
+    #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
+    #   |sudo tee -a /etc/chromium-browser/default
 
