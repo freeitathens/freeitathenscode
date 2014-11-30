@@ -20,8 +20,8 @@ declare -r uri_firefox_prefs=\
 #TO : /etc/firefox/syspref.js/syspref.js
 
 declare -r uri_firefox_bookmarks='http://a.pomf.se/kyiput.sqlite'
-[[ -z $live_run ]] || live_run='N'
-[[ -z $refresh_git ]] || refresh_git='N'
+[[ -z $live_run ]] && live_run='N'
+[[ -z $refresh_git ]] && refresh_git='N'
 [[ -z $codebase ]] && codebase="${HOME}/freeitathenscode/image_scripts"
 
 Mainline() {
