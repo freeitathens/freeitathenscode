@@ -19,6 +19,7 @@ declare -r uri_firefox_prefs=\
 'https://gist.github.com/bpr97050/eb37e9850e2d951bc676/raw'
 #TO : /etc/firefox/syspref.js/syspref.js
 
+#TODO: Following link is broken (HTTP 404)
 declare -r uri_firefox_bookmarks='http://a.pomf.se/kyiput.sqlite'
 [[ -z $live_run ]] && live_run='N'
 [[ -z $refresh_git ]] && refresh_git='N'
@@ -70,7 +71,7 @@ Download_custom_desktop_files() {
     find ${PWD}/${Git_name} -type f -exec head -n4 {} \;
     Pauze 'Now do Manual Moves from '${PWD}/${Git_name}' to /etc/skel/'
     bash
-    #sudo rsync -aRv --exclude '.git' --delete-excluded ${Git_name}/ /etc/skel/
+    #Broken: sudo rsync -aRv --exclude '.git' --delete-excluded ${Git_name}/ /etc/skel/
     Reset_shopts
 
     return $RC
@@ -98,7 +99,7 @@ Firefox_stuff() {
     #   cf.https://addons.mozilla.org/en-US/firefox/addon/ssl-version-control/
     # Options for Firefox bookmarks and settings
     wget -O ${DOWNLOADS}/syspref.js $uri_firefox_prefs
-    wget -O ${DOWNLOADS}/places.sqlite $uri_firefox_bookmarks
+    #wget -O ${DOWNLOADS}/places.sqlite $uri_firefox_bookmarks
 
     Answer='N'
     [[ $live_run == 'Y' ]] &&\
@@ -235,6 +236,9 @@ source ${codebase}/Prepare_functions || exit 13
 DOWNLOADS=${HOME}'/Downloads'
 [[ -d ${DOWNLOADS} ]] || mkdir ${HOME}/Downloads
 [[ -d ${DOWNLOADS} ]] || exit 13
+
+echo $DOWNLOADS
+Pauze 'Confirm above is Downloads'
 
 find $DOWNLOADS -not -uid $UID -exec sudo chown -c $UID {} \;
 Mainline
