@@ -1,8 +1,8 @@
 #!/bin/bash
 set -u
-Git_name=FRITAdot
+custom_dotfiles_id='FRITAdot'
 declare -r uri_desktop_files=\
-'https://github.com/bpr97050/'${Git_name}'.git'
+'https://github.com/bpr97050/'${custom_dotfiles_id}'.git'
 declare -r uri_chromium_prefs=\
 'https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/'
 #TO : /etc/chromium-browser/master_preferences 
@@ -64,15 +64,22 @@ Download_custom_desktop_files() {
     cd $DOWNLOADS
 
     Activate_shopts
-    [[ -n $Git_name ]] && [[ -d $Git_name ]] && sudo rm -rf ${Git_name}
-    git clone $uri_desktop_files || return $?
-    cd -
+    if [[ -d $custom_dotfiles_id ]]
+    then
+	rm -rf ${custom_dotfiles_id}/*
+    else
+	mkdir $custom_dotfiles_id
+    fi
 
-    find ${PWD}/${Git_name} -type f -exec head -n4 {} \;
-    Pauze 'Now do Manual Moves from '${PWD}/${Git_name}' to /etc/skel/'
-    bash
-    #Broken: sudo rsync -aRv --exclude '.git' --delete-excluded ${Git_name}/ /etc/skel/
+    cd $custom_dotfiles_id || return 12
+    git clone $uri_desktop_files || return $?
+
+    find . -type f -exec head -n4 {} \;
+    Pauze 'Now do Manual Moves (where appropriate) to /etc/skel/'
+    bash ||RC=$?
+    #Broken: sudo rsync -aRv --exclude '.git' --delete-excluded ${custom_dotfiles_id}/ /etc/skel/
     Reset_shopts
+    cd
 
     return $RC
 }
@@ -170,7 +177,7 @@ echo $CHROMIUM_FLAGS
 Pauze 'Setup Chromium Flags (Append to above)'
     CHROMIUM_FLAGS=${CHROMIUM_FLAGS}' --start-maximized --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1 --disable-google-now-integration'
     echo 'CHROMIUM_FLAGS='$CHROMIUM_FLAGS >>$chromium_default_settings
-    vim $chromium_default_settings
+    sudo vim $chromium_default_settings
 
     else
         Pauze 'DRY RUN: '
