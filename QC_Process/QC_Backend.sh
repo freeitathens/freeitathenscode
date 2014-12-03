@@ -62,12 +62,20 @@ Housekeeping() {
     then
 	echo $0':Running Master QC Mode' >&2
 	echo 'Frita'${CPU_ADDRESS}-$(date +'%b%d') |sudo tee /etc/hostname
+	Alter_HOSTNAME
+    elif [ $Master_test == 'm' ]
+	echo 'Not changing hostname '$Found_hostname' on master this run...'
 	sleep 3
     else
 	# *--* For Cloning Client, update the Hostname to 
 	#   'Frita64-date_in_seconds_since_1970 (or Frita32...)'
 	echo 'Frita'${CPU_ADDRESS}-$(date +'%s') |sudo tee /etc/hostname
+	Alter_HOSTNAME
     fi
+}
+
+Alter_HOSTNAME() {
+
     New_hostname=$(cat /etc/hostname)
     [[ -z $New_hostname ]] && New_hostname='AnotherFullyBogusName'
     sudo sed -i "s/$Found_hostname/$New_hostname/" /etc/hosts
@@ -78,6 +86,7 @@ Housekeeping() {
 	echo '   and from /etc/hosts: '$(grep '^127\.' /etc/hosts |grep -v 'localhost')
 	read -p'<OK?>'
     fi
+
 }
 
 Integrity_tests() {
@@ -541,7 +550,7 @@ Test_ff_flash() {
     sample_video='https://www.youtube.com/watch?v=syHv0kuQCus'
 	    #http://www.youtube.com/watch?v=mwbgwZxodKE
 
-    if [ -n "$path2firefox" ]
+    if [ -z "$path2firefox" ]
     then
         Append_to_log 'PROB' 'Flash plugin test' 'This test is NOT possible'
 	return 1
