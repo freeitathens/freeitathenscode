@@ -149,7 +149,6 @@ Set_sys_rpts_distro_name() {
     if [ -n ${sys_rpts_distro_name} ]
     then
         echo 'System reports distro as '${sys_rpts_distro_name}'.'
-        read -p'<ENTER>'
         return 0
     fi
 

@@ -264,6 +264,8 @@ Set_backgrounds() {
     #sudo sed -i 's/^background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
 }
 
+source /home/oem/freeitathenscode/image_scripts/Prepare_functions || exit 99
+
 DOWNLOADS="/home/$(id -n -u)/Downloads"
 [[ -d ${DOWNLOADS} ]] || mkdir $DOWNLOADS
 [[ -d ${DOWNLOADS} ]] || exit 13
