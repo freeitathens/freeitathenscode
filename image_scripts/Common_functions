@@ -269,7 +269,7 @@ Pause_n_Answer() {
     declare -a user_resp_arr
     prompt_to_user=' ----> Your response {'${question_to_user}'}? '
 
-    read -p $prompt_to_user -a user_resp_arr -t100
+    read -p"$prompt_to_user" -a user_resp_arr -t100
     RC=$?
     echo ''
     [[ $RC -gt 0 ]] && return $RC
