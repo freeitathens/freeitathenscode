@@ -9,17 +9,17 @@ source ${codebase}/image_scripts/Common_functions || exit 12
 
 declare -r HOLDIFS=$IFS
 
-Not_Batch_Run='N'
+batch_run='N'
 
 declare -rx Messages_O=$(mktemp -t "Prep2Clonze_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "Prep2Clonze_err.XXXXX")
 declare -x aptcache_needs_update='Y'
 
-while getopts 'Bd:Rh' OPT
+while getopts 'bd:Rh' OPT
 do
     case $OPT in
-        B)
-            Not_Batch_Run='Y'
+        b)
+            batch_run='Y'
 	    ;;
         R)
             aptcache_needs_update='N'
@@ -36,7 +36,7 @@ do
             ;;
     esac
 done
-declare -rx Not_Batch_Run
+declare -rx batch_run
 
 address_len=0
 Get_Address_Len

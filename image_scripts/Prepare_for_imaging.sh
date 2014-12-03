@@ -25,7 +25,7 @@ refresh_git='Y'
 ADD_ALL='Y'
 PUR_ALL='Y'
 live_run='N'
-Not_Batch_Run='N'
+batch_run='N'
 
 Mainline() {
 
@@ -540,7 +540,7 @@ declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
 
 # -*- Process any command line Options -*-
-Optvalid='APBDn:RuVGh'
+Optvalid='APbDn:RuVGh'
 while getopts $Optvalid OPT
 do
     case $OPT in
@@ -553,8 +553,8 @@ do
         D)
             live_run='Y'
             ;;
-        B)
-            Not_Batch_Run='Y'
+        b)
+            batch_run='Y'
             ;;
         n)
             Set_Confirm_distro_name $OPTARG;RCx1=$?
@@ -573,11 +573,10 @@ do
             refresh_git='N'
             ;;
         h)
-            echo $This_script\
-            ': Valid options are [ -A -P -B -d{distro} -R -u -V -G -b{SrcBase} -h]'
+            echo $This_script
             echo "A SET ADD_ALL='N'"
             echo "P SET PUR_ALL='N'"
-            echo "B SET Not_Batch_Run='Y'"
+            echo "b SET batch_run='Y'"
             echo "n SET :Distro Name:"
             echo "R SET aptcache_needs_update='N'"
             echo "u SET refresh_updatedb='Y'"
@@ -605,8 +604,8 @@ declare -x refresh_svn
 declare -x refresh_git
 declare -r ADD_ALL
 declare -r PUR_ALL
-declare -rx Not_Batch_Run
-[[ $Not_Batch_Run == 'Y' ]] && echo 'Interactive Run Selected'
+declare -rx batch_run
+[[ $batch_run == 'Y' ]] || Pauze 'Interactive Run Selected'
 
 echo '$SOURCEBASE='$SOURCEBASE
 echo '$codebase='$codebase

@@ -230,8 +230,6 @@ Yes_its_numeric() {
 Pauze() {
 
     Log_mess $@
-    # !Print to terminal only if this session is interactive.
-    [[ "${Not_Batch_Run}." == 'N.' ]] && return 0
 
     set +u
     IFS=$' \t\n'
@@ -245,12 +243,17 @@ Pauze() {
     done
     IFS=$HOLDIFS
 
+    [[ "${batch_run}." == 'Y.' ]] && return 0
+
     read -p '<ENTER; timeout in 10 secs...>' -t10
 
     return $RC
 }
 
 Pause_n_Answer() {
+
+    [[ "${batch_run}." == 'Y.' ]] && return 0
+
     set +u
     IFS=$' \t\n'
     question_to_user=$1;shift
