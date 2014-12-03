@@ -121,8 +121,7 @@ Firefox_stuff() {
 
     if [[ $live_run != 'Y' ]]
     then
-        Pauze 'DRY RUN: action would be "cp -iv '\
-        ${src_path_firefox_prefs}' '$sys_path_firefox_prefs'"'
+        Pauze 'DRY RUN: action would be "cp -iv ' ${src_path_firefox_prefs}' '$sys_path_firefox_prefs'"'
         return 0
     fi
 
@@ -175,8 +174,7 @@ Chromium_master_pref() {
 
     if [[ $live_run != 'Y' ]]
     then
-        Pauze 'DRY RUN: would normally exec: cp -iv '\
-           $src_path_mastprefs' '$sys_dir_chromium'/'
+        Pauze 'DRY RUN: would normally exec: cp -iv ' $src_path_mastprefs' '$sys_dir_chromium'/'
         return 0
     fi
 
@@ -286,11 +284,11 @@ Pauze 'Downloaded files this run (above).'
 #sudo apt-get install wine winetricks
 #sudo do-release-upgrade
 #sudo apt-get install ibus
-   #     sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
-   #     --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1\
+   #     sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized
+   #     --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1
    #     --disable-google-now-integration"/g' /etc/chromium-browser/default
 
     #sudo add-apt-repository ppa:skunk/pepper-flash
-    #sudo apt-get install pepflashplugin-installer\
-    #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
+    #sudo apt-get install pepflashplugin-installer
+    #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'
 

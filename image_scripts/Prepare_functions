@@ -25,8 +25,7 @@ Apt_purge() {
     local RC=0
     if [ "${live_run}." != 'Y.' ]
     then
-        Pauze 'DRY RUN: apt-get purge --auto-remove '\
-$packages |tee -a ${Messages_O}
+        Pauze 'DRY RUN: apt-get purge --auto-remove ' $packages |tee -a ${Messages_O}
         return 0
     fi
 
@@ -43,8 +42,7 @@ Apt_install() {
     local RC=0
     if [ "${live_run}." != 'Y.' ]
     then
-        Pauze 'DRY RUN: apt-get install -V --show-progress'\
-$packages |tee -a ${Messages_O}
+        Pauze 'DRY RUN: apt-get install -V --show-progress '$packages |tee -a ${Messages_O}
         return 0
     fi
 

@@ -148,7 +148,7 @@ Set_sys_rpts_distro_name() {
 
     if [ -n ${sys_rpts_distro_name} ]
     then
-        echo 'System reports distro as '${sys_rpts_distro_name}'.'
+        echo 'System reports distro as '${sys_rpts_distro_name}'.' >&2
         return 0
     fi
 
@@ -470,8 +470,7 @@ Check_Setup_wallpaper() {
 
     if [ $live_run != 'Y' ]
     then
-        Pauze 'DRY RUN: Would run cp -iv '$src_path_wallpaper\
-            ${sys_dir_wallpaper}'/'
+        Pauze 'DRY RUN: Would run cp -iv '${src_path_wallpaper}' '${sys_dir_wallpaper}'/'
         return 0
     fi
 
@@ -480,8 +479,8 @@ Check_Setup_wallpaper() {
         'WARN,Copy '$filename_wallpaper' to '$sys_dir_wallpaper'?'
     if [ "${Answer}." == 'Y.' ]
     then
-        sudo cp -iv $src_path_wallpaper\
-            ${sys_dir_wallpaper}/ || return 7
+        sudo cp -iv $src_path_wallpaper ${sys_dir_wallpaper}/\
+	    || return 7
         return 0
     fi
 
