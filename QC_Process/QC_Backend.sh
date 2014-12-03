@@ -536,23 +536,32 @@ read Xu
 }
 
 Test_ff_flash() {
+
     path2firefox=$(which firefox 2>/dev/null)
+    sample_video='https://www.youtube.com/watch?v=syHv0kuQCus'
+	    #http://www.youtube.com/watch?v=mwbgwZxodKE
+
     if [ -n "$path2firefox" ]
     then
-        dialog --keep-tite --clear --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
-            --yesno "Test \Z4\ZrShockwave Flash\ZR \Z0in $path2firefox ?" 9 60
-        d_RC=$?
-        if [ $d_RC -eq 0 ]
-        then
-            $path2firefox -no-remote http://www.youtube.com/watch?v=mwbgwZxodKE 2>>$ERRFILE &
-            ice_PID=$!
-            echo $ice_PID 'process # for ff' >>$ERRFILE
-            Window_killa $ice_PID 40
-            Append_to_log 'INFO' 'Flash plugin test' 'Test was run'
-        fi
-    else
         Append_to_log 'PROB' 'Flash plugin test' 'This test is NOT possible'
+	return 1
     fi
+
+    dialog --keep-tite --clear --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
+	--yesno "Test \Z4\ZrShockwave Flash\ZR \Z0in $path2firefox ?" 9 60
+    d_RC=$?
+    if [ $d_RC -eq 0 ]
+    then
+	$path2firefox -no-remote\
+	    $sample_video\
+	    2>>$ERRFILE &
+	ice_PID=$!
+	echo $ice_PID 'process # for ff' >>$ERRFILE
+	Window_killa $ice_PID 40
+	Append_to_log 'INFO' 'Flash plugin test' 'Test was run'
+    fi
+
+    return 0
 }
 
 Window_killa() {
