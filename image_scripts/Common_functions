@@ -1,4 +1,6 @@
 # *Common_functions: to be sourced
+declare -r HOLDIFS=$IFS
+
 # *--* Identify box as 32 or 64 bit capable. *--*
 Get_Address_Len() {
     use_strict=${1:-'n'}
@@ -19,7 +21,8 @@ Get_Address_Len() {
             && alt_address_len=64
         if [ $address_len -ne $alt_address_len ]
         then
-            echo 'Discrepancy in finding cpu address size '$address_len' '$alt_address_len
+            echo 'Discrepancy in finding cpu address size '\
+                $address_len' VS. '$alt_address_len
         fi
     fi
     export address_len
@@ -105,7 +108,7 @@ Ramp_up() {
         t)
             echo -ne "\t"
             ;;
-        M) 
+        M)
             echo -ne ${colorattr_pre}${COLORATTR}'m'$Message
             COLORATTR=''
             ;;
@@ -128,14 +131,14 @@ Ramp_up() {
                 "${colorattr_pre}${COLORATTR}${colorattr_post}"${mess_parts_a[$mess_ix]} &&\
                 COLORATTR=''
             ;;
-        B) 
+        B)
             echo -ne "${colorattr_pre}${COLORATTR}${colorattr_post} "
             ;;
         *)
             Is_numeric_tr $token && Is_numeric_re $token && Yes_its_numeric $token
             ;;
     esac
- 
+
     last_token=$token
     return $RC
 }
@@ -240,6 +243,7 @@ Pauze() {
         Zanned_response $1 || ((RC+=$?))
         shift 1
     done
+    IFS=$HOLDIFS
 
     read -p '<ENTER; timeout in 10 secs...>' -t10
 
@@ -249,9 +253,7 @@ Pauze() {
 Pause_n_Answer() {
     set +u
     IFS=$' \t\n'
-    Prompt2U=$1
-    shift
-    Answer=''
+    question_to_user=$1;shift
     local RC=0
 
     while [ -n "$1" ]
@@ -259,15 +261,21 @@ Pause_n_Answer() {
         Zanned_response $1 || ((RC+=$?))
         shift 1
     done
+    IFS=$HOLDIFS
 
-    #[[ $Prompt2U =~ [Y|y|N|n] ]] Prompt2U='Y|N' RC=1
     set +u
-    Prompt2U='====> Your response {'${Prompt2U}'}? '
     echo ''
-    declare -a User_resp
-    read -p "$Prompt2U" -a User_resp
-    Answer=${User_resp[0]}
+    [[ -z $Answer ]] && Answer='N'
+    declare -a user_resp_arr
+    prompt_to_user=' ----> Your response {'${question_to_user}'}? '
 
+    read -p $prompt_to_user -a user_resp_arr -t100
+    RC=$?
+    echo ''
+    [[ $RC -gt 0 ]] && return $RC
+    [[ ${#user_resp_arr[@]} -eq 0 ]] && return 0
+
+    Answer=${user_resp_arr[0]}
     return $RC
 }
 
@@ -299,7 +307,7 @@ Zanned_response() {
     fi
 
     [[ -z "$mess" ]] && mess='Unknown Message..????'
-    #rettyprint "n,1,${basic_emph},47,M,0,n" $mess || RC=$?
+
     prettyprint "n,1,${basic_emph},40,M,0,n" $mess || RC=$?
 
     return $RC
@@ -311,8 +319,8 @@ Run_Cap_Out() {
     if [ $cmd = 'sudo' ]
     then
         dosu='sudo'
-	cmd=$1
-	shift
+        cmd=$1
+        shift
     fi
     stuff=$@
 
@@ -368,7 +376,7 @@ Time_to_kill() {
 
     return $RC
 }
- 
+
 #/usr/share/lubuntu/wallpapers/: directory
 #udevadm info --query=env --name=/dev/sda1 |grep UUID
 

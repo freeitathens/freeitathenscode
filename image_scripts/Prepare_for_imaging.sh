@@ -14,8 +14,8 @@ source ${codebase}/Prepare_functions || exit 136
 
 pathname_packages_list=${codebase}'/Packages'
 filename_wallpaper='FreeIT.png'
-pathname_wallpaper_source=${codebase}/$filename_wallpaper
-dirname_wallpaper_syshome='/usr/share/backgrounds'
+src_path_wallpaper=${codebase}/$filename_wallpaper
+sys_dir_wallpaper='/usr/share/backgrounds'
 wallpaper_was_setup='N'
 
 aptcache_needs_update='Y'
@@ -26,11 +26,6 @@ ADD_ALL='Y'
 PUR_ALL='Y'
 live_run='N'
 Not_Batch_Run='N'
-
-This_script=$(basename $0)
-declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
-declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
-Optvalid='APBDn:RuVGh'
 
 Mainline() {
 
@@ -99,7 +94,7 @@ Distro_name_Set() {
     [[ $RCxS -eq 0 ]] || return 30
 
     DISTRO_NAME=$sys_rpts_distro_name
-    echo 'set' \$DISTRO_NAME '= '$DISTRO_NAME
+    #echo 'set' \$DISTRO_NAME '= '$DISTRO_NAME
     Answer='N'
     Pause_n_Answer 'Y|N' '...system value '${DISTRO_NAME}' is used, OK? '
     [[ "${Answer}." == 'Y.' ]] || return 12
@@ -463,36 +458,32 @@ Pkg_by_distro_session() {
 Check_Setup_wallpaper() {
 
     [[ $DISTRO_NAME == 'lubuntu' ]] &&\
-dirname_wallpaper_syshome='/usr/share/lubuntu/wallpapers'
-    pathname_wallpaper_syshome=${dirname_wallpaper_syshome}/$filename_wallpaper
-    if [[ -e $pathname_wallpaper_syshome ]]
+        sys_dir_wallpaper='/usr/share/lubuntu/wallpapers'
+    sys_path_wallpaper=${sys_dir_wallpaper}/$filename_wallpaper
+    if [[ -e $sys_path_wallpaper ]]
     then
         wallpaper_was_setup='Y'
         return 0
     fi
 
-    [[ -d $dirname_wallpaper_syshome ]] || return 5
+    [[ -d $sys_dir_wallpaper ]] || return 5
+    [[ -f $src_path_wallpaper ]] || return 6
 
-    [[ -f $pathname_wallpaper_source ]] || return 6
+    if [ $live_run != 'Y' ]
+    then
+        Pauze 'DRY RUN: Would run cp -iv '$src_path_wallpaper\
+            ${sys_dir_wallpaper}'/'
+        return 0
+    fi
 
     Answer='Y'
-    Pause_n_Answer 'Y|N' 'INFO,Copy '$filename_wallpaper' to '$dirname_wallpaper_syshome'?'
+    Pause_n_Answer 'Y|N'\
+        'WARN,Copy '$filename_wallpaper' to '$sys_dir_wallpaper'?'
     if [ "${Answer}." == 'Y.' ]
     then
-        if [ $live_run != 'Y' ]
-        then
-            Pauze 'DRY RUN: Would run cp -iv '$pathname_wallpaper_source\
-	    ${dirname_wallpaper_syshome}'/'
-            return 0
-        fi
-
-        sudo cp -iv $pathname_wallpaper_source\
-${dirname_wallpaper_syshome}/ || return 7
-	set -e
-        echo 'Potential change to file '$pathname_wallpaper_syshome >>$Errors_O
-	set +e
+        sudo cp -iv $src_path_wallpaper\
+            ${sys_dir_wallpaper}/ || return 7
         return 0
-
     fi
 
     return 1
@@ -506,19 +497,19 @@ Report_Check_Setup_wallpaper() {
     case $RCi in
         0)
             [[ $wallpaper_was_setup == 'N' ]] && echo 'Wallpaper successfully setup'
-            Pauze 'Wallpaper is in place:'$pathname_wallpaper_syshome
+            Pauze 'Wallpaper is in place:'$sys_path_wallpaper
             ;;
         1)
             Pauze 'WARNING, wallpaper setup will be done later...'
             ;;
         6)
-            Pauze 'Invalid wallpaper source pathname '$pathname_wallpaper_source
+            Pauze 'Invalid wallpaper source pathname '$src_path_wallpaper
             ;;
         5)
-            Pauze 'Invalid wallpaper System Location: '$dirname_wallpaper_syshome
+            Pauze 'Invalid wallpaper System Location: '$sys_dir_wallpaper
             ;;
         7)
-            Pauze 'Cannot copy wallpaper to '$dirname_wallpaper_syshome
+            Pauze 'Cannot copy wallpaper to '$sys_dir_wallpaper
             ;;
         *)
             Pauze 'Invalid code:'${RCi}' Wallpaper report'
@@ -542,6 +533,14 @@ Cleanup_nouser_nogroup() {
     return 0
 }
 
+# -*- Execution continues here. Mainline (below) invokes driving function -*-
+declare -r HOLDIFS=$IFS
+This_script=$(basename $0)
+declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
+declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
+
+# -*- Process any command line Options -*-
+Optvalid='APBDn:RuVGh'
 while getopts $Optvalid OPT
 do
     case $OPT in
@@ -553,11 +552,9 @@ do
             ;;
         D)
             live_run='Y'
-            Pauze 'LIVE RUN Selected. Control-C now to exit.'
             ;;
         B)
             Not_Batch_Run='Y'
-            echo 'Interactive Run'
             ;;
         n)
             Set_Confirm_distro_name $OPTARG;RCx1=$?
@@ -597,6 +594,10 @@ do
     esac
 done
 
+echo -ne "\n\n\e[1;31;40m"\
+'*---------------------------------------------------------------*'
+echo -e "\e[0m"
+
 # -x = let child processes inherit
 # -r = make value permanent (read-only)
 declare -x aptcache_needs_update
@@ -605,35 +606,24 @@ declare -x refresh_git
 declare -r ADD_ALL
 declare -r PUR_ALL
 declare -rx Not_Batch_Run
-declare -rx live_run
-
-declare -r HOLDIFS=$IFS
+[[ $Not_Batch_Run == 'Y' ]] && echo 'Interactive Run Selected'
 
 echo '$SOURCEBASE='$SOURCEBASE
-codebase=${SOURCEBASE}'/image_scripts'
-[[ -d $codebase ]] || exit 14
-declare -x codebase
-source ${codebase}/Prepare_functions || exit 136
+echo '$codebase='$codebase
+echo '$pathname_packages_list'=$pathname_packages_list
+echo '$filename_wallpaper'=$filename_wallpaper
+echo '$src_path_wallpaper'=$src_path_wallpaper
+echo '$sys_dir_wallpaper'=$sys_dir_wallpaper
+echo '$aptcache_needs_update'=$aptcache_needs_update
+echo '$refresh_updatedb'=$refresh_updatedb
+echo '$refresh_svn'=$refresh_svn
+echo '$refresh_git'=$refresh_git
+echo '$ADD_ALL'=$ADD_ALL
+echo '$PUR_ALL'=$PUR_ALL
 
-pathname_packages_list=${codebase}'/Packages'
-filename_wallpaper='FreeIT.png'
-pathname_wallpaper_source=${codebase}/$filename_wallpaper
-dirname_wallpaper_syshome='/usr/share/backgrounds'
-wallpaper_was_setup='N'
-
-aptcache_needs_update='Y'
-refresh_updatedb='N'
-refresh_svn='N'
-refresh_git='Y'
-ADD_ALL='Y'
-PUR_ALL='Y'
-live_run='N'
-Not_Batch_Run='N'
-
-This_script=$(basename $0)
-declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
-declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
-Optvalid='APBDn:RuVGh'
+declare -rx live_run
+[[ $live_run == 'Y' ]] && echo 'LIVE RUN Selected. System files COULD be changed!'
+Pauze 'Confirm Selections <ENTER> ... or LEAVE <Control-C>'
 
 Mainline
 

@@ -3,7 +3,7 @@ source ${codebase}/Common_functions || return 135
 
 Run_apt_update() {
 
-    sudo ifconfig
+    sudo /bin/ifconfig
 
     [[ $aptcache_needs_update == 'Y' ]] || return 0
 
@@ -25,7 +25,8 @@ Apt_purge() {
     local RC=0
     if [ "${live_run}." != 'Y.' ]
     then
-        Pauze 'DRY RUN: apt-get purge --auto-remove '$packages |tee -a ${Messages_O}
+        Pauze 'DRY RUN: apt-get purge --auto-remove '\
+$packages |tee -a ${Messages_O}
         return 0
     fi
 
@@ -42,7 +43,8 @@ Apt_install() {
     local RC=0
     if [ "${live_run}." != 'Y.' ]
     then
-        Pauze 'DRY RUN: apt-get install -V --show-progress '$packages |tee -a ${Messages_O}
+        Pauze 'DRY RUN: apt-get install -V --show-progress'\
+$packages |tee -a ${Messages_O}
         return 0
     fi
 
@@ -132,4 +134,3 @@ Check_report_dest() {
 #
 #    return $RC
 #}
-
