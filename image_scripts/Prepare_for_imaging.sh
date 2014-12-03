@@ -1,7 +1,7 @@
 #!/bin/bash +x
 [[ 0 -eq $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]] &&\
     read -p'NOTE: Please run as normal user with sudo privledges.<CONTROL-C>'
-#    read -p'NOTE: Permission Problems? Rerun with sudo (i.e., as root).<ENTER>' -t5
+# read -p'NOTE: Permission Problems Rerun with sudo (i.e., as root).<ENTER>' -t5
 
 # Establish base of version-controlled code tree.
 [[ -z $SOURCEBASE ]] && declare -x SOURCEBASE='/home/oem/freeitathenscode'
@@ -9,7 +9,6 @@
 # Establish location of these scripts within SOURCEBASE
 codebase=${SOURCEBASE}'/image_scripts'
 [[ -d $codebase ]] || exit 14
-
 declare -x codebase
 source ${codebase}/Prepare_functions || exit 136
 
@@ -41,7 +40,8 @@ Mainline() {
 
     if [ $address_len -eq 64 ]
     then
-        grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 
+        grep -o -P '^OnlyShowIn=.*MATE'\
+/usr/share/applications/screensavers/*.desktop
         Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
     fi
 
@@ -64,7 +64,7 @@ Mainline() {
 Housekeeping() {
 
     sys_rpts_distro_name=''
-    if [ -z $DISTRO_NAME ] 
+    if [ -z $DISTRO_NAME ]
     then
         Distro_name_Set;RCxDnS=$?
         if [ $RCxDnS -gt 0 ]
@@ -84,7 +84,6 @@ Housekeeping() {
     [[ "${refresh_updatedb}." == 'Y.' ]] && updatedb &
     [[ "${refresh_svn}." == 'Y.' ]] && Contact_server
 
-    Pauze 'Will update apt-metadata if requested (COND:'$aptcache_needs_update')'
     [[ $aptcache_needs_update == 'Y' ]] && Run_apt_update
 
     #Pauze 'Confirm no medibuntu in apt sources'
@@ -138,7 +137,10 @@ Set_Confirm_distro_name() {
         ${DISTRO_NAME}').'
     echo ''
     read -p'<ACCEPT System Value?>' -a ANS_ARR;echo ''
-    [[ ${#ANS_ARR[*]} -gt 0 ]] && [[ ${ANS_ARR[0]} == 'Y' ]] && DISTRO_NAME=$sys_rpts_distro_name && return 0
+    [[ ${#ANS_ARR[*]} -gt 0 ]] &&\
+        [[ ${ANS_ARR[0]} == 'Y' ]] &&\
+        DISTRO_NAME=$sys_rpts_distro_name &&\
+        return 0
 
     return 3
 }
@@ -212,7 +214,8 @@ Confirm_DISTRO_CPU() {
     prettyprint '1,32,40,M,n' ' distribution name.'
     [[ $distro_valid_flag != 'Y' ]] && return 16
 
-    prettyprint '0,1,32,40,M,n' 'Using general distro (category) name of '$distro_generia'.'
+    prettyprint '0,1,32,40,M,n'\
+'Using general distro (category) name of '$distro_generia'.'
     Pauze "INFO,Confirmed $DISTRO_NAME on ${address_len}-bit box."
 
     return 0
@@ -228,73 +231,22 @@ User_no_distro_bye() {
     exit $RCxDC
 }
 
-Contact_server() {
-
-    Pauze "Check that server address is correct and is contactable ( COND: $refresh_svn )"
-
-    Sub_lcl_stat() {
-        echo 'Check on subversion local repo status'
-        if [ -d ${SOURCEBASE}/.svn ]
-        then
-            cd ${SOURCEBASE}/
-            svn update
-        else
-            apt-get install subversion
-            cd
-            Correct_subversion_ssh
-            svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
-        fi
-        Pauze '(DONE) Check on subversion local repo status'
-    }
-
-    [[ $(ssh frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]\
-        && Pauze 'Checked Server is valid: 192.168.1.9' && Sub_lcl_stat && return $?
-
-    return 1
-}
-
-Correct_subversion_ssh() {
-
-    subv_conf=''
-    for subversion_meta_dir in $(find '/home/'$(grep ':'$UID':' /etc/passwd |cut -f1 -d:) -maxdepth 1 -type d -name '.subversion';find /etc/ -maxdepth 1 -type d -name 'subversion')
-    do
-        subv_conf="${subversion_meta_dir}/config"
-        echo 'Checking subversion config path '$subv_conf
-        [[ -f ${subv_conf} ]] && break
-        subv_conf=''
-    done
-    [[ -z $subv_conf ]] && return 4
-
-    grep 'ssh' $subv_conf
-    Answer='N'
-    Pause_n_Answer 'Y|N' "Fix $subv_conf for Frita's ssh connection (Y|N)? "
-    case $Answer in
-        Y)
-            sudo perl -pi'.bak' -e 's/#\s*ssh\b(.+?ssh)\s+-q(.+)$/ssh${1} -v${2}/' ${subv_conf}
-            ;;
-        *)
-            Pauze 'OK, NO changes made...'
-            ;;
-    esac
-
-    return 0
-}
-
 Integrity_check() {
     Pauze 'Check (absence of) local UUID reference for swap in fstab.'
     RCxU=1
     grep -P 'UUID.+swap' /etc/fstab && RCxU=$?
     if [ $RCxU -eq 0 ]
     then
-        Pauze 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference. Entering editor...'
-        sudo vi /etc/fstab
+        echo 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference'
+        Pauze '   but might be false positive...'
+        #Entering editor...'
+        #sudo vi /etc/fstab
     fi
 
     Pauze 'Checking swap'
     Run_Cap_Out sudo swapoff --all --verbose
     Run_Cap_Out sudo swapon --all --verbose
 
-    Pauze "Ensuring that QC.sh and revert_prep... are properly linked in ${HOME}/bin" 
     local_scripts_DIR="${HOME}/bin"
     [[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
     sudo chown -c oem $local_scripts_DIR
@@ -346,6 +298,8 @@ Install_Remove_requested_packages() {
 
     return 0
 }
+
+#This_script_dir=$(dirname $0)
 #for pkg_file in $(find $This_script_dir -maxdepth 1 -type f -name 'Packages*')
 
 Install_packages_from_file_list() {
@@ -380,7 +334,7 @@ Install_packages_from_file_list() {
         then
             echo 'Problem with package '$pkg_name
             ((RCz+=$RCa))
-        fi 
+        fi
     done
     return $RCz
 }
@@ -406,7 +360,7 @@ Check_extra() {
             then
                 Pauze 'Return code for ppa setup ='$RCxPPA
                 RCxPPA=0
-            fi 
+            fi
             return $RCxPPA
             ;;
         INSTALL)
@@ -508,7 +462,8 @@ Pkg_by_distro_session() {
 
 Check_Setup_wallpaper() {
 
-    [[ $DISTRO_NAME == 'lubuntu' ]] && dirname_wallpaper_syshome='/usr/share/lubuntu/wallpapers'
+    [[ $DISTRO_NAME == 'lubuntu' ]] &&\
+dirname_wallpaper_syshome='/usr/share/lubuntu/wallpapers'
     pathname_wallpaper_syshome=${dirname_wallpaper_syshome}/$filename_wallpaper
     if [[ -e $pathname_wallpaper_syshome ]]
     then
@@ -517,7 +472,7 @@ Check_Setup_wallpaper() {
     fi
 
     [[ -d $dirname_wallpaper_syshome ]] || return 5
-    
+
     [[ -f $pathname_wallpaper_source ]] || return 6
 
     Answer='Y'
@@ -531,7 +486,8 @@ Check_Setup_wallpaper() {
             return 0
         fi
 
-        sudo cp -iv $pathname_wallpaper_source ${dirname_wallpaper_syshome}/ || return 7
+        sudo cp -iv $pathname_wallpaper_source\
+${dirname_wallpaper_syshome}/ || return 7
 	set -e
         echo 'Potential change to file '$pathname_wallpaper_syshome >>$Errors_O
 	set +e
@@ -640,6 +596,9 @@ do
             ;;
     esac
 done
+
+# -x = let child processes inherit
+# -r = make value permanent (read-only)
 declare -x aptcache_needs_update
 declare -x refresh_svn
 declare -x refresh_git
@@ -649,7 +608,32 @@ declare -rx Not_Batch_Run
 declare -rx live_run
 
 declare -r HOLDIFS=$IFS
-This_script_dir=$(dirname $0)
+
+echo '$SOURCEBASE='$SOURCEBASE
+codebase=${SOURCEBASE}'/image_scripts'
+[[ -d $codebase ]] || exit 14
+declare -x codebase
+source ${codebase}/Prepare_functions || exit 136
+
+pathname_packages_list=${codebase}'/Packages'
+filename_wallpaper='FreeIT.png'
+pathname_wallpaper_source=${codebase}/$filename_wallpaper
+dirname_wallpaper_syshome='/usr/share/backgrounds'
+wallpaper_was_setup='N'
+
+aptcache_needs_update='Y'
+refresh_updatedb='N'
+refresh_svn='N'
+refresh_git='Y'
+ADD_ALL='Y'
+PUR_ALL='Y'
+live_run='N'
+Not_Batch_Run='N'
+
+This_script=$(basename $0)
+declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
+declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
+Optvalid='APBDn:RuVGh'
 
 Mainline
 
@@ -657,7 +641,7 @@ Mainline
 [[ -z $PIDng ]] || echo 'Check on process '$PIDng
 
 # Make the version-controlled tree - SOURCEBASE --
-#  -- let child processes inherit (-x)
 
-#PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms mintdrivers gparted terminator hardinfo'
-
+#PKGS='lm-sensors hddtemp ethtool gimp firefox 
+#  dialog xscreensaver-gl libreoffice aptitude vim
+#  flashplugin-installer htop inxi vrms mintdrivers gparted terminator hardinfo'

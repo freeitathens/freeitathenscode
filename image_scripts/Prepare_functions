@@ -3,6 +3,8 @@ source ${codebase}/Common_functions || return 135
 
 Run_apt_update() {
 
+    sudo ifconfig
+
     [[ $aptcache_needs_update == 'Y' ]] || return 0
 
     Check_report_dest $Messages_O || return $?
@@ -47,6 +49,58 @@ Apt_install() {
     sudo apt-get install -V --show-progress $packages 2>>${Messages_O} || RC=$?
 
     return $RC
+}
+
+Contact_server() {
+
+    Pauze "Check that server address is correct and is contactable ( COND: $refresh_svn )"
+
+    Sub_lcl_stat() {
+        echo 'Check on subversion local repo status'
+        if [ -d ${SOURCEBASE}/.svn ]
+        then
+            cd ${SOURCEBASE}/
+            svn update
+        else
+            apt-get install subversion
+            cd
+            Correct_subversion_ssh
+            svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
+        fi
+        Pauze '(DONE) Check on subversion local repo status'
+    }
+
+    [[ $(ssh frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]\
+        && Pauze 'Checked Server is valid: 192.168.1.9' && Sub_lcl_stat && return $?
+
+    return 1
+}
+
+Correct_subversion_ssh() {
+
+    subv_conf=''
+    for subversion_meta_dir in $(find '/home/'$(grep ':'$UID':' /etc/passwd |cut -f1 -d:) -maxdepth 1 -type d -name '.subversion';find /etc/ -maxdepth 1 -type d -name 'subversion')
+    do
+        subv_conf="${subversion_meta_dir}/config"
+        echo 'Checking subversion config path '$subv_conf
+        [[ -f ${subv_conf} ]] && break
+        subv_conf=''
+    done
+    [[ -z $subv_conf ]] && return 4
+
+    grep 'ssh' $subv_conf
+    Answer='N'
+    Pause_n_Answer 'Y|N' "Fix $subv_conf for Frita's ssh connection (Y|N)? "
+    case $Answer in
+        Y)
+            sudo perl -pi'.bak' -e 's/#\s*ssh\b(.+?ssh)\s+-q(.+)$/ssh${1} -v${2}/' ${subv_conf}
+            ;;
+        *)
+            Pauze 'OK, NO changes made...'
+            ;;
+    esac
+
+    return 0
 }
 
 Check_report_dest() {

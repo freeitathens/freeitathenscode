@@ -44,7 +44,7 @@ Mainline() {
 
     # -*- Auto security upgrades -*-
     [[ $live_run == 'Y' ]] &&\
-	sudo dpkg-reconfigure -plow unattended-upgrades
+        sudo dpkg-reconfigure -plow unattended-upgrades
 
     # -*- Install / update patches now -*-
     Pauze 'apt-get dist-upgrade'
@@ -66,9 +66,9 @@ Download_custom_desktop_files() {
     Activate_shopts
     if [[ -d $custom_dotfiles_id ]]
     then
-	rm -rf ${custom_dotfiles_id}/*
+        rm -rf ${custom_dotfiles_id}/*
     else
-	mkdir $custom_dotfiles_id
+        mkdir $custom_dotfiles_id
     fi
 
     cd $custom_dotfiles_id || return 12
@@ -109,20 +109,25 @@ Firefox_stuff() {
     #wget -O ${DOWNLOADS}/places.sqlite $uri_firefox_bookmarks
 
     Answer='N'
-    [[ $live_run == 'Y' ]] &&\
-        Pause_n_Answer 'Y|N' 'INFO,Customize Default Settings for Firefox?'
+    if [[ $live_run != 'Y' ]]
+    then
+    else
+        Pauze 'DRY RUN: action would be "cp -iv '\
+            ${DOWNLOADS}'/syspref.js /etc/firefox/syspref.js"'
+        return 0
+    fi
+
+    Pause_n_Answer 'Y|N' 'INFO,Customize Default Settings for Firefox?'
     if [ "${Answer}." == 'Y.' ]
     then
         sudo cp -iv ${DOWNLOADS}/syspref.js /etc/firefox/syspref.js ||RC=$?
-        #rm -iv ${HOME}/.mozilla/firefox/*.default/places.sqlite{,-*} 
-        #cp -iv ${DOWNLOADS}/places.sqlite ${HOME}/.mozilla/firefox/*.default/places.sqlite
         timeout -k 1m 5s firefox
-    else
-        Pauze 'DRY RUN?: action is cp -iv '${DOWNLOADS}'/syspref.js /etc/firefox/syspref.js'
-    fi
 
     return $RC
 }
+#rm -iv ${HOME}/.mozilla/firefox/*.default/places.sqlite{,-*} 
+#cp -iv ${DOWNLOADS}/places.sqlite
+#    ${HOME}/.mozilla/firefox/*.default/places.sqlite
 
 Chromium_stuff() {
 
