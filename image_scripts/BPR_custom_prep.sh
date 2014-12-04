@@ -199,13 +199,17 @@ Chromium_defaults() {
 	return 0
     fi
 
-sudo rm -f /tmp/chromium_flags
-grep 'CHROMIUM_FLAGS' $sys_path_chromium_defaults |grep -v '\$CHROMIUM_FLAGS' |perl -ne 'chomp;$cfl=$_;$cfl =~ s/^\s+//;print $cfl."\n";' |tee /tmp/chromium_flags
-source /tmp/chromium_flags
+Workfile=$(mktemp -t "chromiumflags.XXX") || return 12
+touch $Workfile || return 13
+
+grep 'CHROMIUM_FLAGS' $sys_path_chromium_defaults |grep -v '\$CHROMIUM_FLAGS' |perl -ne 'chomp;$cfl=$_;$cfl =~ s/^\s+//;print $cfl."\n";' |tee $Workfile
+source $Workfile
 echo $CHROMIUM_FLAGS 
 Pauze 'Setup Chromium Flags (Append to above)'
+
 CHROMIUM_FLAGS=${CHROMIUM_FLAGS}' --start-maximized --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1 --disable-google-now-integration'
-    echo 'CHROMIUM_FLAGS='$CHROMIUM_FLAGS >>$sys_path_chromium_defaults
+    echo 'CHROMIUM_FLAGS='$CHROMIUM_FLAGS |sudo tee -a $sys_path_chromium_defaults
+    Pauze 'Written to '$sys_path_chromium_defaults'. Now going into edit...'
     sudo vim $sys_path_chromium_defaults
 
     return $?

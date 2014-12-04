@@ -33,17 +33,20 @@ Mainline() {
     Integrity_check
     Install_Remove_requested_packages
 
-    if [ $address_len -eq 64 ]
-    then
-        grep -o -P '^OnlyShowIn=.*MATE'\
-/usr/share/applications/screensavers/*.desktop
-        Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
-    fi
+    case $distro_generia in
+        ubuntu|mint)
+            echo 'Run BPR Code'
+            [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
+                ${codebase}/BPR_custom_prep.sh
+            Pauze "Run BPR: Last return code: $?"
+            ;;
+        *)
+            Pauze "Don't need to run BPR additions for "$distro_generia' ('$DISTRO_NAME')'
+            ;;
+    esac
 
-    set -u
     Check_Setup_wallpaper;RCxW=$?
     Report_Check_Setup_wallpaper $RCxW
-    set +u
 
     Pauze 'Lauching Virtual Greybeard'
     clear
@@ -226,9 +229,10 @@ User_no_distro_bye() {
 }
 
 Integrity_check() {
-    Pauze 'Check (absence of) local UUID reference for swap in fstab.'
+
     RCxU=1
     grep -P 'UUID.+swap' /etc/fstab && RCxU=$?
+    Pauze 'Verify (absence of) local UUID reference for swap in fstab.'
     if [ $RCxU -eq 0 ]
     then
         echo 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference'
@@ -237,27 +241,30 @@ Integrity_check() {
         #sudo vi /etc/fstab
     fi
 
-    Pauze 'Checking swap'
-    Run_Cap_Out sudo swapoff --all --verbose
-    Run_Cap_Out sudo swapon --all --verbose
+    sudo swapoff --all --verbose
+    Pauze 'Verify swap off'
+    sudo swapon --all --verbose
+    Pauze 'Verify swap on'
 
     local_scripts_DIR="${HOME}/bin"
     [[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
     sudo chown -c oem $local_scripts_DIR
 
-    [[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${SOURCEBASE}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
-    [[ -e ${local_scripts_DIR}/revert_prep_for_shipping_to_eu ]]\
-        || ln -s ${codebase}/revert_prep_for_shipping_to_eu ${local_scripts_DIR}/revert_prep_for_shipping_to_eu 
-    find ${local_scripts_DIR} -ls
-    echo ''
+    [[ -e ${local_scripts_DIR}/QC.sh ]] ||\
+        ln -s ${SOURCEBASE}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
+    [[ -e ${local_scripts_DIR}/revert_prep_for_shipping_to_eu ]] ||\
+        ln -s ${codebase}/revert_prep_for_shipping_to_eu\
+     ${local_scripts_DIR}/revert_prep_for_shipping_to_eu 
 
-    Pauze 'Confirming that the correct Run Quality Control icon is in place...'
+    find ${local_scripts_DIR} -ls
+    Pauze 'Verify you have a home bin dir. And that QC / other scripts are present'
+
     (find ${SOURCEBASE}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
         find ${SOURCEBASE}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
         find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort
-    echo ''
+    Pauze 'Verify that the correct Run Quality Control icon is in place...'
 
-    Pauze 'Done with Integrity Check'
+    #Pauze 'Done with Integrity Check'
 
     return 0
 }
@@ -278,17 +285,11 @@ Install_Remove_requested_packages() {
     Install_packages_from_file_list $pathname_packages_list || RCxPK=$?
     [[ $RCxPK -ne 0 ]] && Pauze 'Problems Installing Packages:'$RCxPK
 
-    case $distro_generia in
-        ubuntu|mint)
-            echo 'Run BPR Code'
-            [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
-                ${codebase}/BPR_custom_prep.sh
-            Pauze "Run BPR: Last return code: $?"
-            ;;
-        *)
-            Pauze "Don't need to run BPR additions for "$distro_generia' ('$DISTRO_NAME')'
-            ;;
-    esac
+    if [ $address_len -eq 64 ]
+    then
+        grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop
+        Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
+    fi
 
     return 0
 }
@@ -299,28 +300,6 @@ Install_Remove_requested_packages() {
 Install_packages_from_file_list() {
     local package_list_file=$1
     RCz=0
-
-    Process_package() {
-        IFS=','
-        declare -ra pkg_info_a=($1)
-        IFS=$HOLDIFS
-
-        declare -r pkg_info_L=${#pkg_info_a[*]}
-        pkg_name=${pkg_info_a[0]}
-        pkg_by_addr=${pkg_info_a[1]}
-        [[ pkg_by_addr -eq 0 ]] && pkg_by_addr=$address_len
-        if [ $pkg_by_addr != $address_len ]
-        then
-            echo 'Skipping package '$pkg_name' on '$address_len' box.'
-            return 4
-        fi
-
-        RCxE=0
-        [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
-        [[ $RCxE -gt 10 ]] && return $RCxE
-
-        Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
-    }
     for pkg_info_csv in $(grep -v '^#' $package_list_file)
     do
         Process_package $pkg_info_csv;RCa=$?
@@ -331,6 +310,31 @@ Install_packages_from_file_list() {
         fi
     done
     return $RCz
+}
+
+Process_package() {
+    IFS=','
+    declare -ra pkg_info_a=($1)
+    IFS=$HOLDIFS
+
+    declare -r pkg_info_L=${#pkg_info_a[*]}
+    pkg_name=${pkg_info_a[0]}
+    pkg_by_addr=${pkg_info_a[1]}
+    [[ pkg_by_addr -eq 0 ]] && pkg_by_addr=$address_len
+    if [ $pkg_by_addr != $address_len ]
+    then
+        echo 'Skipping package '$pkg_name' on '$address_len' box.'
+        return 0
+    fi
+
+    RCxE=0
+    [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
+    [[ $RCxE -gt 10 ]] && return $RCxE
+
+    RCxDS=$RCxE
+    Pkg_by_distro_session ${pkg_info_a[2]} || RCxDS=$?
+
+    return $RCxDS
 }
 
 Check_extra() {
@@ -344,6 +348,7 @@ Check_extra() {
     IFS=$HOLDIFS
     declare extra_L=${#extra_a[*]}
     [[ $extra_L -gt 1 ]] || return 5
+
     case ${extra_a[0]} in
         ppa)
             RCxPPA=0
@@ -513,7 +518,6 @@ Report_Check_Setup_wallpaper() {
             Pauze 'Invalid code:'${RCi}' Wallpaper report'
             ;;
     esac
-    set +u
     return 0
 }
 
@@ -532,6 +536,7 @@ Cleanup_nouser_nogroup() {
 }
 
 # -*- Execution continues here. Mainline (below) invokes driving function -*-
+set -u
 declare -r HOLDIFS=$IFS
 This_script=$(basename $0)
 declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
