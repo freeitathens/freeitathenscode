@@ -58,21 +58,23 @@ Housekeeping() {
     [[ -z $Found_hostname ]] && Found_hostname='fullyBogusName'
     # *--* For Master Box, update the Hostname to 
     #       'FritaAA-MMMdd', where AA is 32 or 64.
-    if [ $Master_test == 'M' ]
-    then
-	echo $0':Running Master QC Mode' >&2
-	echo 'Frita'${CPU_ADDRESS}-$(date +'%b%d') |sudo tee /etc/hostname
-	Alter_HOSTNAME
-    elif [ $Master_test == 'm' ]
-    then
+    case $Master_test in
+    'M')
+        echo $0':Running Master QC Mode' >&2
+        echo 'Frita'${CPU_ADDRESS}-$(date +'%b%d') |sudo tee /etc/hostname
+        Alter_HOSTNAME
+        ;;
+    'm')
 	echo 'Not changing hostname '$Found_hostname' on master this run...'
 	sleep 3
-    else
+        ;;
+    *)
 	# *--* For Cloning Client, update the Hostname to 
 	#   'Frita64-date_in_seconds_since_1970 (or Frita32...)'
 	echo 'Frita'${CPU_ADDRESS}-$(date +'%s') |sudo tee /etc/hostname
 	Alter_HOSTNAME
-    fi
+        ;;
+    esac
 }
 
 Alter_HOSTNAME() {
