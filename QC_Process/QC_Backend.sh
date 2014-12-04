@@ -64,6 +64,7 @@ Housekeeping() {
 	echo 'Frita'${CPU_ADDRESS}-$(date +'%b%d') |sudo tee /etc/hostname
 	Alter_HOSTNAME
     elif [ $Master_test == 'm' ]
+    then
 	echo 'Not changing hostname '$Found_hostname' on master this run...'
 	sleep 3
     else
