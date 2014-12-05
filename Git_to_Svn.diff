@@ -1,137 +1,415 @@
-diff -r -x.svn -x.git /data/Git/freeitathenscode/image_scripts/BPR_custom_prep.sh /data/freeitathenscode/image_scripts/BPR_custom_prep.sh
-7a8,9
-> #TO : /etc/chromium-browser/master_preferences 
-> 
-9a12,14
-> #TO : /etc/chromium-browser/default_bookmarks.html
-> declare -r chromium_default_settings='/etc/chromium-browser/default'
-> 
-11a17
-> 
-14c20
-< declare -r uri_firefox_bookmarks='http://a.pomf.se/kyiput.sqlite'
+diff -r -x.svn -x.git /data/Git/freeitathenscode/image_scripts/BPR_custom_prep.sh /partimag/freeitathenscode/image_scripts/BPR_custom_prep.sh
+3c3
+< Git_name=FRITAdot
 ---
-> #TO : /etc/firefox/syspref.js/syspref.js
-16c22,26
+> custom_dotfiles_id='FRITAdot'
+5,6c5,8
+< 'https://github.com/bpr97050/'${Git_name}'.git'
+< declare -r uri_chromium_prefs=\
+---
+> 'https://github.com/bpr97050/'${custom_dotfiles_id}'.git'
+> 
+> sys_dir_chromium='/etc/chromium-browser'
+> declare -r uri_chromium_mastprefs=\
+7a10,12
+> 
+> file_chromium_bookmarks='default_bookmarks.html'
+> sys_path_chromium_bookmarks="${sys_dir_chromium}/$file_chromium_bookmarks"
+9a15,19
+> 
+> file_chromium_defaults='default'
+> declare -r sys_path_chromium_defaults=\
+> "${sys_dir_chromium}/$file_chromium_defaults"
+> 
+11a22
+> 
+13a25,29
+> file_firefox_prefs='syspref.js'
+> sys_dir_firefox='/etc/firefox'
+> sys_path_firefox_prefs="${sys_dir_firefox}/$file_firefox_prefs"
+> 
+> #TODO: Following link is broken (HTTP 404)
+16c32,34
 < active_live_run=${live_run:-'N'}
 ---
-> #TODO: Following link is broken (HTTP 404)
-> declare -r uri_firefox_bookmarks='http://a.pomf.se/kyiput.sqlite'
 > [[ -z $live_run ]] && live_run='N'
 > [[ -z $refresh_git ]] && refresh_git='N'
 > [[ -z $codebase ]] && codebase="${HOME}/freeitathenscode/image_scripts"
-35,36c45,46
+22,28c40,43
+<     if [ $refresh_git == 'Y' ]
+<     then
+<         Download_custom_desktop_files\
+<             || echo 'Download_custom_desktop_files: Problem?'
+<     else
+<         Pauze 'Refresh from github not in the cards this run...'
+<     fi
+---
+>     cd $DOWNLOADS
+>     Download_custom_desktop_files\
+>         || echo 'Download_custom_desktop_files: Problem?'
+>     cd -
+35,37c50,52
 <     #Auto security upgrades
 <     [[ $active_live_run == 'Y' ]] &&\
+< 	sudo dpkg-reconfigure -plow unattended-upgrades
 ---
 >     # -*- Auto security upgrades -*-
 >     [[ $live_run == 'Y' ]] &&\
-38a49
+>         sudo dpkg-reconfigure -plow unattended-upgrades
+38a54
 >     # -*- Install / update patches now -*-
-46d56
+46d61
 < 
-50a61
+50a66
 > 
-60c71,72
-<     Pauze 'Preparing for Manual Moves from '${PWD}/${Git_name}' to /etc/skel/'
+52,53d67
+<     Pauze 'BPR Download_custom_desktop_files'
+<     cd $DOWNLOADS
+56c70,79
+<     [[ -n $Git_name ]] && [[ -d $Git_name ]] && sudo rm -rf ${Git_name}
 ---
->     find ${PWD}/${Git_name} -type f -exec head -n4 {} \;
->     Pauze 'Now do Manual Moves from '${PWD}/${Git_name}' to /etc/skel/'
-62c74
+>     if [[ -d $custom_dotfiles_id ]]
+>     then
+>         rm -rf ${custom_dotfiles_id}/*
+>     else
+>         mkdir $custom_dotfiles_id
+>     fi
+> 
+>     [[ $refresh_git == 'Y' ]] || return 0
+> 
+>     cd $custom_dotfiles_id || return 12
+58c81
+<     cd -
+---
+>     find . -type f -exec head -n4 {} \;
+60,62c83,84
+<     Pauze 'Preparing for Manual Moves from '${PWD}/${Git_name}' to /etc/skel/'
+<     bash
 <     #sudo rsync -aRv --exclude '.git' --delete-excluded ${Git_name}/ /etc/skel/
 ---
->     #Broken: sudo rsync -aRv --exclude '.git' --delete-excluded ${Git_name}/ /etc/skel/
-90c102
+>     Pauze 'Now do Manual Moves (where appropriate) to /etc/skel/'
+>     #bash ||RC=$?
+68a91,92
+> 
+>     shopt -o >&2
+72a97,98
+> 
+>     return $?
+75a102
+> 
+77a105,107
+>     shopt -o >&2
+> 
+>     return $?
+84c114,115
+<     sudo apt-get install firefox || return 16
+---
+>     #sudo apt-get install firefox || return 16
+>     which firefox || return 16
+86,87c117
+<     # *--* Poodle et.al.,
+<     #   cf.https://addons.mozilla.org/en-US/firefox/addon/ssl-version-control/
+---
+>     src_path_firefox_prefs="${DOWNLOADS}/$file_firefox_prefs"
+89,90c119,120
+<     wget -O ${DOWNLOADS}/syspref.js $uri_firefox_prefs
 <     wget -O ${DOWNLOADS}/places.sqlite $uri_firefox_bookmarks
 ---
+>     wget -O $src_path_firefox_prefs $uri_firefox_prefs
 >     #wget -O ${DOWNLOADS}/places.sqlite $uri_firefox_bookmarks
-93c105
+92,102c122,125
+<     Answer='N'
 <     [[ $active_live_run == 'Y' ]] &&\
+<         Pause_n_Answer 'Y|N' 'INFO,Customize Default Settings for Firefox?'
+<     if [ "${Answer}." == 'Y.' ]
+<     then
+<         sudo cp -iv ${DOWNLOADS}/syspref.js /etc/firefox/syspref.js ||RC=$?
+<         #rm -iv ${HOME}/.mozilla/firefox/*.default/places.sqlite{,-*} 
+<         #cp -iv ${DOWNLOADS}/places.sqlite ${HOME}/.mozilla/firefox/*.default/places.sqlite
+<         timeout -k 1m 5s firefox
+<     else
+<         Pauze 'DRY RUN?: action is cp -iv '${DOWNLOADS}'/syspref.js /etc/firefox/syspref.js'
 ---
->     [[ $live_run == 'Y' ]] &&\
-111a124
+>     if [[ $live_run != 'Y' ]]
+>     then
+>         Pauze 'DRY RUN: action would be "cp -iv ' ${src_path_firefox_prefs}' '$sys_path_firefox_prefs'"'
+>         return 0
+104a128,135
+>     cp -iv --backup=t $sys_path_firefox_prefs /tmp
+>     Answer='N'
+>     Pause_n_Answer 'Y|N' 'WARN,Customize Default Settings for Firefox?'
+>     [[ "${Answer}." == 'Y.' ]] &&\
+>         sudo cp -iv ${src_path_firefox_prefs} $sys_path_firefox_prefs
+>     RC=$?
+>     [[ $RC -eq 0 ]] && timeout -k 1m 5s firefox
+> 
+106a138,145
+> # *--* Poodle fixes, et.al.:
+> # cf. https://addons.mozilla.org/en-US/firefox/addon/ssl-version-control/
+> # cf. https://disablessl3.com/ *--*
+> 
+> #TODO sql code to merge sqlite bookmarks (places)
+> #rm -iv ${HOME}/.mozilla/firefox/*.default/places.sqlite{,-*} 
+> #cp -iv ${DOWNLOADS}/places.sqlite
+> #    ${HOME}/.mozilla/firefox/*.default/places.sqlite
+111a151
 >     Pauze 'Ensure latest chromium-browser is installed'
-120c133
-<     Chromium_master_pref
----
->     [[ $refresh_git == 'Y' ]] && Chromium_master_pref
-125,129d137
+114,119d153
+<     # Ensure "/etc/chromium-browser" is a directory (not a file)
+<     [[ -e /etc/chromium-browser ]]\
+<         && ( [[ -d /etc/chromium-browser ]]\
+<         || sudo mv -iv /etc/chromium-browser /tmp/ )
+<     [[ -d /etc/chromium-browser ]] || sudo mkdir /etc/chromium-browser
+< 
+123,128c157
+<     Chromium_nonfree_codex_prep
+< 
 <     #sudo add-apt-repository ppa:skunk/pepper-flash
 <     #sudo apt-get install pepflashplugin-installer\
 <     #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
 <     #   |sudo tee -a /etc/chromium-browser/default
-< 
-136c144,146
+---
+>     Chromium_nonfree_codex_prep || echo 'Problem with nonfree codex installer?'
+135,136c164
+<     # Download master_preferences config file for chromium
 <     wget -O ${DOWNLOADS}/master_preferences $uri_chromium_prefs
 ---
->     Pauze 'Download and install chromium master prefs'
+>     local RC=0
+138c166,169
+<     if [[ $active_live_run == 'Y' ]]
+---
+>     file_mastprefs='master_preferences'
+>     src_path_mastprefs="${DOWNLOADS}/${file_mastprefs}"
+>     Pauze 'Install chromium master prefs. $live_run='$live_run', $refresh_git='$refresh_git
+>     if [[ $refresh_git == 'Y' ]]
+140,142c171,172
+<         sudo cp -iv ${DOWNLOADS}/master_preferences /etc/chromium-browser/
+<     else
+<         Pauze 'DRY RUN: cp -iv '${DOWNLOADS}'/master_preferences /etc/chromium-browser/'
+---
+>         wget -O ${src_path_mastprefs} $uri_chromium_mastprefs
+> 	RC=$?
+145c175,190
+<     return $?
+---
+>     if [[ $live_run != 'Y' ]]
+>     then
+>         Pauze 'DRY RUN: would normally exec: cp -iv ' $src_path_mastprefs' '$sys_dir_chromium'/'
+>         return 0
+>     fi
 > 
->     wget -O ${DOWNLOADS}/master_preferences $uri_chromium_prefs || return $?
-138c148
+>     sys_path_mastprefs=${sys_dir_chromium}/${file_mastprefs}
+>     cp -iv --backup=t $sys_path_mastprefs /tmp
+>     Answer='N'
+>     Pause_n_Answer 'Y|N' 'Install Custom Chromium Master Preferences?'
+>     if [[ "${Answer}." == 'Y.' ]]
+>     then
+>         sudo cp -iv ${src_path_mastprefs} ${sys_dir_chromium}/ ||RC=$?
+>     fi
+> 
+>     return $RC
+147,148d191
+< #Answer='N'
+< #Pause_n_Answer 'Y|N' 'Git-Load Chromium Master Preferences?'
+152,153c195
+<     # Ensure certain Chromium Flags settings are in place.
 <     if [[ $active_live_run == 'Y' ]]
 ---
->     if [[ $live_run == 'Y' ]]
-153c163
-<     if [[ $active_live_run == 'Y' ]]
----
->     if [[ $live_run == 'Y' ]]
-155,157c165,174
+>     if [[ $live_run != 'Y' ]]
+155,159c197,199
 <         sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
 <         --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1\
 <         --disable-google-now-integration"/g' /etc/chromium-browser/default
+<     else
+<         Pauze 'DRY RUN: '
 ---
-> 
-> sudo rm -f /tmp/chromium_flags
-> grep 'CHROMIUM_FLAGS' /etc/chromium-browser/default |grep -v '\$CHROMIUM_FLAGS' |perl -ne 'chomp;$cfl=$_;$cfl =~ s/^\s+//;print $cfl."\n";' |tee /tmp/chromium_flags
-> source /tmp/chromium_flags
-> echo $CHROMIUM_FLAGS 
-> Pauze 'Setup Chromium Flags (Append to above)'
->     CHROMIUM_FLAGS=${CHROMIUM_FLAGS}' --start-maximized --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1 --disable-google-now-integration'
->     echo 'CHROMIUM_FLAGS='$CHROMIUM_FLAGS >>$chromium_default_settings
->     vim $chromium_default_settings
-> 
-161,162d177
+>         grep 'CHROMIUM_FLAGS' $sys_path_chromium_defaults
+>         Pauze 'DRY RUN: Chromium default file for run flags ... '
+> 	return 0
+161,162c201,213
 <     grep 'CHROMIUM_FLAGS' /etc/chromium-browser/default
 <     read -p'Chromium Flags Listed' -t20
-171c186
+---
+> 
+> Workfile=$(mktemp -t "chromiumflags.XXX") || return 12
+> touch $Workfile || return 13
+> 
+> grep 'CHROMIUM_FLAGS' $sys_path_chromium_defaults |grep -v '\$CHROMIUM_FLAGS' |perl -ne 'chomp;$cfl=$_;$cfl =~ s/^\s+//;print $cfl."\n";' |tee $Workfile
+> source $Workfile
+> echo $CHROMIUM_FLAGS 
+> Pauze 'Setup Chromium Flags (Append to above)'
+> 
+> CHROMIUM_FLAGS=${CHROMIUM_FLAGS}' --start-maximized --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1 --disable-google-now-integration'
+>     echo 'CHROMIUM_FLAGS='$CHROMIUM_FLAGS |sudo tee -a $sys_path_chromium_defaults
+>     Pauze 'Written to '$sys_path_chromium_defaults'. Now going into edit...'
+>     sudo vim $sys_path_chromium_defaults
+165d215
+<     # *--* Poodle fix et.al. cf. https://disablessl3.com/ *--*
+170,171c220,221
+<     wget -O ${DOWNLOADS}/default_bookmarks.html $uri_chromium_bookmarks
 <     if [[ $active_live_run == 'Y' ]]
 ---
->     if [[ $live_run == 'Y' ]]
-190a206
->     [[ $RCxPSS -eq 0 ]] &&\
-217d232
-< [[ -z $codebase ]] && codebase="${HOME}/freeitathenscode/image_scripts"
-224a240,242
-> echo $DOWNLOADS
-> Pauze 'Confirm above is Downloads'
+>     src_path_chromium_bookmarks="${DOWNLOADS}/file_chromium_bookmarks"
+>     if [[ $live_run != 'Y' ]]
+173,176c223,224
+<         sudo cp -iv\
+<             ${DOWNLOADS}/default_bookmarks.html /etc/chromium-browser/
+<     else
+<         Pauze 'DRY RUN: copy '${DOWNLOADS}'/default_bookmarks.html /etc/chromium-browser/'
+---
+>         Pauze "DRY RUN: cp -iv $src_path_chromium_bookmarks ${sys_dir_chromium}/"
+> 	return 0
+178a227,230
+>     wget -O $src_path_chromium_bookmarks $uri_chromium_bookmarks
+>     cp -iv --backup=t $sys_path_chromium_bookmarks /tmp
+>     sudo cp -iv $src_path_chromium_bookmarks ${sys_dir_chromium}/
 > 
-229c247,248
+191c243,244
+<     Pauze 'Make icon on desktop that runs /usr/local/bin/install_nonfree_codex'
+---
+>     [[ $RCxPSS -eq 0 ]] &&\
+>         Pauze 'Make icon on desktop that runs /usr/local/bin/install_nonfree_codex'
+204c257
+<             then 
+---
+>             then
+216,219c269
+< declare -r HOLDIFS=$IFS 2>/dev/null
+< [[ -z $codebase ]] && codebase="${HOME}/freeitathenscode/image_scripts"
+< source ${codebase}/Common_functions || exit 12
+< source ${codebase}/Prepare_functions || exit 13
+---
+> source /home/oem/freeitathenscode/image_scripts/Prepare_functions || exit 99
+221,222c271,272
+< DOWNLOADS=${HOME}'/Downloads'
+< [[ -d ${DOWNLOADS} ]] || mkdir ${HOME}/Downloads
+---
+> DOWNLOADS="/home/$(id -n -u)/Downloads"
+> [[ -d ${DOWNLOADS} ]] || mkdir $DOWNLOADS
+224a275,276
+> cd $DOWNLOADS
+> pwd
+225a278,280
+> Pauze 'Confirm (above) is Downloads Directory and contents'
+> cd -
+> 
+229c284,285
 < find ${DOWNLOADS} -cmin -10 -ls
 ---
-> Pauze 'Downloaded files this run:'
 > find ${DOWNLOADS} -cmin -12
-234a254,261
->    #     sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized\
->    #     --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1\
+> Pauze 'Downloaded files this run (above).'
+234a291,297
+>    #     sudo sed -i 's/CHROMIUM_FLAGS=""/CHROMIUM_FLAGS="--start-maximized
+>    #     --disable-new-tab-first-run --no-first-run --ssl-version-min=tls1
 >    #     --disable-google-now-integration"/g' /etc/chromium-browser/default
 > 
 >     #sudo add-apt-repository ppa:skunk/pepper-flash
->     #sudo apt-get install pepflashplugin-installer\
->     #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'\
->     #   |sudo tee -a /etc/chromium-browser/default
-Only in /data/freeitathenscode/image_scripts: BPR_custom_prep.sh~
-Only in /data/Git/freeitathenscode/image_scripts: BPR_xt_lubuntu_32bit.sh
-Only in /data/freeitathenscode/image_scripts: Dev
-Only in /data/Git/freeitathenscode/image_scripts: intro_ubuntu.desktop
-diff -r -x.svn -x.git /data/Git/freeitathenscode/image_scripts/Prepare_for_imaging.sh /data/freeitathenscode/image_scripts/Prepare_for_imaging.sh
+>     #sudo apt-get install pepflashplugin-installer
+>     #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'
+diff -r -x.svn -x.git /data/Git/freeitathenscode/image_scripts/Common_functions /partimag/freeitathenscode/image_scripts/Common_functions
+1a2,3
+> declare -r HOLDIFS=$IFS
+> 
+22c24,25
+<             echo 'Discrepancy in finding cpu address size '$address_len' '$alt_address_len
+---
+>             echo 'Discrepancy in finding cpu address size '\
+>                 $address_len' VS. '$alt_address_len
+108c111
+<         M) 
+---
+>         M)
+131c134
+<         B) 
+---
+>         B)
+138c141
+<  
+---
+> 
+230,231d232
+<     # !Print to terminal only if this session is interactive.
+<     [[ "${Not_Batch_Run}." == 'N.' ]] && return 0
+242a244,246
+>     IFS=$HOLDIFS
+> 
+>     [[ "${batch_run}." == 'Y.' ]] && return 0
+249a254,256
+> 
+>     [[ "${batch_run}." == 'Y.' ]] && return 0
+> 
+252,254c259
+<     Prompt2U=$1
+<     shift
+<     Answer=''
+---
+>     question_to_user=$1;shift
+261a267
+>     IFS=$HOLDIFS
+263d268
+<     #[[ $Prompt2U =~ [Y|y|N|n] ]] Prompt2U='Y|N' RC=1
+265d269
+<     Prompt2U='====> Your response {'${Prompt2U}'}? '
+267,269c271,279
+<     declare -a User_resp
+<     read -p "$Prompt2U" -a User_resp
+<     Answer=${User_resp[0]}
+---
+>     [[ -z $Answer ]] && Answer='N'
+>     declare -a user_resp_arr
+>     prompt_to_user=' ----> Your response {'${question_to_user}'}? '
+> 
+>     read -p"$prompt_to_user" -a user_resp_arr -t100
+>     RC=$?
+>     echo ''
+>     [[ $RC -gt 0 ]] && return $RC
+>     [[ ${#user_resp_arr[@]} -eq 0 ]] && return 0
+270a281
+>     Answer=${user_resp_arr[0]}
+302c313
+<     #rettyprint "n,1,${basic_emph},47,M,0,n" $mess || RC=$?
+---
+> 
+314,315c325,326
+< 	cmd=$1
+< 	shift
+---
+>         cmd=$1
+>         shift
+371c382
+<  
+---
+> 
+diff -r -x.svn -x.git /data/Git/freeitathenscode/image_scripts/Prepare_for_clonze.sh /partimag/freeitathenscode/image_scripts/Prepare_for_clonze.sh
+12c12
+< Not_Batch_Run='N'
+---
+> batch_run='N'
+18c18
+< while getopts 'Bd:Rh' OPT
+---
+> while getopts 'bd:Rh' OPT
+21,22c21,22
+<         B)
+<             Not_Batch_Run='Y'
+---
+>         b)
+>             batch_run='Y'
+39c39
+< declare -rx Not_Batch_Run
+---
+> declare -rx batch_run
+diff -r -x.svn -x.git /data/Git/freeitathenscode/image_scripts/Prepare_for_imaging.sh /partimag/freeitathenscode/image_scripts/Prepare_for_imaging.sh
 2,3c2,4
 < [[ 0 -ne $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]] &&\
 <     read -p'NOTE: Permission Problems? Rerun with sudo (i.e., as root).<ENTER>' -t5
 ---
 > [[ 0 -eq $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]] &&\
 >     read -p'NOTE: Please run as normal user with sudo privledges.<CONTROL-C>'
-> #    read -p'NOTE: Permission Problems? Rerun with sudo (i.e., as root).<ENTER>' -t5
-15,18c16,19
+> # read -p'NOTE: Permission Problems Rerun with sudo (i.e., as root).<ENTER>' -t5
+11d11
+< 
+15,18c15,18
 < package_list_path_I=${codebase}'/Packages'
 < wallpaper_filename='FreeIT.png'
 < wallpaper_source_pathname=${codebase}/$wallpaper_filename
@@ -139,84 +417,453 @@ diff -r -x.svn -x.git /data/Git/freeitathenscode/image_scripts/Prepare_for_imagi
 ---
 > pathname_packages_list=${codebase}'/Packages'
 > filename_wallpaper='FreeIT.png'
-> pathname_wallpaper_source=${codebase}/$filename_wallpaper
-> dirname_wallpaper_syshome='/usr/share/backgrounds'
-136c137
+> src_path_wallpaper=${codebase}/$filename_wallpaper
+> sys_dir_wallpaper='/usr/share/backgrounds'
+28,33c28
+< Not_Batch_Run='N'
+< 
+< This_script=$(basename $0)
+< declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
+< declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
+< Optvalid='APBDn:RuVGh'
+---
+> batch_run='N'
+41,45c36,46
+<     if [ $address_len -eq 64 ]
+<     then
+<         grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop 
+<         Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
+<     fi
+---
+>     case $distro_generia in
+>         ubuntu|mint)
+>             echo 'Run BPR Code'
+>             [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
+>                 ${codebase}/BPR_custom_prep.sh
+>             Pauze "Run BPR: Last return code: $?"
+>             ;;
+>         *)
+>             Pauze "Don't need to run BPR additions for "$distro_generia' ('$DISTRO_NAME')'
+>             ;;
+>     esac
+47d47
+<     set -u
+50d49
+<     set +u
+66c65
+<     if [ -z $DISTRO_NAME ] 
+---
+>     if [ -z $DISTRO_NAME ]
+86d84
+<     Pauze 'Will update apt-metadata if requested (COND:'$aptcache_needs_update')'
+102c100
+<     echo 'set' \$DISTRO_NAME '= '$DISTRO_NAME
+---
+>     #echo 'set' \$DISTRO_NAME '= '$DISTRO_NAME
+136c134
 <           '): mismatch (however slight) with input: ('\
 ---
 >           '): mismatch (however slight) with your supplied name: ('\
-138c139,140
+138,139c136,141
 <     read -p'<ACCEPT(=Y)?>' -a ANS_ARR
+<     [[ ${#ANS_ARR[*]} -gt 0 ]] && [[ ${ANS_ARR[0]} == 'Y' ]] && DISTRO_NAME=$sys_rpts_distro_name && return 0
 ---
 >     echo ''
 >     read -p'<ACCEPT System Value?>' -a ANS_ARR;echo ''
-330c332
+>     [[ ${#ANS_ARR[*]} -gt 0 ]] &&\
+>         [[ ${ANS_ARR[0]} == 'Y' ]] &&\
+>         DISTRO_NAME=$sys_rpts_distro_name &&\
+>         return 0
+152,153c154
+<         echo 'System reports distro as '${sys_rpts_distro_name}'.'
+<         read -p'<ENTER>'
+---
+>         echo 'System reports distro as '${sys_rpts_distro_name}'.' >&2
+213c214,215
+<     prettyprint '0,1,32,40,M,n' 'Using general distro (category) name of '$distro_generia'.'
+---
+>     prettyprint '0,1,32,40,M,n'\
+> 'Using general distro (category) name of '$distro_generia'.'
+229,280d230
+< Contact_server() {
+< 
+<     Pauze "Check that server address is correct and is contactable ( COND: $refresh_svn )"
+< 
+<     Sub_lcl_stat() {
+<         echo 'Check on subversion local repo status'
+<         if [ -d ${SOURCEBASE}/.svn ]
+<         then
+<             cd ${SOURCEBASE}/
+<             svn update
+<         else
+<             apt-get install subversion
+<             cd
+<             Correct_subversion_ssh
+<             svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
+<         fi
+<         Pauze '(DONE) Check on subversion local repo status'
+<     }
+< 
+<     [[ $(ssh frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]\
+<         && Pauze 'Checked Server is valid: 192.168.1.9' && Sub_lcl_stat && return $?
+< 
+<     return 1
+< }
+< 
+< Correct_subversion_ssh() {
+< 
+<     subv_conf=''
+<     for subversion_meta_dir in $(find '/home/'$(grep ':'$UID':' /etc/passwd |cut -f1 -d:) -maxdepth 1 -type d -name '.subversion';find /etc/ -maxdepth 1 -type d -name 'subversion')
+<     do
+<         subv_conf="${subversion_meta_dir}/config"
+<         echo 'Checking subversion config path '$subv_conf
+<         [[ -f ${subv_conf} ]] && break
+<         subv_conf=''
+<     done
+<     [[ -z $subv_conf ]] && return 4
+< 
+<     grep 'ssh' $subv_conf
+<     Answer='N'
+<     Pause_n_Answer 'Y|N' "Fix $subv_conf for Frita's ssh connection (Y|N)? "
+<     case $Answer in
+<         Y)
+<             sudo perl -pi'.bak' -e 's/#\s*ssh\b(.+?ssh)\s+-q(.+)$/ssh${1} -v${2}/' ${subv_conf}
+<             ;;
+<         *)
+<             Pauze 'OK, NO changes made...'
+<             ;;
+<     esac
+< 
+<     return 0
+< }
+< 
+282c232
+<     Pauze 'Check (absence of) local UUID reference for swap in fstab.'
+---
+> 
+284a235
+>     Pauze 'Verify (absence of) local UUID reference for swap in fstab.'
+287,288c238,241
+<         Pauze 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference. Entering editor...'
+<         sudo vi /etc/fstab
+---
+>         echo 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference'
+>         Pauze '   but might be false positive...'
+>         #Entering editor...'
+>         #sudo vi /etc/fstab
+291,293c244,247
+<     Pauze 'Checking swap'
+<     Run_Cap_Out sudo swapoff --all --verbose
+<     Run_Cap_Out sudo swapon --all --verbose
+---
+>     sudo swapoff --all --verbose
+>     Pauze 'Verify swap off'
+>     sudo swapon --all --verbose
+>     Pauze 'Verify swap on'
+295d248
+<     Pauze "Ensuring that QC.sh and revert_prep... are properly linked in ${HOME}/bin" 
+300,302c253,258
+<     [[ -e ${local_scripts_DIR}/QC.sh ]] || ln -s ${SOURCEBASE}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
+<     [[ -e ${local_scripts_DIR}/revert_prep_for_shipping_to_eu ]]\
+<         || ln -s ${codebase}/revert_prep_for_shipping_to_eu ${local_scripts_DIR}/revert_prep_for_shipping_to_eu 
+---
+>     [[ -e ${local_scripts_DIR}/QC.sh ]] ||\
+>         ln -s ${SOURCEBASE}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
+>     [[ -e ${local_scripts_DIR}/revert_prep_for_shipping_to_eu ]] ||\
+>         ln -s ${codebase}/revert_prep_for_shipping_to_eu\
+>      ${local_scripts_DIR}/revert_prep_for_shipping_to_eu 
+> 
+304c260
+<     echo ''
+---
+>     Pauze 'Verify you have a home bin dir. And that QC / other scripts are present'
+306d261
+<     Pauze 'Confirming that the correct Run Quality Control icon is in place...'
+310c265
+<     echo ''
+---
+>     Pauze 'Verify that the correct Run Quality Control icon is in place...'
+312c267
+<     Pauze 'Done with Integrity Check'
+---
+>     #Pauze 'Done with Integrity Check'
+330c285
 <     Install_packages_from_file_list $package_list_path_I || RCxPK=$?
 ---
 >     Install_packages_from_file_list $pathname_packages_list || RCxPK=$?
-509,511c511,513
+333,343c288,292
+<     case $distro_generia in
+<         ubuntu|mint)
+<             echo 'Run BPR Code'
+<             [[ -f ${codebase}/BPR_custom_prep.sh ]] &&\
+<                 ${codebase}/BPR_custom_prep.sh
+<             Pauze "Run BPR: Last return code: $?"
+<             ;;
+<         *)
+<             Pauze "Don't need to run BPR additions for "$distro_generia' ('$DISTRO_NAME')'
+<             ;;
+<     esac
+---
+>     if [ $address_len -eq 64 ]
+>     then
+>         grep -o -P '^OnlyShowIn=.*MATE' /usr/share/applications/screensavers/*.desktop
+>         Pauze 'Mate Desktop able to access xscreensavers for ant spotlight?'
+>     fi
+346a296,297
+> 
+> #This_script_dir=$(dirname $0)
+352,373d302
+< 
+<     Process_package() {
+<         IFS=','
+<         declare -ra pkg_info_a=($1)
+<         IFS=$HOLDIFS
+< 
+<         declare -r pkg_info_L=${#pkg_info_a[*]}
+<         pkg_name=${pkg_info_a[0]}
+<         pkg_by_addr=${pkg_info_a[1]}
+<         [[ pkg_by_addr -eq 0 ]] && pkg_by_addr=$address_len
+<         if [ $pkg_by_addr != $address_len ]
+<         then
+<             echo 'Skipping package '$pkg_name' on '$address_len' box.'
+<             return 4
+<         fi
+< 
+<         RCxE=0
+<         [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
+<         [[ $RCxE -gt 10 ]] && return $RCxE
+< 
+<         Pkg_by_distro_session ${pkg_info_a[2]};RCxDS=$?
+<     }
+381c310
+<         fi 
+---
+>         fi
+385a315,339
+> Process_package() {
+>     IFS=','
+>     declare -ra pkg_info_a=($1)
+>     IFS=$HOLDIFS
+> 
+>     declare -r pkg_info_L=${#pkg_info_a[*]}
+>     pkg_name=${pkg_info_a[0]}
+>     pkg_by_addr=${pkg_info_a[1]}
+>     [[ pkg_by_addr -eq 0 ]] && pkg_by_addr=$address_len
+>     if [ $pkg_by_addr != $address_len ]
+>     then
+>         echo 'Skipping package '$pkg_name' on '$address_len' box.'
+>         return 0
+>     fi
+> 
+>     RCxE=0
+>     [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
+>     [[ $RCxE -gt 10 ]] && return $RCxE
+> 
+>     RCxDS=$RCxE
+>     Pkg_by_distro_session ${pkg_info_a[2]} || RCxDS=$?
+> 
+>     return $RCxDS
+> }
+> 
+396a351
+> 
+407c362
+<             fi 
+---
+>             fi
+509,511c464,467
 <     [[ $DISTRO_NAME == 'lubuntu' ]] && wallpaper_system_dirname='/usr/share/lubuntu/wallpapers'
 <     wallpaper_system_path=${wallpaper_system_dirname}/$wallpaper_filename
 <     if [[ -e $wallpaper_system_path ]]
 ---
->     [[ $DISTRO_NAME == 'lubuntu' ]] && dirname_wallpaper_syshome='/usr/share/lubuntu/wallpapers'
->     pathname_wallpaper_syshome=${dirname_wallpaper_syshome}/$filename_wallpaper
->     if [[ -e $pathname_wallpaper_syshome ]]
-517c519
+>     [[ $DISTRO_NAME == 'lubuntu' ]] &&\
+>         sys_dir_wallpaper='/usr/share/lubuntu/wallpapers'
+>     sys_path_wallpaper=${sys_dir_wallpaper}/$filename_wallpaper
+>     if [[ -e $sys_path_wallpaper ]]
+517,519c473,480
 <     [[ -d $wallpaper_system_dirname ]] || return 5
----
->     [[ -d $dirname_wallpaper_syshome ]] || return 5
-519c521
+<     
 <     [[ -f $wallpaper_source_pathname ]] || return 6
 ---
->     [[ -f $pathname_wallpaper_source ]] || return 6
-522c524
+>     [[ -d $sys_dir_wallpaper ]] || return 5
+>     [[ -f $src_path_wallpaper ]] || return 6
+> 
+>     if [ $live_run != 'Y' ]
+>     then
+>         Pauze 'DRY RUN: Would run cp -iv '${src_path_wallpaper}' '${sys_dir_wallpaper}'/'
+>         return 0
+>     fi
+522c483,484
 <     Pause_n_Answer 'Y|N' 'INFO,Copy '$wallpaper_filename' to '$wallpaper_system_dirname'?'
 ---
->     Pause_n_Answer 'Y|N' 'INFO,Copy '$filename_wallpaper' to '$dirname_wallpaper_syshome'?'
-527c529,530
+>     Pause_n_Answer 'Y|N'\
+>         'WARN,Copy '$filename_wallpaper' to '$sys_dir_wallpaper'?'
+525,531c487,488
+<         if [ $live_run != 'Y' ]
+<         then
 <             Pauze 'DRY RUN: Would run cp -iv '$wallpaper_source_pathname ${wallpaper_system_dirname}'/'
----
->             Pauze 'DRY RUN: Would run cp -iv '$pathname_wallpaper_source\
-> 	    ${dirname_wallpaper_syshome}'/'
-531c534,537
+<             return 0
+<         fi
+< 
 <         sudo cp -iv $wallpaper_source_pathname ${wallpaper_system_dirname}/ || return 7
 ---
->         sudo cp -iv $pathname_wallpaper_source ${dirname_wallpaper_syshome}/ || return 7
-> 	set -e
->         echo 'Potential change to file '$pathname_wallpaper_syshome >>$Errors_O
-> 	set +e
-538d543
+>         sudo cp -iv $src_path_wallpaper ${sys_dir_wallpaper}/\
+> 	    || return 7
+533d489
+< 
+538d493
 < # find ${wallpaper_system_dir}/ -name "$wallpaper_file" &
-548c553
+548c503
 <             Pauze 'Wallpaper is in place:'$wallpaper_system_path
 ---
->             Pauze 'Wallpaper is in place:'$pathname_wallpaper_syshome
-554c559
+>             Pauze 'Wallpaper is in place:'$sys_path_wallpaper
+554c509
 <             Pauze 'Invalid wallpaper source pathname '$wallpaper_source_pathname
 ---
->             Pauze 'Invalid wallpaper source pathname '$pathname_wallpaper_source
-557c562
+>             Pauze 'Invalid wallpaper source pathname '$src_path_wallpaper
+557c512
 <             Pauze 'Invalid wallpaper System Location: '$wallpaper_system_dirname
 ---
->             Pauze 'Invalid wallpaper System Location: '$dirname_wallpaper_syshome
-560c565
+>             Pauze 'Invalid wallpaper System Location: '$sys_dir_wallpaper
+560c515
 <             Pauze 'Cannot copy wallpaper to '$wallpaper_system_dirname
 ---
->             Pauze 'Cannot copy wallpaper to '$dirname_wallpaper_syshome
-643a649
+>             Pauze 'Cannot copy wallpaper to '$sys_dir_wallpaper
+566d520
+<     set +u
+583a538,546
+> # -*- Execution continues here. Mainline (below) invokes driving function -*-
+> set -u
+> declare -r HOLDIFS=$IFS
+> This_script=$(basename $0)
+> declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
+> declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
+> 
+> # -*- Process any command line Options -*-
+> Optvalid='APbDn:RuVGh'
+595d557
+<             Pauze 'LIVE RUN Selected. Control-C now to exit.'
+597,599c559,560
+<         B)
+<             Not_Batch_Run='Y'
+<             echo 'Interactive Run'
+---
+>         b)
+>             batch_run='Y'
+618,619c579
+<             echo $This_script\
+<             ': Valid options are [ -A -P -B -d{distro} -R -u -V -G -b{SrcBase} -h]'
+---
+>             echo $This_script
+622c582
+<             echo "B SET Not_Batch_Run='Y'"
+---
+>             echo "b SET batch_run='Y'"
+637a598,604
+> 
+> echo -ne "\n\n\e[1;31;40m"\
+> '*---------------------------------------------------------------*'
+> echo -e "\e[0m"
+> 
+> # -x = let child processes inherit
+> # -r = make value permanent (read-only)
+643c610,611
+< declare -rx Not_Batch_Run
+---
+> declare -rx batch_run
+> [[ $batch_run == 'Y' ]] || Pauze 'Interactive Run Selected'
+645,646c613,628
+< declare -r HOLDIFS=$IFS
+< This_script_dir=$(dirname $0)
+---
+> echo '$SOURCEBASE='$SOURCEBASE
+> echo '$codebase='$codebase
+> echo '$pathname_packages_list'=$pathname_packages_list
+> echo '$filename_wallpaper'=$filename_wallpaper
+> echo '$src_path_wallpaper'=$src_path_wallpaper
+> echo '$sys_dir_wallpaper'=$sys_dir_wallpaper
+> echo '$aptcache_needs_update'=$aptcache_needs_update
+> echo '$refresh_updatedb'=$refresh_updatedb
+> echo '$refresh_svn'=$refresh_svn
+> echo '$refresh_git'=$refresh_git
+> echo '$ADD_ALL'=$ADD_ALL
+> echo '$PUR_ALL'=$PUR_ALL
+> 
 > declare -rx live_run
-Only in /data/freeitathenscode/image_scripts: Resource
-Only in /data/freeitathenscode/image_scripts: skel
-Only in /data/Git/freeitathenscode/image_scripts: watch_intro
-Only in /data/Git/freeitathenscode/: intro_ubuntu
-Only in /data/freeitathenscode/preseeding: 1004-desktop-noscrub.seed
-Only in /data/freeitathenscode/preseeding: 1004-desktop-scrub.seed
-Only in /data/freeitathenscode/preseeding: 810-alternate-noscrub.seed
-Only in /data/freeitathenscode/preseeding: 810-alternate-scrub.seed
-Only in /data/freeitathenscode/preseeding: 810-desktop-noscrub.seed
-Only in /data/freeitathenscode/preseeding: 810-desktop-scrub.seed
-diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/01-00-1f-29-4e-e9-21 /data/freeitathenscode/pxe/01-00-1f-29-4e-e9-21
+> [[ $live_run == 'Y' ]] && echo 'LIVE RUN Selected. System files COULD be changed!'
+> Pauze 'Confirm Selections <ENTER> ... or LEAVE <Control-C>'
+654,656d635
+< #  -- let child processes inherit (-x)
+< 
+< #PKGS='lm-sensors hddtemp ethtool gimp firefox dialog xscreensaver-gl libreoffice aptitude vim flashplugin-installer htop inxi vrms mintdrivers gparted terminator hardinfo'
+657a637,639
+> #PKGS='lm-sensors hddtemp ethtool gimp firefox 
+> #  dialog xscreensaver-gl libreoffice aptitude vim
+> #  flashplugin-installer htop inxi vrms mintdrivers gparted terminator hardinfo'
+diff -r -x.svn -x.git /data/Git/freeitathenscode/image_scripts/Prepare_functions /partimag/freeitathenscode/image_scripts/Prepare_functions
+5a6,7
+>     sudo $(which ifconfig || /bin/true)
+> 
+26c28
+<         Pauze 'DRY RUN: apt-get purge --auto-remove '$packages |tee -a ${Messages_O}
+---
+>         Pauze 'DRY RUN: apt-get purge --auto-remove ' $packages |tee -a ${Messages_O}
+51a54,105
+> Contact_server() {
+> 
+>     Pauze "Check that server address is correct and is contactable ( COND: $refresh_svn )"
+> 
+>     Sub_lcl_stat() {
+>         echo 'Check on subversion local repo status'
+>         if [ -d ${SOURCEBASE}/.svn ]
+>         then
+>             cd ${SOURCEBASE}/
+>             svn update
+>         else
+>             apt-get install subversion
+>             cd
+>             Correct_subversion_ssh
+>             svn co svn+ssh://frita@192.168.1.9/var/svn/Frita/freeitathenscode/
+>         fi
+>         Pauze '(DONE) Check on subversion local repo status'
+>     }
+> 
+>     [[ $(ssh frita@192.168.1.9 'echo $HOSTNAME') =~ 'nuvo-servo' ]]\
+>         && Pauze 'Checked Server is valid: 192.168.1.9' && Sub_lcl_stat && return $?
+> 
+>     return 1
+> }
+> 
+> Correct_subversion_ssh() {
+> 
+>     subv_conf=''
+>     for subversion_meta_dir in $(find '/home/'$(grep ':'$UID':' /etc/passwd |cut -f1 -d:) -maxdepth 1 -type d -name '.subversion';find /etc/ -maxdepth 1 -type d -name 'subversion')
+>     do
+>         subv_conf="${subversion_meta_dir}/config"
+>         echo 'Checking subversion config path '$subv_conf
+>         [[ -f ${subv_conf} ]] && break
+>         subv_conf=''
+>     done
+>     [[ -z $subv_conf ]] && return 4
+> 
+>     grep 'ssh' $subv_conf
+>     Answer='N'
+>     Pause_n_Answer 'Y|N' "Fix $subv_conf for Frita's ssh connection (Y|N)? "
+>     case $Answer in
+>         Y)
+>             sudo perl -pi'.bak' -e 's/#\s*ssh\b(.+?ssh)\s+-q(.+)$/ssh${1} -v${2}/' ${subv_conf}
+>             ;;
+>         *)
+>             Pauze 'OK, NO changes made...'
+>             ;;
+>     esac
+> 
+>     return 0
+> }
+> 
+81d134
+< 
+diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/01-00-1f-29-4e-e9-21 /partimag/freeitathenscode/pxe/01-00-1f-29-4e-e9-21
 19c19
 < menu vshift 14
 ---
@@ -519,7 +1166,7 @@ diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/01-00-1f-29-4e-e9-21 /data/
 > #21889642 Beta_Mint17_32bit
 > #21889043 Beta_Mint17_64bit
 > #21889659 Beta_Mint17_lvm_32bit
-diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/01-00-21-5a-60-cd-9f /data/freeitathenscode/pxe/01-00-21-5a-60-cd-9f
+diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/01-00-21-5a-60-cd-9f /partimag/freeitathenscode/pxe/01-00-21-5a-60-cd-9f
 38a39,47
 > #LABEL DBAN_Short
 > #    MENU LABEL DBAN v2.2.6 [DoD 5220.22-M: short] 
@@ -536,25 +1183,22 @@ diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/01-00-21-5a-60-cd-9f /data/
 < # menu label (DEPRECATED, OLD DBAN) Wipe hard drive
 < #  kernel memdisk
 < #  append initrd=dban_OLD/dban.img floppy
-Only in /data/freeitathenscode/pxe: LVM_Post_Run
-Only in /data/freeitathenscode/pxe: LVM_Post_Run_add3
-Only in /data/freeitathenscode/pxe: LVM_Post_Run_add6
-diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/Master32_Pxeboot_Menu /data/freeitathenscode/pxe/Master32_Pxeboot_Menu
+diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/Master32_Pxeboot_Menu /partimag/freeitathenscode/pxe/Master32_Pxeboot_Menu
 37c37
 <     APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts Mint17_Mate_32_oem_20141120.img sda1 sda3 sda5"  ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 ---
->     APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts Mint17_Mate_32_oem_20141124.img sda1 sda3 sda5"  ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
-diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/Master64_Pxeboot_Menu /data/freeitathenscode/pxe/Master64_Pxeboot_Menu
+>     APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts MINT17v1_MATE_32_OEM_20141203.img sda1 sda3 sda5"  ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/Master64_Pxeboot_Menu /partimag/freeitathenscode/pxe/Master64_Pxeboot_Menu
 37c37
 <   APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p poweroff saveparts Mint17_Mate_64_oem_20141102.img sda1 sda3 sda5" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs
 ---
->   APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p poweroff saveparts Mint17_Mate_64_oem_20141124.img sda1 sda3 sda5" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs
-diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/part32_boot_lvm_temp0619.sh /data/freeitathenscode/pxe/part32_boot_lvm_temp0619.sh
+>   APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p poweroff saveparts MINT17r0_MATE_64_OEM_20141204.img sda1 sda3 sda5" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs
+diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/part32_boot_lvm_temp0619.sh /partimag/freeitathenscode/pxe/part32_boot_lvm_temp0619.sh
 1a2,4
 > Reference_mount=${1:-/home/partimag/'}
 > echo 'Reference mount is '$Reference_mount
 > sleep 4
-diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/part64_home.sh /data/freeitathenscode/pxe/part64_home.sh
+diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/part64_home.sh /partimag/freeitathenscode/pxe/part64_home.sh
 4,6c4,6
 < parted -s -a optimal /dev/sda mkpart primary linux-swap 10001 11026
 < parted -s -a optimal /dev/sda mkpart extended 11026 100%
@@ -567,11 +1211,76 @@ diff -r -x.svn -x.git /data/Git/freeitathenscode/pxe/part64_home.sh /data/freeit
 < 	sleep 1
 ---
 > 	sleep 2
-Only in /data/freeitathenscode/pxe: part64_template
-Only in /data/freeitathenscode/pxe: Prod64_Mint13_part.sh
-Only in /data/freeitathenscode/QC_Process: Disable 3D.desktop
-Only in /data/Git/freeitathenscode/QC_Process: Quality Control.desktop
-Only in /data/freeitathenscode/QC_process_dev: Master_1core
-Only in /data/freeitathenscode/QC_process_dev: Master_Mcore
-Only in /data/freeitathenscode/QC_process_dev: Typical_Home_Skeleton.tar.bz2
-Only in /data/freeitathenscode/QC_process_dev: Webcam_sends_reset
+diff -r -x.svn -x.git /data/Git/freeitathenscode/QC_Process/QC_Backend.sh /partimag/freeitathenscode/QC_Process/QC_Backend.sh
+61,64c61,68
+<     if [ $Master_test == 'M' ]
+<     then
+< 	echo $0':Running Master QC Mode' >&2
+< 	echo 'Frita'${CPU_ADDRESS}-$(date +'%b%d') |sudo tee /etc/hostname
+---
+>     case $Master_test in
+>     'M')
+>         echo $0':Running Master QC Mode' >&2
+>         echo 'Frita'${CPU_ADDRESS}-$(date +'%b%d') |sudo tee /etc/hostname
+>         Alter_HOSTNAME
+>         ;;
+>     'm')
+> 	echo 'Not changing hostname '$Found_hostname' on master this run...'
+66c70,71
+<     else
+---
+>         ;;
+>     *)
+70c75,81
+<     fi
+---
+> 	Alter_HOSTNAME
+>         ;;
+>     esac
+> }
+> 
+> Alter_HOSTNAME() {
+> 
+80a92
+> 
+538a551
+> 
+540c553,556
+<     if [ -n "$path2firefox" ]
+---
+>     sample_video='https://www.youtube.com/watch?v=syHv0kuQCus'
+> 	    #http://www.youtube.com/watch?v=mwbgwZxodKE
+> 
+>     if [ -z "$path2firefox" ]
+542,553d557
+<         dialog --keep-tite --clear --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
+<             --yesno "Test \Z4\ZrShockwave Flash\ZR \Z0in $path2firefox ?" 9 60
+<         d_RC=$?
+<         if [ $d_RC -eq 0 ]
+<         then
+<             $path2firefox -no-remote http://www.youtube.com/watch?v=mwbgwZxodKE 2>>$ERRFILE &
+<             ice_PID=$!
+<             echo $ice_PID 'process # for ff' >>$ERRFILE
+<             Window_killa $ice_PID 40
+<             Append_to_log 'INFO' 'Flash plugin test' 'Test was run'
+<         fi
+<     else
+554a559,573
+> 	return 1
+>     fi
+> 
+>     dialog --keep-tite --clear --colors --title "\Z7\ZrFree IT Athens Quality Control Test"\
+> 	--yesno "Test \Z4\ZrShockwave Flash\ZR \Z0in $path2firefox ?" 9 60
+>     d_RC=$?
+>     if [ $d_RC -eq 0 ]
+>     then
+> 	$path2firefox -no-remote\
+> 	    $sample_video\
+> 	    2>>$ERRFILE &
+> 	ice_PID=$!
+> 	echo $ice_PID 'process # for ff' >>$ERRFILE
+> 	Window_killa $ice_PID 40
+> 	Append_to_log 'INFO' 'Flash plugin test' 'Test was run'
+555a575,576
+> 
+>     return 0
