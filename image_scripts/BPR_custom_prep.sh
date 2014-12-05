@@ -295,4 +295,5 @@ Pauze 'Downloaded files this run (above).'
     #sudo add-apt-repository ppa:skunk/pepper-flash
     #sudo apt-get install pepflashplugin-installer
     #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'
+#https://github.com/freeITathens/freeitathenscode/blob/master/image_scripts/BPR_xt_lubuntu_32bit.sh
 

@@ -1,5 +1,11 @@
-#Temp
-#firmware-b43-installer,0,ALL
+# -*- [repo source]/image_scripts/Packages.csv : comma separated -*-
+# -*- Free I.T. Athens Custom Package Install/Remove Settings    -*-
+# -*- Comment lines (line this one) are ignored by the script    -*-
+# COLUMN 1 = PACKAGE_NAME
+#    COLUMN 2 = ARCHITECTURE (32, 64, 0=any)
+#       COLUMN 3 = TARGET ({ALL|Distro Family Name}=install; NONE=purge)
+#          COLUMN 4 = EXTRA (ppa repo add; otherwise cross-package ins/purg info)
+firmware-b43-installer,32,mint,why=make_avail_for_laptops
 chromium-browser,0,ALL
 pepperflashplugin-nonfree,0,ALL
 aptitude,0,ALL,
