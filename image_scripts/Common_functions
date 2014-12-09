@@ -235,7 +235,7 @@ Pauze() {
     IFS=$' \t\n'
     local RC=0
 
-    echo -e "\n"
+    #echo -e "\n"
     while [ $# -gt 0 ]
     do
         Zanned_response $1 || ((RC+=$?))
@@ -311,7 +311,7 @@ Zanned_response() {
 
     [[ -z "$mess" ]] && mess='Unknown Message..????'
 
-    prettyprint "n,1,${basic_emph},40,M,0,n" $mess || RC=$?
+    prettyprint "1,${basic_emph},40,M,0,n" $mess || RC=$?
 
     return $RC
 }
