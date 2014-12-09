@@ -260,7 +260,7 @@ Integrity_check() {
     Pauze 'Verify you have a home bin dir. And that QC / other scripts are present'
 
     (find ${SOURCEBASE}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
-        find ${SOURCEBASE}/QC_process_dev/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
+        find ${SOURCEBASE}/Development/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
         find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort
     Pauze 'Verify that the correct Run Quality Control icon is in place...'
 
@@ -577,15 +577,16 @@ do
             ;;
         h)
             echo $This_script
-            echo "A SET ADD_ALL='N'"
-            echo "P SET PUR_ALL='N'"
-            echo "b SET batch_run='Y'"
-            echo "n SET :Distro Name:"
-            echo "R SET aptcache_needs_update='N'"
-            echo "u SET refresh_updatedb='Y'"
-            echo "V SET refresh_svn='Y'"
-            echo "G SET refresh_git='N'"
-
+	    echo "D makes live_run='Y'"
+            echo "A makes ADD_ALL='N'"
+            echo "P makes PUR_ALL='N'"
+            echo "b makes batch_run='Y'"
+            echo "n sets :Distro Name:"
+            echo "R makes aptcache_needs_update='N'"
+            echo "u makes refresh_updatedb='Y'"
+            echo "V makes refresh_svn='Y'"
+            echo "G makes refresh_git='N'"
+            #Optvalid='APbDn:RuVGh'
             echo '(Match up with '$Optvalid')'
             exit 0
             ;;
@@ -625,7 +626,7 @@ echo '$PUR_ALL'=$PUR_ALL
 
 declare -rx live_run
 [[ $live_run == 'Y' ]] && echo 'LIVE RUN Selected. System files COULD be changed!'
-Pauze 'Confirm Selections <ENTER> ... or LEAVE <Control-C>'
+read -p'Confirm Selections <ENTER> ... or LEAVE <Control-C>'
 
 Mainline
 
