@@ -22,7 +22,7 @@ MENU BEGIN Image with Clonezilla: 64-bit
 MENU BEGIN 64-bit: Ready for Prime Time
 
 LABEL Prod-mint17-64bit
-    MENU LABEL Install Mint17 MATE 64-bit oem (02-Nov Build, normal 60GB+)
+    MENU LABEL Install Mint17 MATE 64-bit oem (04-Dec Build, normal 60GB+)
     KERNEL Czilla_20140331_saucy_amd64/live/vmlinuz
     INITRD Czilla_20140331_saucy_amd64/live/initrd.img 
     APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint17N_64.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod64_Mint17 sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs 
@@ -50,18 +50,6 @@ LABEL Prod-mint17-normalfs
     KERNEL clonezilla-i486/live/vmlinuz
     INITRD clonezilla-i486/live/initrd.img 
     APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod32_Mint17_PARTI.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod32_Mint17 sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs 
-
-LABEL lubuntu32-oem-config
-    MENU LABEL Install Lubuntu 14.04 32-bit oem-config (28-Apr Build)
-    KERNEL clonezilla-i486/live/vmlinuz
-    INITRD clonezilla-i486/live/initrd.img 
-    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
-
-LABEL mint32-pae-legacy
-  MENU LABEL Install Mint13 XFCE 32-bit PAE (Lacks oem-config ability)
-  KERNEL clonezilla-i486/live/vmlinuz
-  INITRD clonezilla-i486/live/initrd.img 
-  APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 LABEL mint32-legacy
   MENU label Install Mint13 XFCE (32-bit, Non-PAE CPUs)
@@ -139,20 +127,10 @@ label live-mc-13
   kernel mc-13/casper/vmlinuz
   append boot=casper netboot=nfs initrd=mc-13/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/mc-13 file=/cdrom/preseed/mint.seed
 
-label live-x1204
-  menu label TRY Xubuntu 12.04
-  kernel x-12.04/casper/vmlinuz
-  append boot=casper netboot=nfs initrd=x-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/x-12.04 file=/cdrom/preseed/ubuntu.seed
-
 label live-u1204
   menu label TRY Ubuntu 12.04
   kernel u-12.04/casper/vmlinuz
   append boot=casper netboot=nfs initrd=u-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-12.04 file=/cdrom/preseed/ubuntu.seed
-
-label live-k1204
-  menu label TRY Kubuntu 12.04
-  kernel k-12.04/casper/vmlinuz
-  append boot=casper netboot=nfs initrd=k-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/k-12.04 file=/cdrom/preseed/ubuntu.seed
 
 label live-l1204
   menu label TRY Lubuntu 12.04
@@ -206,21 +184,45 @@ MENU END
 
 MENU BEGIN Ye Olde Legacie Scriptes
 
+LABEL lubuntu32-oem-config
+    MENU LABEL Install Lubuntu 14.04 32-bit oem-config (28-Apr Build)
+    KERNEL clonezilla-i486/live/vmlinuz
+    INITRD clonezilla-i486/live/initrd.img 
+    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_Lubuntu sda1 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+
+LABEL mint32-pae-legacy
+  MENU LABEL Install Mint13 XFCE 32-bit PAE (Lacks oem-config ability)
+  KERNEL clonezilla-i486/live/vmlinuz
+  INITRD clonezilla-i486/live/initrd.img 
+  APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+
 LABEL Install Emmabuntus 32-bit oem-config
   KERNEL clonezilla-i486/live/vmlinuz
   INITRD clonezilla-i486/live/initrd.img 
   APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/part32_home_boot.sh" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod_emmabuntus sda1 sda2 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+
+label live-x1204
+  menu label TRY Xubuntu 12.04
+  kernel x-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=x-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/x-12.04 file=/cdrom/preseed/ubuntu.seed
+
+label live-k1204
+  menu label TRY Kubuntu 12.04
+  kernel k-12.04/casper/vmlinuz
+  append boot=casper netboot=nfs initrd=k-12.04/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/k-12.04 file=/cdrom/preseed/ubuntu.seed
 
 label live-u10043
   menu label TRY Ubuntu 10.04.3
   kernel u-10.04.3/casper/vmlinuz
   append boot=casper netboot=nfs initrd=u-10.04.3/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/u-10.04.3 file=/cdrom/preseed/ubuntu.seed
 
+MENU END
+
 # Following from http://www.dslreports.com/forum/r24834879-How-To-PXE-Boot-DBAN
-label DBAN_2
-  menu label DBAN version 2.2.7
-  kernel dban2/dban.bzi
-  append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+#label DBAN_2
+#  menu label DBAN version 2.2.7
+#  kernel dban2/dban.bzi
+#  append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
 
 #LABEL System Rescue CD "Live Image"
 #kernel systemrescuecd/isolinux/rescue32
@@ -228,8 +230,6 @@ label DBAN_2
 # can have it autorun a script ar_nowait ar_source=http://server/autorun
 # can load entire filesystem in ram isntead of as needed boottftp=tftp://server/sysrcd/sysrcd.dat
 #append initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 dostartx
-
-MENU END
 
 #   OLD ocs_prerun="/sbin/dhclient -v" 
 #label dban
