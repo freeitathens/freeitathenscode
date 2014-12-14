@@ -5,7 +5,7 @@
 #    COLUMN 2 = ARCHITECTURE (32, 64, 0=any)
 #       COLUMN 3 = TARGET ({ALL|Distro Family Name}=install; NONE=purge)
 #          COLUMN 4 = EXTRA (ppa repo add; otherwise cross-package ins/purg info)
-firmware-b43-installer,32,mint,why=make_avail_for_laptops
+firmware-b43-installer,32,mint,WHY=make_avail_for_laptops
 chromium-browser,0,ALL
 pepperflashplugin-nonfree,0,ALL
 aptitude,0,ALL,
@@ -28,7 +28,7 @@ oem-config,32,ALL,
 oem-config-debconf,32,ALL,
 oem-config-gtk,32,ALL,
 terminator,0,ALL,
-ubiquity-frontend-[dgk].*,32,ALL,
+#biquity-frontend-[dgk].*,32,ALL,
 vim,0,ALL,
 vrms,0,ALL,
 xscreensaver-gl,0,ALL,

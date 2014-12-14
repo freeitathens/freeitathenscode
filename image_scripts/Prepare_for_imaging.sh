@@ -79,7 +79,7 @@ Housekeeping() {
     Get_Address_Len
     Confirm_DISTRO_CPU || User_no_distro_bye $?
 
-    [[ "${refresh_updatedb}." == 'Y.' ]] && updatedb &
+    [[ "${refresh_updatedb}." == 'Y.' ]] && sudo updatedb &
     [[ "${refresh_svn}." == 'Y.' ]] && Contact_server
 
     [[ $aptcache_needs_update == 'Y' ]] && Run_apt_update
@@ -187,7 +187,7 @@ Confirm_DISTRO_CPU() {
         distro_valid_flag='Y'
         prettyprint '1,34,40,M' ' a valid'
         ;;
-    debian|SolydXK)
+    debian|Solyd*)
         distro_generia='debian'
         distro_valid_flag='Y'
         prettyprint '1,34,40,M' ' a valid'
@@ -364,6 +364,10 @@ Check_extra() {
             ;;
         INSTALL)
             echo 'Check that '${extra_a[1]}' replaces '$pkg_name
+            return 0
+            ;;
+        WHY)
+            echo ${extra_a[1]}
             return 0
             ;;
         REMOVE)
