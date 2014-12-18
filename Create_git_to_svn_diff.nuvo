@@ -1,2 +1,7 @@
+
+reportdest=$PWD
+touch $reportdest || reportdest=/tmp
+
 diff -r -x'.svn' -x'.git'\
-    /{data/Git,partimag}/freeitathenscode/ |tee /data/Svn/git_to_svn.diff
+    /{data/Git,partimag}/freeitathenscode/ |tee $reportdest/git_to_svn.diff
+
