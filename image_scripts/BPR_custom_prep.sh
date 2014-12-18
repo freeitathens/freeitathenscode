@@ -8,15 +8,15 @@ declare -r uri_desktop_files=\
 
 declare -r uri_chromium_mastprefs=\
 'https://gist.githubusercontent.com/bpr97050/a714210a8759b7ccc89c/raw/'
-sys_dir_chromium='/etc/chromium-browser'
+dirname_sys_chromium='/etc/chromium-browser'
 
 declare -r uri_chromium_bookmarks=\
 'https://gist.github.com/bpr97050/b6b5679f94d344879328/raw'
-file_chromium_bookmarks='default_bookmarks.html'
+filename_chromium_bookmarks='default_bookmarks.html'
 
 file_chromium_defaults='default'
-declare -r sys_path_chromium_defaults=\
-"${sys_dir_chromium}/$file_chromium_defaults"
+declare -r filepath_sys_chromium_defaults=\
+"${dirname_sys_chromium}/$file_chromium_defaults"
 
 declare -r uri_pepperflash_codex_installer=\
 'https://gist.githubusercontent.com/bpr97050/9899740/raw'
@@ -25,7 +25,7 @@ declare -r uri_firefox_prefs=\
 'https://gist.github.com/bpr97050/eb37e9850e2d951bc676/raw'
 file_firefox_prefs='syspref.js'
 sys_dir_firefox='/etc/firefox'
-sys_path_firefox_prefs="${sys_dir_firefox}/$file_firefox_prefs"
+filepath_ff_prefs_sys="${sys_dir_firefox}/$file_firefox_prefs"
 
 #TODO: Following link is broken (HTTP 404)
 declare -r uri_firefox_bookmarks='http://a.pomf.se/kyiput.sqlite'
@@ -33,15 +33,17 @@ declare -r uri_firefox_bookmarks='http://a.pomf.se/kyiput.sqlite'
 [[ -z $live_run ]] && live_run='N'
 [[ -z $refresh_git ]] && refresh_git='N'
 [[ -z $codebase ]] && codebase="${HOME}/freeitathenscode/image_scripts"
+source /home/oem/freeitathenscode/image_scripts/Prepare_functions || exit 99
 
 Mainline() {
 
+    DOWNLOADS="/home/$(id -n -u)/Downloads"
+    Pre_Verify_Downloads_dir
+
     Run_apt_update || return $?
 
-    cd $DOWNLOADS
     Download_custom_desktop_files\
         || echo 'Download_custom_desktop_files: Problem?'
-    cd -
 
     Firefox_stuff || echo 'Firefox Config: Problem?'
     Chromium_stuff || echo 'Chromium Config: Problem?'
@@ -59,6 +61,7 @@ Mainline() {
     sudo apt-get --purge autoremove
     sudo apt-get autoclean
 
+    Post_Verify_Downloads_dir
     read -t$timeout -p'Finished with BPR custom code. last RC: '$?
 
     return 0
@@ -69,6 +72,7 @@ Download_custom_desktop_files() {
     local RC=0
 
     Activate_shopts
+    cd $DOWNLOADS
     if [[ -d $custom_dotfiles_id ]]
     then
         rm -rf ${custom_dotfiles_id}/*
@@ -76,16 +80,23 @@ Download_custom_desktop_files() {
         mkdir $custom_dotfiles_id
     fi
 
-    [[ $refresh_git == 'Y' ]] || return 0
+    if [[ $refresh_git == 'Y' ]]
+    then
+	cd -
+	return 0
+    fi
 
-    cd $custom_dotfiles_id || return 12
-    git clone $uri_desktop_files || return $?
+    cd $custom_dotfiles_id
+    if [ $? -gt 0 ];then;cd -;return 12;fi
+    git clone $uri_desktop_files
+    if [ $? -gt 0 ];then;cd -;return $?;fi
+
     find . -type f -exec head -n4 {} \;
-
     read -t$timeout -p'Now do Manual Moves (where appropriate) to /etc/skel/'
     #bash ||RC=$?
-    Reset_shopts
 
+    Reset_shopts
+    cd -
     return $RC
 }
 
@@ -116,26 +127,17 @@ Firefox_stuff() {
     #sudo apt-get install firefox || return 16
     which firefox || return 16
 
-    src_path_firefox_prefs="${DOWNLOADS}/$file_firefox_prefs"
-    # Options for Firefox bookmarks and settings
-    wget -O $src_path_firefox_prefs $uri_firefox_prefs
-    #wget -O ${DOWNLOADS}/places.sqlite $uri_firefox_bookmarks
+    filepath_ff_prefs_src="${DOWNLOADS}/$file_firefox_prefs"
+    wget -O $filepath_ff_prefs_src $uri_firefox_prefs
 
     if [[ $live_run != 'Y' ]]
     then
-        read -t$timeout -p'DRY RUN: action would be "cp -iv '${src_path_firefox_prefs}' '$sys_path_firefox_prefs'"'
+        read -t$timeout -p'DRY RUN: action would be "cp -iv
+	'${filepath_ff_prefs_src}' '$filepath_ff_prefs_sys'"'
         return 0
     fi
 
-    Answer='N'
-    diff $sys_path_firefox_prefs $src_path_firefox_prefs |less
-    Pause_n_Answer 'Y|N' 'WARN,Customize Default Settings for Firefox?'
-    if [[ "${Answer}." == 'Y.' ]]
-    then
-        cp -iv --backup=t $sys_path_firefox_prefs ${HOME}/ 2>/dev/null
-        sudo cp -iv ${src_path_firefox_prefs} $sys_path_firefox_prefs
-        RC=$?
-    fi 
+    Backup_and_Customize $filepath_ff_prefs_src $filepath_ff_prefs_sys;RC=$?
     [[ $RC -eq 0 ]] && timeout -k 1m 5s firefox
 
     return $RC
@@ -148,6 +150,7 @@ Firefox_stuff() {
 #rm -iv ${HOME}/.mozilla/firefox/*.default/places.sqlite{,-*} 
 #cp -iv ${DOWNLOADS}/places.sqlite
 #    ${HOME}/.mozilla/firefox/*.default/places.sqlite
+#wget -O ${DOWNLOADS}/places.sqlite $uri_firefox_bookmarks
 
 Chromium_stuff() {
 
@@ -167,41 +170,32 @@ Chromium_stuff() {
 Chromium_master_pref() {
 
     local RC=0
+    filename_mast_prefs='master_preferences'
+    filepath_mast_prefs_src="${DOWNLOADS}/${filename_mast_prefs}"
 
-    file_mastprefs='master_preferences'
-    src_path_mastprefs="${DOWNLOADS}/${file_mastprefs}"
-    read -t$timeout -p'Install chromium master prefs. $live_run='$live_run', $refresh_git='$refresh_git
+    read -t$timeout\
+	-p'Install chromium master prefs. $live_run='$live_run', $refresh_git='$refresh_git
     if [[ $refresh_git == 'Y' ]]
     then
-        wget -O ${src_path_mastprefs} $uri_chromium_mastprefs
+        wget -O ${filepath_mast_prefs_src} $uri_chromium_mastprefs
 	RC=$?
     fi
 
+    filepath_mast_prefs_sys=${dirname_sys_chromium}/${filename_mast_prefs}
     if [[ $live_run != 'Y' ]]
     then
-        read -t$timeout -p'DRY RUN: would normally exec: cp -iv '$src_path_mastprefs' '$sys_dir_chromium'/'
+        read -t$timeout -p'DRY RUN: would normally exec: cp -iv '$filepath_mast_prefs_src' '$filepath_mast_prefs_sys
         return 0
     fi
 
-    sys_path_mastprefs=${sys_dir_chromium}/${file_mastprefs}
-    if [ -e $sys_path_mastprefs ]
-    then
-        diff $sys_path_mastprefs $src_path_mastprefs |less
-    fi
-    Answer='N'
-    Pause_n_Answer 'Y|N' 'Install Custom Chromium Master Preferences?'
-    if [[ "${Answer}." == 'Y.' ]]
-    then
-        cp -iv --backup=t $sys_path_mastprefs ${HOME}/ 2>/dev/null
-        sudo cp -iv ${src_path_mastprefs} ${sys_dir_chromium}/ ||RC=$?
-    fi
+    Backup_and_Customize $filepath_mast_prefs_src $filepath_mast_prefs_sys ||RC=$?
 
     return $RC
 }
 
 Chromium_defaults() {
 
-    grep 'CHROMIUM_FLAGS' $sys_path_chromium_defaults
+    grep 'CHROMIUM_FLAGS' $filepath_sys_chromium_defaults
     CHROMIUM_ADD_FLAGS='--start-maximized --no-first-run --ssl-version-min=tls1 --disable-google-now-integration'
     echo 'Our Flags to add: '$CHROMIUM_ADD_FLAGS
 
@@ -212,26 +206,25 @@ Chromium_defaults() {
     fi
     
     read -t$timeout -p'<CONTINUE>'
-    echo -n $CHROMIUM_ADD_FLAGS |\
-        sudo perl -pi'.bak' -ne 'chomp;cf=$_;s/^(CHROMIUM_FLAGS='\''.+'\'')/${1} $cf'\''/;'
+    Inplace_file_change $CHROMIUM_ADD_FLAGS $filepath_sys_chromium_defaults
 
     return $?
 }
 
 Chromium_bookmarks() {
 
-    sys_path_chromium_bookmarks="${sys_dir_chromium}/$file_chromium_bookmarks"
-    src_path_chromium_bookmarks="${DOWNLOADS}/$file_chromium_bookmarks"
-    diff ${sys_dir_chromium}/ $src_path_chromium_bookmarks
+    filepath_chromium_bookmarks_src="${DOWNLOADS}/$filename_chromium_bookmarks"
+    filepath_chromium_bookmarks_sys="${dirname_sys_chromium}/$filename_chromium_bookmarks"
+    wget -O $filepath_chromium_bookmarks_src $uri_chromium_bookmarks
+
     if [[ $live_run != 'Y' ]]
     then
-        read -t$timeout -p'DRY RUN, live would do "cp -iv '$src_path_chromium_bookmarks ${sys_dir_chromium}'/"'
+        read -t$timeout -p'DRY RUN, live would do\
+"cp -iv '$filepath_chromium_bookmarks_src $filepath_chromium_bookmarks_sys'"'
 	return 0
     fi
 
-    wget -O $src_path_chromium_bookmarks $uri_chromium_bookmarks
-    cp -iv --backup=t $sys_path_chromium_bookmarks ${HOME}/
-    sudo cp -iv $src_path_chromium_bookmarks ${sys_dir_chromium}/
+    Backup_and_Customize $filepath_chromium_bookmarks_src $filepath_chromium_bookmarks_sys
 
     return $?
 }
@@ -271,23 +264,63 @@ Set_backgrounds() {
     #sudo sed -i 's/^background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
 }
 
-source /home/oem/freeitathenscode/image_scripts/Prepare_functions || exit 99
+Backup_and_Customize() {
+    local filepath_source=$1
+    local filepath_target=$2
 
-DOWNLOADS="/home/$(id -n -u)/Downloads"
-[[ -d ${DOWNLOADS} ]] || mkdir $DOWNLOADS
-[[ -d ${DOWNLOADS} ]] || exit 13
+    if [ -f $filepath_target ]
+    then
+	cp -v --backup=t $filepath_target ${HOME}/
+        diff $filepath_target $filepath_source |less
+    fi
 
-cd $DOWNLOADS
-pwd
-find $DOWNLOADS -not -uid $UID -exec sudo chown -c $UID {} \;
-read -t$timeout -p'Confirm (above) is Downloads Directory and contents'
-cd -
+    Answer='N'
+    #Pause_n_Answer 'Y|N' 'WARN,Customize Default Settings?'
+    #if [[ "${Answer}." == 'Y.' ]]
+    #hen
+    sudo cp -iv $filepath_source $filepath_target
+
+    return $?
+}
+
+Pre_Verify_Downloads_dir() {
+
+    [[ -d ${DOWNLOADS} ]] || mkdir $DOWNLOADS
+    [[ -d ${DOWNLOADS} ]] || exit 13
+
+    cd $DOWNLOADS || exit 14
+    find $DOWNLOADS -not -uid $UID -exec sudo chown -c $UID {} \;
+    echo -e "\n\n"
+    find ${DOWNLOADS} -type f
+    echo 'Downloaded files previous run (above).'
+    read -t$timeout -p'Confirm'
+    echo ''
+
+}
+
+Post_Verify_Downloads_dir() {
+
+    find $DOWNLOADS -not -uid $UID -exec sudo chown -c $UID {} \;
+    echo -e "\n\n"
+    find ${DOWNLOADS} -type f -cmin -12
+    echo 'Downloaded files this run (above).'
+    read -t$timeout -p'Confirm'
+    echo ''
+
+}
+
+
+Inplace_file_change() {
+    flags=$1
+    filepath=$2
+
+    echo -n $CHROMIUM_ADD_FLAGS |\
+	sudo perl -pi'.bak' -ne 'chomp;cf=$_;s/^(CHROMIUM_FLAGS='\''.+'\'')/${1} $cf'\''/;'\
+        $filepath_sys_chromium_defaults
+    mv -iv ${filepath_sys_chromium_defaults}.bak $HOME
+}
 
 Mainline
-
-find $DOWNLOADS -not -uid $UID -exec sudo chown -c $UID {} \;
-find ${DOWNLOADS} -cmin -12
-read -t$timeout -p'Downloaded files this run (above).'
 
 #Wine stuff in case the user needs to run a Windows executable
 #sudo apt-get install wine winetricks
@@ -301,4 +334,3 @@ read -t$timeout -p'Downloaded files this run (above).'
     #sudo apt-get install pepflashplugin-installer
     #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'
 #https://github.com/freeITathens/freeitathenscode/blob/master/image_scripts/BPR_xt_lubuntu_32bit.sh
-
