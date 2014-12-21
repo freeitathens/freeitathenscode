@@ -283,7 +283,7 @@ Install_Remove_requested_packages() {
     Pauze 'Install necessary packages'
     RCxPK=0
     Install_packages_from_file_list $pathname_packages_list || RCxPK=$?
-    [[ $RCxPK -ne 0 ]] && Pauze 'Problems Installing Packages:'$RCxPK
+    #[[ $RCxPK -ne 0 ]] && Pauze 'Problems Installing Packages:'$RCxPK
 
     if [ $address_len -eq 64 ]
     then
@@ -306,7 +306,6 @@ Install_packages_from_file_list() {
         if [ $RCa -gt 0 ]
         then
             echo 'Problem with package '$pkg_name
-            ((RCz+=$RCa))
         fi
     done
     return $RCz
@@ -331,7 +330,7 @@ Process_package() {
     [[ $pkg_info_L -gt 3 ]] && (Check_extra $pkg_name ${pkg_info_a[3]} || RCxE=$?)
     [[ $RCxE -gt 10 ]] && return $RCxE
 
-    RCxDS=$RCxE
+    RCxDS=0
     Pkg_by_distro_session ${pkg_info_a[2]} || RCxDS=$?
 
     return $RCxDS

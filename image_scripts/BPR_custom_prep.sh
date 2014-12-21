@@ -196,7 +196,6 @@ Chromium_master_pref() {
 Chromium_defaults() {
 
     grep 'CHROMIUM_FLAGS' $filepath_sys_chromium_defaults
-    CHROMIUM_ADD_FLAGS='--start-maximized --no-first-run --ssl-version-min=tls1 --disable-google-now-integration'
     echo 'Our Flags to add: '$CHROMIUM_ADD_FLAGS
 
     if [[ $live_run != 'Y' ]]
@@ -314,10 +313,8 @@ Inplace_file_change() {
     flags=$1
     filepath=$2
 
-    echo -n $CHROMIUM_ADD_FLAGS |\
-	sudo perl -pi'.bak' -ne 'chomp;cf=$_;s/^(CHROMIUM_FLAGS='\''.+'\'')/${1} $cf'\''/;'\
-        $filepath_sys_chromium_defaults
-    mv -iv ${filepath_sys_chromium_defaults}.bak $HOME
+    sudo perl -pi'.bak' -ne 'chomp;s/^(CHROMIUM_FLAGS='\''.+'\'')/${1} --start-maximized --no-first-run --ssl-version-min=tls1 --disable-google-now-integration/;' $filepath_sys_chromium_defaults
+    sudo mv -iv ${filepath_sys_chromium_defaults}.bak $HOME
 }
 
 Mainline
