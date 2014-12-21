@@ -79,10 +79,10 @@ Housekeeping() {
     Get_Address_Len
     Confirm_DISTRO_CPU || User_no_distro_bye $?
 
-    [[ "${refresh_updatedb}." == 'Y.' ]] && sudo updatedb &
+    [[ "${refresh_updatedb}." == 'Y.' ]] && sudo updatedb
     [[ "${refresh_svn}." == 'Y.' ]] && Contact_server
 
-    [[ $aptcache_needs_update == 'Y' ]] && Run_apt_update
+    Run_apt_update
 
     #Pauze 'Confirm no medibuntu in apt sources'
     #egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list

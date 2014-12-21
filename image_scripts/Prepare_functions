@@ -1,9 +1,10 @@
+#!/bin/bash
 # Prepare_functions: common code for Prepare for imaging / clone / custom BPR
 source ${codebase}/Common_functions || return 135
 
 Run_apt_update() {
 
-    sudo $(which ifconfig || /bin/true)
+    sudo ifconfig
 
     [[ $aptcache_needs_update == 'Y' ]] || return 0
 

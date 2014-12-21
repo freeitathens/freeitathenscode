@@ -87,9 +87,9 @@ Download_custom_desktop_files() {
     fi
 
     cd $custom_dotfiles_id
-    if [ $? -gt 0 ];then;cd -;return 12;fi
+    if [ $? -gt 0 ];then cd -;return 12;fi
     git clone $uri_desktop_files
-    if [ $? -gt 0 ];then;cd -;return $?;fi
+    if [ $? -gt 0 ];then cd -;return $?;fi
 
     find . -type f -exec head -n4 {} \;
     read -t$timeout -p'Now do Manual Moves (where appropriate) to /etc/skel/'
