@@ -195,8 +195,14 @@ Chromium_master_pref() {
 
 Chromium_defaults() {
 
-    grep 'CHROMIUM_FLAGS' $filepath_sys_chromium_defaults
-    echo 'Our Flags to add: '$CHROMIUM_ADD_FLAGS
+    echo 'Current Chromium flags:'
+    grep 'CHROMIUM_FLAGS=' $filepath_sys_chromium_defaults
+    grep -P 'CHROMIUM_FLAGS=.+--ssl-version-min=tls1' $filepath_sys_chromium_defaults;RCxCF=$?
+    if [[ $RCxCF -eq 0 ]]
+    then
+	read -t$timeout -p'Chromium Flags (appear to be) Already Updated.'
+	return 0
+    fi
 
     if [[ $live_run != 'Y' ]]
     then
@@ -205,7 +211,9 @@ Chromium_defaults() {
     fi
     
     read -t$timeout -p'<CONTINUE>'
-    Inplace_file_change $CHROMIUM_ADD_FLAGS $filepath_sys_chromium_defaults
+
+    sudo perl -pi'.bak' -ne 's/^(CHROMIUM_FLAGS=".+)"/${1} --start-maximized --no-first-run --ssl-version-min=tls1 --disable-google-now-integration"/;' $filepath_sys_chromium_defaults
+    sudo mv -iv ${filepath_sys_chromium_defaults}.bak $HOME
 
     return $?
 }
@@ -306,15 +314,6 @@ Post_Verify_Downloads_dir() {
     read -t$timeout -p'Confirm'
     echo ''
 
-}
-
-
-Inplace_file_change() {
-    flags=$1
-    filepath=$2
-
-    sudo perl -pi'.bak' -ne 'chomp;s/^(CHROMIUM_FLAGS='\''.+'\'')/${1} --start-maximized --no-first-run --ssl-version-min=tls1 --disable-google-now-integration/;' $filepath_sys_chromium_defaults
-    sudo mv -iv ${filepath_sys_chromium_defaults}.bak $HOME
 }
 
 Mainline
