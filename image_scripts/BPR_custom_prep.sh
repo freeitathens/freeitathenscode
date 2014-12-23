@@ -1,6 +1,5 @@
 #!/bin/bash
 set -u
-timeout=12
 
 custom_dotfiles_id='FRITAdot'
 declare -r uri_desktop_files=\
@@ -55,14 +54,15 @@ Mainline() {
         sudo dpkg-reconfigure -plow unattended-upgrades
 
     # -*- Install / update patches now -*-
-    read -t$timeout -p'apt-get dist-upgrade'
+    Prompt_time "apt-get dist-upgrade"
     sudo apt-get dist-upgrade
-    read -t$timeout -p'apt-get purge autoremove and autoclean'
+
+    Prompt_time 'apt-get purge autoremove and autoclean'
     sudo apt-get --purge autoremove
     sudo apt-get autoclean
 
     Post_Verify_Downloads_dir
-    read -t$timeout -p'Finished with BPR custom code. last RC: '$?
+    Prompt_time "Finished with BPR custom code. last RC: $?"
 
     return 0
 }
@@ -71,28 +71,37 @@ Download_custom_desktop_files() {
 
     local RC=0
 
-    Activate_shopts
     cd $DOWNLOADS
     if [[ -d $custom_dotfiles_id ]]
     then
-        rm -rf ${custom_dotfiles_id}/*
+        rm -rf ${custom_dotfiles_id}/* ||RC=$?
     else
-        mkdir $custom_dotfiles_id
+        mkdir $custom_dotfiles_id ||RC=$?
     fi
+    if [ $RC -gt 0 ];then cd -;return $RC;fi
 
-    if [[ $refresh_git == 'Y' ]]
+    if [[ $refresh_git != 'Y' ]]
     then
 	cd -
 	return 0
     fi
 
-    cd $custom_dotfiles_id
-    if [ $? -gt 0 ];then cd -;return 12;fi
-    git clone $uri_desktop_files
-    if [ $? -gt 0 ];then cd -;return $?;fi
+    cd $custom_dotfiles_id ||RC=$?
+    if [ $RC -gt 0 ];then cd -;return $RC;fi
 
-    find . -type f -exec head -n4 {} \;
-    read -t$timeout -p'Now do Manual Moves (where appropriate) to /etc/skel/'
+    Activate_shopts
+    git clone $uri_desktop_files ||RC=$?
+    if [ $RC -gt 0 ]
+    then
+	Reset_shopts
+	cd -
+	return $RC
+    fi
+
+    (echo -e "Sample Contents in $PWD\n";\
+	find . -type f -exec head -n4 {} \;)|\
+	od -Ax -taz |less
+    Prompt_time "Now do Manual Moves (where appropriate) to /etc/skel/"
     #bash ||RC=$?
 
     Reset_shopts
@@ -132,8 +141,8 @@ Firefox_stuff() {
 
     if [[ $live_run != 'Y' ]]
     then
-        read -t$timeout -p'DRY RUN: action would be "cp -iv
-	'${filepath_ff_prefs_src}' '$filepath_ff_prefs_sys'"'
+	Prompt_time 'DRY RUN: action would be "cp -iv '\
+	    ${filepath_ff_prefs_src}' '$filepath_ff_prefs_sys'"'
         return 0
     fi
 
@@ -156,7 +165,7 @@ Chromium_stuff() {
 
     local RC=0
 
-    read -t$timeout -p'Ensure latest chromium-browser is installed'
+    Prompt_time 'Ensure latest chromium-browser is installed'
     sudo apt-get install chromium-browser
 
     Chromium_master_pref
@@ -173,8 +182,8 @@ Chromium_master_pref() {
     filename_mast_prefs='master_preferences'
     filepath_mast_prefs_src="${DOWNLOADS}/${filename_mast_prefs}"
 
-    read -t$timeout\
-	-p'Install chromium master prefs. $live_run='$live_run', $refresh_git='$refresh_git
+    Prompt_time 'Install chromium master prefs. $live_run='\
+	$live_run', $refresh_git='$refresh_git
     if [[ $refresh_git == 'Y' ]]
     then
         wget -O ${filepath_mast_prefs_src} $uri_chromium_mastprefs
@@ -184,7 +193,9 @@ Chromium_master_pref() {
     filepath_mast_prefs_sys=${dirname_sys_chromium}/${filename_mast_prefs}
     if [[ $live_run != 'Y' ]]
     then
-        read -t$timeout -p'DRY RUN: would normally exec: cp -iv '$filepath_mast_prefs_src' '$filepath_mast_prefs_sys
+        Prompt_time 'DRY RUN: would normally exec: "cp -iv '\
+	    $filepath_mast_prefs_src\
+	    ' '$filepath_mast_prefs_sys'"'
         return 0
     fi
 
@@ -200,18 +211,17 @@ Chromium_defaults() {
     grep -P 'CHROMIUM_FLAGS=.+--ssl-version-min=tls1' $filepath_sys_chromium_defaults;RCxCF=$?
     if [[ $RCxCF -eq 0 ]]
     then
-	read -t$timeout -p'Chromium Flags (appear to be) Already Updated.'
+        Prompt_time 'Chromium Flags (appear to be) Already Updated.'
 	return 0
     fi
 
     if [[ $live_run != 'Y' ]]
     then
-        read -t$timeout -p'DRY RUN: Not changing Chromium flags yet ... '
+        Prompt_time 'DRY RUN: Not changing Chromium flags yet ... '
 	return 0
     fi
     
-    read -t$timeout -p'<CONTINUE>'
-
+    Prompt_time 'Behold! CHROMIUM_FLAGS! Preparing to edit in-place...'
     sudo perl -pi'.bak' -ne 's/^(CHROMIUM_FLAGS=".+)"/${1} --start-maximized --no-first-run --ssl-version-min=tls1 --disable-google-now-integration"/;' $filepath_sys_chromium_defaults
     sudo mv -iv ${filepath_sys_chromium_defaults}.bak $HOME
 
@@ -226,8 +236,9 @@ Chromium_bookmarks() {
 
     if [[ $live_run != 'Y' ]]
     then
-        read -t$timeout -p'DRY RUN, live would do\
-"cp -iv '$filepath_chromium_bookmarks_src $filepath_chromium_bookmarks_sys'"'
+	Prompt_time 'DRY RUN, live would do "cp -iv '\
+	    $filepath_chromium_bookmarks_src\
+	    $filepath_chromium_bookmarks_sys'"'
 	return 0
     fi
 
@@ -246,7 +257,7 @@ Chromium_nonfree_codex_prep() {
         && RCxPSS=0
 
     [[ $RCxPSS -eq 0 ]] &&\
-        read -t3 -p'Make icon on desktop that runs /usr/local/bin/install_nonfree_codex'
+	Prompt_time 'TODO: Make icon on desktop that runs /usr/local/bin/install_nonfree_codex'
 
     return $RCxPSS
 }
@@ -266,7 +277,7 @@ Set_backgrounds() {
         done
     elif [ -d /etc/mdm/ ]
     then
-        read -t$timeout -p'/etc/mdm/conf: Set BackgroundColor in [ greeter ] stanza to #00e5a0'
+	Prompt_time '/etc/mdm/conf: Set BackgroundColor in [ greeter ] stanza to #00e5a0'
     fi
     #sudo sed -i 's/^background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
 }
@@ -275,16 +286,15 @@ Backup_and_Customize() {
     local filepath_source=$1
     local filepath_target=$2
 
+    filepath_diff=${filepath_diff_temp}'.diff'
+    set -e
     if [ -f $filepath_target ]
     then
 	cp -v --backup=t $filepath_target ${HOME}/
-        diff $filepath_target $filepath_source |less
+        diff $filepath_target $filepath_source\
+	    >$filepath_diff
+	[[ -s  $filepath_diff ]] || less $filepath_diff
     fi
-
-    Answer='N'
-    #Pause_n_Answer 'Y|N' 'WARN,Customize Default Settings?'
-    #if [[ "${Answer}." == 'Y.' ]]
-    #hen
     sudo cp -iv $filepath_source $filepath_target
 
     return $?
@@ -300,8 +310,7 @@ Pre_Verify_Downloads_dir() {
     echo -e "\n\n"
     find ${DOWNLOADS} -type f
     echo 'Downloaded files previous run (above).'
-    read -t$timeout -p'Confirm'
-    echo ''
+    Prompt_time 'Confirm or CONTROL-C'
 
 }
 
@@ -311,10 +320,23 @@ Post_Verify_Downloads_dir() {
     echo -e "\n\n"
     find ${DOWNLOADS} -type f -cmin -12
     echo 'Downloaded files this run (above).'
-    read -t$timeout -p'Confirm'
-    echo ''
+    Prompt_time 'Confirm or CONTROL-C'
 
 }
+
+timeout=12
+Prompt_time() {
+    mess=$@
+    local RC=0
+
+    echo -e "\e[1;32;47m"
+    read -t$timeout -p"$mess <ENTER>";RC=$?
+    echo -e "\e[0m"
+
+    return $RC
+}
+
+filepath_diff_temp=$(mktemp -t prepare.XXX) || exit 99
 
 Mainline
 
@@ -330,3 +352,5 @@ Mainline
     #sudo apt-get install pepflashplugin-installer
     #   && echo '. /usr/lib/pepflashplugin-installer/pepflashplayer.sh'
 #https://github.com/freeITathens/freeitathenscode/blob/master/image_scripts/BPR_xt_lubuntu_32bit.sh
+    #Pause_n_Answer 'Y|N' 'WARN,Customize Default Settings?'
+    Prompt_time "HaVe A nIcE dAy"
