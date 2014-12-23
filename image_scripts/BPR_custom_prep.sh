@@ -329,7 +329,7 @@ Prompt_time() {
     mess=$@
     local RC=0
 
-    echo -e "\e[1;32;47m"
+    echo -e "\e[1;32;40m"
     read -t$timeout -p"$mess <ENTER>";RC=$?
     echo -e "\e[0m"
 
