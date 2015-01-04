@@ -1,7 +1,24 @@
+#!/bin/bash
 
 reportdest=$PWD
 touch $reportdest || reportdest=/tmp
 
-diff -r -x'.svn' -x'.git'\
-    /{data/Git,partimag}/freeitathenscode/ |tee $reportdest/git_to_svn.diff
+select Host in nuvo-servo fritagonal other
+do break
+done
+
+case $Host in
+    nuvo-servo)
+	diff -r -x'.svn' -x'.git'\
+	    /{data/Git,partimag}/freeitathenscode/ |tee $reportdest/git_to_svn_${Host}.diff
+	;;
+    fritagonal)
+	diff -r -x'.svn' -x'.git'\
+	    /data{/Git,}/freeitathenscode/ |tee $reportdest/git_to_svn_${Host}.diff
+	;;
+    other)
+	echo "diff -r -x'.svn' -x'.git' olddir newdir |tee $reportdest/git_to_svn.diff"
+	;;
+esac
+	#tee /data/Svn/git_to_svn.diff
 
