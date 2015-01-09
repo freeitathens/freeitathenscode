@@ -1,0 +1,39 @@
+#Time
+gsettings set org.mate.panel.applet.clock:/org/mate/panel/objects/clock/prefs/ format 12-hour
+gsettings set org.mate.panel.applet.clock:/org/mate/panel/objects/clock/prefs/ show-seconds false
+gsettings set org.mate.panel.menubar show-desktop false
+#Multimedia codecs installer 
+wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw
+sudo mv check /usr/local/bin/
+sudo chmod +x /usr/local/bin/check
+#Auto security upgrades
+sudo dpkg-reconfigure -plow unattended-upgrades
+#Set LightDM wallpaper
+sudo sed -i 's/background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
+sudo echo "background=#FFFFFF" >> /etc/lightdm/lightdm-gtk-greeter.conf
+#/etc/chromium-browser/master_preferences
+#Bookmarks
+#Remove unnecessary programs
+sudo apt-get purge --auto-remove ace-of-penguins abiword abiword-common libabiword-3.0 gnumeric gnumeric-common
+#Printing
+sudo apt-get install system-config-printer-gnome libprinterconf-dev
+#Replace Thunderbird with Claws Mail (looks similar to Outlook, more feature complete like Outlook)
+sudo apt-get purge --auto-remove thunderbird && sudo apt-get install claws-mail claws-mail-extra-plugins claws-mail-tools claws-mail-plugins 
+#Music (replace Banshee with Rhythmbox for Ipod support)
+sudo apt-get purge --auto-remove banshee && sudo apt-get install libimobiledevice4 rhythmbox rhythmbox-plugins
+#Wine stuff in case the user needs to run a Windows executable
+sudo apt-get install wine
+#Java web plugin
+sudo apt-get install icedtea-plugin
+#Cleanup
+sudo apt-get --purge autoremove
+sudo apt-get autoclean
+#Remove Ibus
+sudo apt-get purge --auto-remove ibus
+#Wallpaper
+cd ~/Pictures
+wget https://raw.githubusercontent.com/bpr97050/freeitathenscode/master/image_scripts/FreeIT.png
+gsettings set org.mate.background picture-filename ./FreeIT.png
+gsettings set org.mate.background picture-options spanned
+gsettings set org.mate.background  primary-color '#DEDEDE'
+

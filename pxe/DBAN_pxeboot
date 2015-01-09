@@ -1,0 +1,94 @@
+DEFAULT vesamenu.c32
+PROMPT 0
+MENU MARGIN 2
+MENU BACKGROUND clonezilla-i486/syslinux/splash.png
+MENU COLOR UNSEL        1;32;40 #c0000090 #00000000
+MENU COLOR TIMEOUT_MSG  7;33;47 #c0000090 #00000000
+MENU COLOR TIMEOUT      7;34;47 #c0000090 #00000000
+MENU COLOR HELP         1;36;40 #c0000090 #00000000
+MENU COLOR help         37;40 #ffdddd00 #00000000 none
+MENU COLOR hotsel       1;7;37;40 #ffffffff #76a1d0ff *
+#MENU ROWS       9
+MENU vshift      4
+MENU helpmsgrow 14
+MENU cmdlinerow 15
+MENU timeoutrow 16
+MENU TABMSG Press ENTER to boot or TAB to edit a menu entry
+MENU TABMSGROW  17
+MENU COLOR TABMSG       * #ffffffff #00000000 *
+
+MENU TITLE Free I.T. Official DBAN Station
+#menu color title        * #d8d8d8ff *
+#menu color border       * #d8d8d8ff #00000000 none
+#menu color sel          * #00000000 #d8d8d8ff *
+#menu color unsel        * #d8d8d8ff #00000000 *
+
+MENU AUTOBOOT Starting DBAN-QuickWipe in # seconds
+
+LABEL DBAN_CURRENT
+    MENU LABEL DBAN 2.2.8 Quick Wipe
+    KERNEL dban_test/dban.bzi
+    APPEND initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe --method zero --prng twister --verify last" nofloppy
+    TIMEOUT 600
+
+LABEL DBAN_CUR_NOOPT
+    MENU LABEL DBAN 2.2.8 Default
+    KERNEL dban_test/dban.bzi
+    APPEND initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+
+#LABEL DBAN_Short
+#    MENU LABEL DBAN v2.2.6 [DoD 5220.22-M: short] 
+#    TEXT HELP 
+#       Warning: This software irrecoverably destroys data. 
+#       Security Level: Medium (3 passes) 
+#    ENDTEXT 
+#    KERNEL images/disk_tools/dban_v2.2.6_i586/DBAN.BZI 
+#    APPEND nuke="dwipe --autonuke --method dodshort" silent
+
+LABEL DBAN_OLD
+    menu label DBAN 2.2.7 (Old Version)
+    kernel dban2/dban.bzi
+    append initrd dban2/dban.bzi root=/dev/ram0 init=rc nuke="dwipe"
+
+LABEL MEMTEST
+    menu label Test RAM
+    kernel memtest/memtestp
+    append -
+
+LABEL IDHW
+    menu label Identify Hardware
+    kernel memdisk
+    append initrd=hdt/hdt.img floppy
+
+LABEL System Rescue CD "Live Image" (GUI Interface)
+    LINUX systemrescuecd/isolinux/rescue32
+    INITRD systemrescuecd/isolinux/initram.igz
+    APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us dostartx
+
+LABEL System Rescue CD "Live Image" (Command Line Interface)
+    LINUX systemrescuecd/isolinux/rescue32
+    INITRD systemrescuecd/isolinux/initram.igz
+    APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us
+
+MENU BEGIN Beta Test
+LABEL System Rescue CD "Live Image" Test 1
+    KERNEL systemrescuecd/isolinux/rescue32
+    APPEND initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5 nfsboot=192.168.1.9:/tftpboot/systemrescuecd/ ar_nowait ar_source=192.168.1.2:/tftpboot/systemrescuecd/
+LABEL System Rescue CD "Live Image" Test 2
+    KERNEL systemrescuecd/isolinux/rescue32
+    APPEND initrd=systemrescuecd/isolinux/initram.igz setkmap=us vga=5
+MENU END
+
+# does not work, says invalid ar_source.  possibly problem with sysrcd.  also sysrcd takes a long time to get to this point, is there any faster option?
+#label install-1004
+#  menu label Auto install Ubuntu 10.04.1
+#  kernel 10.04.1/casper/vmlinuz
+## change "noscrub.seed" to "scrub.seed" to use a preseed file with scrubbing
+## add "noninteractive" to install on low ram
+#  append  boot=casper netboot=nfs initrd=10.04.1/casper/initrd.lz nfsroot=192.168.1.9:/tftpboot/10.04.1 automatic-ubiquity debug-ubiquity noprompt file=/cdrom/preseed/noscrub.seed
+
+#label dban
+#  menu label (DEPRECATED, OLD DBAN) Wipe hard drive
+#  kernel memdisk
+#  append initrd=dban_OLD/dban.img floppy
+
