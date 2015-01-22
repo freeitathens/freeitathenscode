@@ -22,18 +22,17 @@ MENU BEGIN Image with Clonezilla: 64-bit
 MENU BEGIN 64-bit: Ready for Prime Time
 
 LABEL Prod-mint17-64bit
-    MENU LABEL Install Mint17 MATE 64-bit oem (04-Dec Build, normal 60GB+)
+    MENU LABEL Install Mint17 MATE 64-bit oem (13-Jan Build, 60GB Min.)
     KERNEL Czilla_20140331_saucy_amd64/live/vmlinuz
     INITRD Czilla_20140331_saucy_amd64/live/initrd.img 
     APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint17N_64.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod64_Mint17 sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs 
-    #Prod64_Mint17_partitioning.sh
 
 MENU END
 
 MENU BEGIN 64-bit: NOT Ready for Prime Time (Beta Tests)
 
 LABEL Beta-mint17-64bit
-    MENU LABEL Install Mint17 MATE 64-bit oem (Beta, 23-Dec Build 60GB+)
+    MENU LABEL Install Mint17.1 MATE 64-bit oem (Beta, 13-Jan Build)
     KERNEL Czilla_20140331_saucy_amd64/live/vmlinuz
     INITRD Czilla_20140331_saucy_amd64/live/initrd.img 
     APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 3" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/Beta64_partitioning.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta64_Mint17 sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/Czilla_20140331_saucy_amd64/live/filesystem.squashfs 
