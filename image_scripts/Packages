@@ -13,7 +13,7 @@ dialog,0,ALL,
 ethtool,0,ALL,
 #/etc/apt/sources.list.d/mozillateam-firefox-next-trusty.list
 firefox,0,ALL,ppa=mozillateam/firefox-next
-flashplugin-installer,0,ALL,
+flashplugin-installer,0,NONE,
 #/etc/apt/sources.list.d/otto-kesselgulasch-gimp-trusty.list
 gimp,0,ALL,ppa=otto-kesselgulasch/gimp
 gparted,0,ALL,
