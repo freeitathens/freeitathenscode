@@ -3,11 +3,11 @@ gsettings set org.mate.panel.applet.clock:/org/mate/panel/objects/clock/prefs/ f
 gsettings set org.mate.panel.applet.clock:/org/mate/panel/objects/clock/prefs/ show-seconds false
 gsettings set org.mate.panel.menubar show-desktop false
 #Multimedia codecs installer 
-wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw
-sudo mv check /usr/local/bin/
-sudo chmod +x /usr/local/bin/check
+#OK wget -O check https://gist.githubusercontent.com/bpr97050/9899740/raw
+#OK sudo mv check /usr/local/bin/
+#OK sudo chmod +x /usr/local/bin/check
 #Auto security upgrades
-sudo dpkg-reconfigure -plow unattended-upgrades
+#OK sudo dpkg-reconfigure -plow unattended-upgrades
 #Set LightDM wallpaper
 sudo sed -i 's/background=/#background=/g' /etc/lightdm/lightdm-gtk-greeter.conf
 sudo echo "background=#FFFFFF" >> /etc/lightdm/lightdm-gtk-greeter.conf
