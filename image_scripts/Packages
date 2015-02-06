@@ -32,7 +32,7 @@ oem-config,32,ALL,
 oem-config-debconf,32,ALL,
 oem-config-gtk,32,ALL,
 terminator,0,ALL,
-#biquity-frontend-[dgk].*,32,ALL,INSTALL='kde also?'
+ubiquity-frontend-[dgk].*,32,ALL,INSTALL='kde also?'
 vim,0,ALL,
 vrms,0,ALL,
 xscreensaver-gl,0,ALL,
