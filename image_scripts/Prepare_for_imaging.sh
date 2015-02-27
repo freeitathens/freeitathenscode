@@ -8,8 +8,6 @@ then
 	-t10
     exit
 fi
-echo 'Run sudo ifconfig'
-sudo ifconfig
 
 # Establish base of version-controlled code tree.
 [[ -z $SOURCEBASE ]] && declare -x SOURCEBASE=${HOME}'/freeitathenscode'
@@ -22,6 +20,8 @@ source ${codebase}/Prepare_functions || exit 136
 
 Mainline() {
 
+    echo 'Run sudo ifconfig'
+    sudo ifconfig
     Housekeeping
     Integrity_check
     Swap_check
@@ -249,10 +249,7 @@ Integrity_check() {
 
 Swap_check() {
 
-    filepath_swap_mess=${HOME}'/Prepare_swapfile_action'
-    sudo chown -c $realuser $filepath_swap_mess
-    cat /dev/null >$filepath_swap_mess
-    Pauze 'Verify (absence of) local UUID reference for swap in fstab.'
+    Pauze 'Verifying (absence of) local UUID reference for swap in fstab.'
     declare -ix RCxU=0
     (date +'%s.%N';grep -P 'UUID.+swap' /etc/fstab;RCxU=$?)\
 	|tee $filepath_swap_mess
@@ -300,6 +297,7 @@ Install_Remove_requested_packages() {
 Install_packages_from_file_list() {
     local package_list_file=$1
     RCz=0
+
     for pkg_info_csv in $(grep -v '^#' $package_list_file)
     do
         Process_package $pkg_info_csv;RCa=$?
@@ -308,6 +306,7 @@ Install_packages_from_file_list() {
             echo 'Problem with package '$pkg_name
         fi
     done
+
     return $RCz
 }
 
@@ -538,9 +537,9 @@ Cleanup_nouser_nogroup() {
     return 0
 }
 
-# -*- Execution continues here. Mainline (below) invokes driving function -*-
+# -*- Execution continues here. M-ainline (below) invokes driving function -*-
 set -u
-declare -r HOLDIFS=$IFS
+declare -r HOLDIFS=$IFS 2>/dev/null
 This_script=$(basename $0)
 declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
@@ -558,6 +557,11 @@ ADD_ALL='Y'
 PUR_ALL='Y'
 live_run='N'
 batch_run='N'
+realuser=${HOME#/home/}
+filepath_swap_mess=${HOME}'/Prepare_swapfile_action'
+sudo touch $filepath_swap_mess
+sudo chown -c $realuser $filepath_swap_mess
+cat /dev/null >$filepath_swap_mess
 
 # -*- Process any command line Options -*-
 Optvalid='APbDn:RuVGh'
@@ -630,7 +634,6 @@ declare -rx batch_run
 
 echo '$SOURCEBASE='$SOURCEBASE
 echo '$codebase='$codebase
-realuser=${HOME#/home/}
 echo '$realuser='$realuser
 echo '$pathname_packages_list'=$pathname_packages_list
 echo '$filename_wallpaper'=$filename_wallpaper
