@@ -4,10 +4,7 @@ source ${codebase}/Common_functions || return 135
 
 Run_apt_update() {
 
-    sudo ifconfig
-
     [[ $aptcache_needs_update == 'Y' ]] || return 0
-
     Check_report_dest $Messages_O || return $?
 
     Pauze 'apt-get update'

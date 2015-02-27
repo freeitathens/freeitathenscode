@@ -101,6 +101,12 @@ label live-mm-64-oem-config-17
   INITRD mint17-64bit-mate/casper/initrd.lz 
   APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/mint17-64bit-mate file=/cdrom/preseed/cli.seed
 
+label live-solydk-20151
+  MENU LABEL TRY Solyd KDE
+  KERNEL solydk64.2015.1/live/vmlinuz
+  INITRD solydk64.2015.1/live/initrd.img 
+  APPEND boot=live netboot=nfs nfsroot=192.168.1.9:/tftpboot/solydk64.2015.1
+
 label live-mm-64-oem-config-13
   MENU label TRY Mint 13 (oem-config) with Mate Desktop Environment
   KERNEL mm64_oemconfig/casper/vmlinuz

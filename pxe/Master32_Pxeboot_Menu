@@ -34,7 +34,7 @@ LABEL clonezilla_32
 MENU LABEL Clone (32-bit)
     KERNEL clonezilla-i486/live/vmlinuz
     INITRD clonezilla-i486/live/initrd.img 
-    APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts MINT17v1_MATE_32_OEM_20141203.img sda1 sda3 sda5"  ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+    APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts MINT17v1_MATE_32_OEM_20149999.img sda1 sda3 sda5"  ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 MENU BEGIN INSTALL GNU+Linux (Image with Clonezilla)
 

@@ -1,10 +1,18 @@
 #!/bin/bash +x
-[[ 0 -eq $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]] &&\
-    read -p'NOTE: Please run as normal user with sudo privledges.<CONTROL-C>'
-# read -p'NOTE: Permission Problems Rerun with sudo (i.e., as root).<ENTER>' -t5
+#if [ $(whoami) == 'root' ]
+#if [ $(id -u) -eq 0 ]
+if [[ 0 -eq $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]]
+then
+    read\
+	-p'NOTE: Please run as normal (but sudo-ed) user <CONTROL-C>'\
+	-t10
+    exit
+fi
+echo 'Run sudo ifconfig'
+sudo ifconfig
 
 # Establish base of version-controlled code tree.
-[[ -z $SOURCEBASE ]] && declare -x SOURCEBASE='/home/oem/freeitathenscode'
+[[ -z $SOURCEBASE ]] && declare -x SOURCEBASE=${HOME}'/freeitathenscode'
 [[ -d $SOURCEBASE ]] || exit 25
 # Establish location of these scripts within SOURCEBASE
 codebase=${SOURCEBASE}'/image_scripts'
@@ -12,25 +20,11 @@ codebase=${SOURCEBASE}'/image_scripts'
 declare -x codebase
 source ${codebase}/Prepare_functions || exit 136
 
-pathname_packages_list=${codebase}'/Packages'
-filename_wallpaper='FreeIT.png'
-src_path_wallpaper=${codebase}/$filename_wallpaper
-sys_dir_wallpaper='/usr/share/backgrounds'
-wallpaper_was_setup='N'
-
-aptcache_needs_update='Y'
-refresh_updatedb='N'
-refresh_svn='N'
-refresh_git='Y'
-ADD_ALL='Y'
-PUR_ALL='Y'
-live_run='N'
-batch_run='N'
-
 Mainline() {
 
     Housekeeping
     Integrity_check
+    Swap_check
     Install_Remove_requested_packages
 
     case $distro_generia in
@@ -48,8 +42,11 @@ Mainline() {
     Check_Setup_wallpaper;RCxW=$?
     Report_Check_Setup_wallpaper $RCxW
 
+    for Count in $(seq 1 5)
+    do
+        echo -ne "\n"
+    done
     Pauze 'Lauching Virtual Greybeard'
-    clear
     vrms
     Pauze '/\Please Purge Non-Free Stuff IF NEEDED/\'
 
@@ -83,9 +80,6 @@ Housekeeping() {
     [[ "${refresh_svn}." == 'Y.' ]] && Contact_server
 
     Run_apt_update
-
-    #Pauze 'Confirm no medibuntu in apt sources'
-    #egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
 
     return 0
 }
@@ -230,25 +224,9 @@ User_no_distro_bye() {
 
 Integrity_check() {
 
-    RCxU=1
-    grep -P 'UUID.+swap' /etc/fstab && RCxU=$?
-    Pauze 'Verify (absence of) local UUID reference for swap in fstab.'
-    if [ $RCxU -eq 0 ]
-    then
-        echo 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference'
-        Pauze '   but might be false positive...'
-        #Entering editor...'
-        #sudo vi /etc/fstab
-    fi
-
-    sudo swapoff --all --verbose
-    Pauze 'Verify swap off'
-    sudo swapon --all --verbose
-    Pauze 'Verify swap on'
-
     local_scripts_DIR="${HOME}/bin"
     [[ -d $local_scripts_DIR ]] || mkdir $local_scripts_DIR
-    sudo chown -c oem $local_scripts_DIR
+    sudo chown -c -R $realuser $local_scripts_DIR
 
     [[ -e ${local_scripts_DIR}/QC.sh ]] ||\
         ln -s ${SOURCEBASE}/QC_Process/QC.sh ${local_scripts_DIR}/QC.sh
@@ -256,8 +234,8 @@ Integrity_check() {
         ln -s ${codebase}/revert_prep_for_shipping_to_eu\
      ${local_scripts_DIR}/revert_prep_for_shipping_to_eu 
 
+    Pauze 'Verifying you have a home bin dir. And that QC / other scripts are present'
     find ${local_scripts_DIR} -ls
-    Pauze 'Verify you have a home bin dir. And that QC / other scripts are present'
 
     (find ${SOURCEBASE}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
         find ${SOURCEBASE}/Development/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
@@ -267,6 +245,28 @@ Integrity_check() {
     #Pauze 'Done with Integrity Check'
 
     return 0
+}
+
+Swap_check() {
+
+    filepath_swap_mess=${HOME}'/Prepare_swapfile_action'
+    sudo chown -c $realuser $filepath_swap_mess
+    cat /dev/null >$filepath_swap_mess
+    Pauze 'Verify (absence of) local UUID reference for swap in fstab.'
+    declare -ix RCxU=0
+    (date +'%s.%N';grep -P 'UUID.+swap' /etc/fstab;RCxU=$?)\
+	|tee $filepath_swap_mess
+    if [ $RCxU -eq 0 ]
+    then
+	(date +'%s.%N';echo 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference')\
+	    |tee -a $filepath_swap_mess
+    fi
+
+    Pauze 'Verify swap off'
+    sudo swapoff --all --verbose
+    Pauze 'Verify swap on'
+    sudo swapon --all --verbose
+
 }
 
 Install_Remove_requested_packages() {
@@ -545,6 +545,20 @@ This_script=$(basename $0)
 declare -rx Messages_O=$(mktemp -t "${This_script}_log.XXXXX")
 declare -rx Errors_O=$(mktemp -t "${This_script}_err.XXXXX")
 
+pathname_packages_list=${codebase}'/Packages'
+filename_wallpaper='FreeIT.png'
+src_path_wallpaper=${codebase}/$filename_wallpaper
+sys_dir_wallpaper='/usr/share/backgrounds'
+wallpaper_was_setup='N'
+aptcache_needs_update='Y'
+refresh_updatedb='N'
+refresh_svn='N'
+refresh_git='Y'
+ADD_ALL='Y'
+PUR_ALL='Y'
+live_run='N'
+batch_run='N'
+
 # -*- Process any command line Options -*-
 Optvalid='APbDn:RuVGh'
 while getopts $Optvalid OPT
@@ -616,6 +630,8 @@ declare -rx batch_run
 
 echo '$SOURCEBASE='$SOURCEBASE
 echo '$codebase='$codebase
+realuser=${HOME#/home/}
+echo '$realuser='$realuser
 echo '$pathname_packages_list'=$pathname_packages_list
 echo '$filename_wallpaper'=$filename_wallpaper
 echo '$src_path_wallpaper'=$src_path_wallpaper
@@ -641,3 +657,7 @@ Mainline
 #PKGS='lm-sensors hddtemp ethtool gimp firefox 
 #  dialog xscreensaver-gl libreoffice aptitude vim
 #  flashplugin-installer htop inxi vrms mintdrivers gparted terminator hardinfo'
+
+    #Pauze 'Confirm no medibuntu in apt sources'
+    #egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
+
