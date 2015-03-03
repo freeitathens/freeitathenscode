@@ -234,15 +234,15 @@ Integrity_check() {
         ln -s ${codebase}/revert_prep_for_shipping_to_eu\
      ${local_scripts_DIR}/revert_prep_for_shipping_to_eu 
 
-    Pauze 'Verifying you have a home bin dir. And that QC / other scripts are present'
-    find ${local_scripts_DIR} -ls
+    echo 'Verifying you have a home bin dir. And that QC / other scripts are present'
+    find ${local_scripts_DIR} -exec ls -li --full-time {} \;
 
+    echo 'Verifying that the correct Run Quality Control icon is in place...'
     (find ${SOURCEBASE}/QC_Process -iname 'Quality*' -exec md5sum {} \; ;\
         find ${SOURCEBASE}/Development/Master_${address_len} -iname 'Quality*' -exec md5sum {} \; ;\
         find ${HOME}/Desktop -iname 'Quality*' -exec md5sum {} \;) |grep -v '\.svn' |sort
-    Pauze 'Verify that the correct Run Quality Control icon is in place...'
 
-    #Pauze 'Done with Integrity Check'
+    echo 'Done with Integrity Check'
 
     return 0
 }

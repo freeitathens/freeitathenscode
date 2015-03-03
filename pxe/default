@@ -101,11 +101,11 @@ label live-mm-64-oem-config-17
   INITRD mint17-64bit-mate/casper/initrd.lz 
   APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/mint17-64bit-mate file=/cdrom/preseed/cli.seed
 
-label live-solydk-20151
-  MENU LABEL TRY Solyd KDE
-  KERNEL solydk64.2015.1/live/vmlinuz
-  INITRD solydk64.2015.1/live/initrd.img 
-  APPEND boot=live netboot=nfs nfsroot=192.168.1.9:/tftpboot/solydk64.2015.1
+label Ubuntu_14_10
+  MENU LABEL TRY "Unbuntu" ;) 14.10
+  KERNEL ubuntu-14.10-desktop-amd64/casper/vmlinuz.efi
+  INITRD ubuntu-14.10-desktop-amd64/casper/initrd.lz 
+  APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/ubuntu-14.10-desktop-amd64 file=/cdrom/preseed/ubuntu.seed
 
 label live-mm-64-oem-config-13
   MENU label TRY Mint 13 (oem-config) with Mate Desktop Environment
@@ -200,7 +200,13 @@ LABEL Kiosk Boot (text only, no gui)
 
 MENU END
 
-MENU BEGIN Ye Olde Legacie Scriptes
+MENU BEGIN Testing, et.al.
+
+label live-solydk-20151
+  MENU LABEL TRY Solyd KDE (broken)
+  KERNEL solydk64.2015.1/live/vmlinuz
+  INITRD solydk64.2015.1/live/initrd.img 
+  APPEND boot=live netboot=nfs nfsroot=192.168.1.9:/tftpboot/solydk64.2015.1
 
 LABEL lubuntu32-oem-config
     MENU LABEL Install Lubuntu 14.04 32-bit oem-config (28-Apr Build)

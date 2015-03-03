@@ -205,6 +205,7 @@ QCtest_optical_drive() {
 Work_on_Optical() {
     [[ -z $TARGET_OPTICAL ]] && return 80
     TARGET_DEVICE="/dev/${TARGET_OPTICAL}"
+   # echo -e "\n\nPlease clear anything in front of optical drive\n"
     sudo eject -a off -i off $TARGET_DEVICE 2>>$ERRFILE
     sudo eject $TARGET_DEVICE 2>>$ERRFILE
     RC=$?

@@ -5,17 +5,17 @@ Mainline() {
 
     Accum_RC=$1
 
-    Set_Mess 'Initializing partition table'
-    sudo parted -s /dev/$drivepart mklabel msdos;Mrc=$?
-    Proc_mess $Mrc $Mess
-
+#    Set_Mess 'Initializing partition table'
+#    sudo parted -s /dev/sda mklabel gpt;Mrc=$?
+#    Proc_mess $Mrc $Mess
+#A MAX 3999743
     Set_Mess 'Creating root partition'
-    sudo parted -s -a optimal /dev/$drivepart unit s mkpart primary ext4 2048 19531775\
+    sudo parted -s -a optimal /dev/sda unit s mkpart primary ext2 2048 19531775\
 	&& Good_mess $Mess\
 	|| Prob_mess $? $Mess
 
     Set_Mess 'Creating swap partition'
-    sudo parted -s -a optimal /dev/$drivepart unit s mkpart primary linux-swap 19531776 21485567\
+    sudo parted -s -a optimal /dev/sda unit s mkpart primary linux-swap 19531776 21485567\
 	&& Good_mess $Mess\
 	|| Prob_mess $? $Mess
     Set_Mess 'Formatting swap partition' 
@@ -23,13 +23,13 @@ Mainline() {
 	&& Good_mess $Mess\
 	|| Prob_mess $? $Mess
 
-    Set_Mess 'Creating extended partition'
-    sudo parted -s -a optimal /dev/$drivepart unit s mkpart extended 21487614 100%\
-	&& Good_mess $Mess\
-	|| Prob_mess $? $Mess
+#    Set_Mess 'Creating extended partition'
+#    sudo parted -s -a optimal /dev/sda unit s mkpart extended 21487614 100%\
+#	&& Good_mess $Mess\
+#	|| Prob_mess $? $Mess
 
     Set_Mess 'Creating home partition'
-    sudo parted -s -a optimal /dev/$drivepart unit s mkpart logical ext4 21487616 100%\
+    sudo parted -s -a optimal /dev/sda unit s mkpart logical ext2 21487616 100%\
 	&& Good_mess $Mess\
 	|| Prob_mess $? $Mess
 
@@ -141,7 +141,7 @@ else
     read Xu
 fi
 echo -e "\nNewly created partition scheme:"
-fdisk -l /dev/$drivepart
+fdisk -l /dev/sda
 
 #Task_init 'Creating extended' 1
 #sudo parted -s -a optimal /dev/sda unit MiB mkpart extended 513 100%\
