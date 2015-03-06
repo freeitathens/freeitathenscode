@@ -5,17 +5,21 @@ Mainline() {
 
     Accum_RC=$1
 
-#    Set_Mess 'Initializing partition table'
-#    sudo parted -s /dev/sda mklabel gpt;Mrc=$?
-#    Proc_mess $Mrc $Mess
-#A MAX 3999743
+    Set_Mess 'Initializing gpt partition table'
+    sudo parted -s /dev/sda mklabel gpt;Mrc=$?
+    Proc_mess $Mrc $Mess
+
     Set_Mess 'Creating root partition'
-    sudo parted -s -a optimal /dev/sda unit s mkpart primary ext2 2048 19531775\
+    sudo parted -s -a optimal /dev/sda\
+	unit MiB mkpart primary ext2\
+	2048 19715276\
 	&& Good_mess $Mess\
 	|| Prob_mess $? $Mess
 
     Set_Mess 'Creating swap partition'
-    sudo parted -s -a optimal /dev/sda unit s mkpart primary linux-swap 19531776 21485567\
+    sudo parted -s -a optimal /dev/sda\
+	unit s mkpart primary linux-swap\
+	19715277 21485567\
 	&& Good_mess $Mess\
 	|| Prob_mess $? $Mess
     Set_Mess 'Formatting swap partition' 
@@ -23,15 +27,18 @@ Mainline() {
 	&& Good_mess $Mess\
 	|| Prob_mess $? $Mess
 
-#    Set_Mess 'Creating extended partition'
-#    sudo parted -s -a optimal /dev/sda unit s mkpart extended 21487614 100%\
-#	&& Good_mess $Mess\
-#	|| Prob_mess $? $Mess
-
-    Set_Mess 'Creating home partition'
-    sudo parted -s -a optimal /dev/sda unit s mkpart logical ext2 21487616 100%\
+    Set_Mess 'Creating dummy partition #1 (sda3)'
+    sudo parted -s -a optimal /dev/sda unit s mkpart extended 21487614 100%\
 	&& Good_mess $Mess\
 	|| Prob_mess $? $Mess
+
+    Set_Mess 'Creating home partition'
+    sudo parted -s -a optimal /dev/sda\
+	unit s mkpart logical ext2\
+	21487616 100%\
+	&& Good_mess $Mess\
+	|| Prob_mess $? $Mess
+        #119537664+21487616
 
     return $Accum_RC
 }
@@ -145,4 +152,11 @@ fdisk -l /dev/sda
 
 #Task_init 'Creating extended' 1
 #sudo parted -s -a optimal /dev/sda unit MiB mkpart extended 513 100%\
+
+#KNAME NAME     SIZE TYPE FSTYPE   MOUNTPOINT                                 MODEL
+#sda   sda     74.5G disk                                                     Maxtor 6L080M0  
+#sda1  |-sda1   9.3G part ext4                                                
+#sda2  |-sda2   954M part swap                                                
+#sda3  |-sda3     1K part                                                     
+#sda5  `-sda5  56.1G part ext4                                                
 
