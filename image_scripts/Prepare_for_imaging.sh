@@ -317,9 +317,9 @@ Process_package() {
 
     declare -r pkg_info_L=${#pkg_info_a[*]}
     pkg_name=${pkg_info_a[0]}
-    pkg_by_addr=${pkg_info_a[1]}
-    [[ pkg_by_addr -eq 0 ]] && pkg_by_addr=$address_len
-    if [ $pkg_by_addr != $address_len ]
+    pkg_by_addr_len=${pkg_info_a[1]}
+    [[ pkg_by_addr_len -eq 0 ]] && pkg_by_addr_len=$address_len
+    if [ $pkg_by_addr_len != $address_len ]
     then
         echo 'Skipping package '$pkg_name' on '$address_len' box.'
         return 0
@@ -425,9 +425,9 @@ Pkg_by_distro_session() {
        declare -a PUR_ARR=('Y')
        if [ $PUR_ALL == 'N' ]
        then
-           read -p'<Purge?>' -a PUR_ARR || return $?
+           read -p'<Purge?>' -a PUR_ARR || return 0
        fi
-       [[ ${#PUR_ARR[*]} -eq 0 ]] && return 1
+       [[ ${#PUR_ARR[*]} -eq 0 ]] && return 0
        if [ ${PUR_ARR[0]} == 'Y' ]
        then
            Apt_purge $pkg_name || return $?
@@ -438,9 +438,9 @@ Pkg_by_distro_session() {
        declare -a ADD_ARR=('Y')
        if [ $ADD_ALL == 'N' ]
        then
-           read -p'<Install/Upgrad3(Y|n)?>' -a ADD_ARR || return $?
+           read -p'<Install/Upgrad3(Y|n)?>' -a ADD_ARR || return 0
        fi
-       [[ ${#ADD_ARR[*]} -eq 0 ]] && return 1
+       [[ ${#ADD_ARR[*]} -eq 0 ]] && return 0
        if [ ${ADD_ARR[0]} == 'Y' ]
        then
            Apt_install $pkg_name || return $?
@@ -456,6 +456,10 @@ Pkg_by_distro_session() {
        $distro_generia)
            Pkg_add || return $?
            ;;
+       *)
+	   echo 'Unknown Distro Generic Description '$distro_session
+	   return 4
+	   ;;
    esac
 
    return 1

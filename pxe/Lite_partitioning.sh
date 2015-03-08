@@ -21,7 +21,8 @@ Mainline() {
     part_len_MiB=$(((94*1024)/10))
     part_len_sectors=$(((${part_len_MiB}*1024*1024)/512))
     end_sector=$((${start_sector}+${part_len_sectors}))
-    sudo parted -s /dev/sda unit s mkpart root ext2 0% $end_sector
+    sudo parted -s /dev/sda unit s mkpart root ext2 $start_sector $end_sector
+    #sudo parted -s /dev/sda unit s mkpart root ext2 0% $end_sector
     Proc_mess $? $Mess
     [[ $Accum_RC -gt 5 ]] && return $Accum_RC
 
@@ -185,31 +186,18 @@ fi
 echo -e "\nNewly created partition scheme:"
 parted -s /dev/sda p
 
-#Task_init 'Creating extended' 1
 #sudo parted -s -a optimal /dev/sda unit MiB mkpart extended 513 100%\
-
-#KNAME NAME     SIZE TYPE FSTYPE   MOUNTPOINT                                 MODEL
-#sda   sda     74.5G disk                                                  Maxtor 6L080M0  
-#
+#KNAME NAME     SIZE TYPE FSTYPE   MOUNTPOINT         MODEL
+#sda   sda     74.5G disk                             Maxtor 6L080M0  
 #mint@mint ~ $ Declare -i zart_len_MiB=$(((94*1024)/10))
-xmint@mint ~ $ echo $xart_len_MiB 
 #9625
-#mint@mint ~ $ echo $(((9625*1024*1024)/512)
-#> ^C
 #mint@mint ~ $ echo $(((9625*1024*1024)/512))
 #19712000
 #mint@mint ~ $ sudo parted /dev/sda
-#GNU Parted 2.3
-#Using /dev/sda
-#Welcome to GNU Parted! Type 'help' to view a list of commands.
-#(parted) p                                                                
 #Model: ATA Maxtor 6L080M0 (scsi)
 #Disk /dev/sda: 80.0GB
 #Sector size (logical/physical): 512B/512B
 #Partition Table: gpt
-#
-#Number  Start  End  Size  File system  Name  Flags
-#
 #(parted) unit MiB
 #(parted) mkpart nameit ext2 0% 9625
 #(parted) p                                                                
@@ -217,10 +205,8 @@ xmint@mint ~ $ echo $xart_len_MiB
 #Disk /dev/sda: 76294MiB
 #Sector size (logical/physical): 512B/512B
 #Partition Table: gpt
-#
 #Number  Start    End      Size     File system  Name    Flags
 # 1      1.00MiB  9625MiB  9624MiB  ext4         nameit
-#
 #(parted) unit GiB
 #(parted) p                                                                
 #Model: ATA Maxtor 6L080M0 (scsi)
@@ -272,7 +258,7 @@ xmint@mint ~ $ echo $xart_len_MiB
 #Number  Start   End     Size    File system  Name    Flags
 # 1      1049kB  10.1GB  10.1GB  ext4         nameit
 #
-#mint@mint ~ $ sudo parted /dev/sda -s unit s p
+#sudo parted /dev/sda -s unit s p
 #Model: ATA Maxtor 6L080M0 (scsi)
 #Disk /dev/sda: 156250000s
 #Sector size (logical/physical): 512B/512B

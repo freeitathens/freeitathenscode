@@ -1,0 +1,2 @@
+Counter=0;while [ $Counter -lt 1000 ];do clear;((Counter++));/sbin/ifconfig|grep inet;route -nv;sleep 1;tracepath 192.168.1.9; sleep 2; tracepath 192.168.1.1; sleep 2; if [ $(($Counter%10)) -eq 0 ];then ping -c2 charter.com;else echo 'Skipping ping charter on iteration '$Counter;fi; sleep 2;echo 'Arp:'; arp; sleep 5; ifconfig ; done
+

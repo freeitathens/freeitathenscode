@@ -122,7 +122,7 @@ Check_report_dest() {
 #
 #    local RC=0
 #    echo 'Attempting to replace' $packages 'with' $replacements
-#    Apt_purge $packages ||RC=$?
+#    apt_purge $packages ||RC=$?
 #    if [ $RC -eq 0 ]
 #    then
 #        Apt_install $replacements ||RC=$?
