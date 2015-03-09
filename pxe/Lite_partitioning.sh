@@ -1,4 +1,8 @@
 #!/bin/bash
+declare units_IN=${1:-'MiB'}
+declare units_OUT=${1:-'MB'}
+
+declare -i partno=0
 declare -i Accum_RC=0
 
 Mainline() {
@@ -7,80 +11,77 @@ Mainline() {
     sudo parted -s /dev/sda mklabel gpt;Mrc=$?
     Proc_mess $Mrc $Mess
 
-    declare -i start_sector=2048
-    declare -i part_len_GiB=10
-    declare -i part_len_MiB=$(((100*1024)/10))
-    declare -i part_len_sectors=1
-    declare -i end_sector=$(((74*1024*1024)/512))
-    declare -i partno=0
-
     ((partno++))
-    Set_Mess 'Creating root partition (#'$partno')'
     #sda1  |-sda1   9.3G part ext4                                                
-    #part_len_GiB=9.4
-    part_len_MiB=$(((94*1024)/10))
-    part_len_sectors=$(((${part_len_MiB}*1024*1024)/512))
-    end_sector=$((${start_sector}+${part_len_sectors}))
-    sudo parted -s /dev/sda unit s mkpart root ext2 $start_sector $end_sector
-    #sudo parted -s /dev/sda unit s mkpart root ext2 0% $end_sector
-    Proc_mess $? $Mess
+    Part_ish_own 1 $(((94*1024)/10)) 'root'
     [[ $Accum_RC -gt 5 ]] && return $Accum_RC
 
     ((partno++))
-    Set_Mess 'Creating swap partition (#'$partno')'
-    start_sector=$((end_sector+1))
-    #part_len_GiB=1
-    part_len_MiB=1024
-    part_len_sectors=$(((${part_len_MiB}*1024*1024)/512))
-    end_sector=$((${start_sector}+${part_len_sectors}))
-    sudo parted -s /dev/sda unit s mkpart 'swap' linux-swap\
-	$start_sector $end_sector
-    Proc_mess $? $Mess
-    [[ $Accum_RC -gt 5 ]] && return $Accum_RC
-
+    Part_ish_own $(($end+1)) 1024 'swap'
     Set_Mess 'Formatting swap partition' 
     mkswap /dev/sda${partno}
     Proc_mess $? $Mess
     [[ $Accum_RC -gt 5 ]] && return $Accum_RC
 
     ((partno++))
-    Set_Mess 'Creating dummy partition #1 (sda3)'
-    start_sector=$((end_sector+1))
-    part_len_MiB=1024
-    part_len_sectors=$(((${part_len_MiB}*1024*1024)/512))
-    end_sector=$((${start_sector}+${part_len_sectors}))
-    sudo parted -s -a optimal /dev/sda unit s mkpart dummy1 ext2\
-        $start_sector $end_sector
-    Proc_mess $? $Mess
+    Part_ish_own $(($end+1)) 1024 'dummu1sda3'
+    [[ $Accum_RC -gt 5 ]] && return $Accum_RC
+    ((partno++))
+    Part_ish_own $(($end+1)) 1024 'dummu2sda4'
     [[ $Accum_RC -gt 5 ]] && return $Accum_RC
 
     ((partno++))
-    Set_Mess 'Creating dummy partition #2 (sda4)'
-    start_sector=$((end_sector+1))
-    part_len_MiB=1024
-    part_len_sectors=$(((${part_len_MiB}*1024*1024)/512))
-    end_sector=$((${start_sector}+${part_len_sectors}))
-    sudo parted -s -a optimal /dev/sda unit s mkpart dummy2 ext2\
-        $start_sector $end_sector
-    Proc_mess $? $Mess
-    [[ $Accum_RC -gt 5 ]] && return $Accum_RC
-
-    ((partno++))
-    Set_Mess 'Creating home partition (#'$partno')'
-    start_sector=$((end_sector+1))
     #sda5  sda5  56.1G part ext4                                                
-    part_len_GiB=57
-    part_len_MiB=$(((${part_len_GiB}*1024)/10))
-    part_len_sectors=$(((${part_len_MiB}*1024*1024)/512))
-    end_sector=$((${start_sector}+${part_len_sectors}))
-    #udo parted -s -a optimal /dev/sda unit s mkpart home ext2
-    sudo parted -s -a optimal /dev/sda unit s mkpart home ext2\
-        $start_sector 100%
-    Proc_mess $? $Mess
+    # 100%!!
+    Part_ish_own $(($end+1)) $(((570*1024)/10)) 'home'
     [[ $Accum_RC -gt 5 ]] && return $Accum_RC
 
     return 0
 }
+
+Part_ish_own() {
+    declare -i start=${1:-1024}
+    declare -i len=${2:-1024}
+    declare label=$3
+    [[ -z $label ]] && label='part'$partno
+    
+    Set_Mess 'Creating '$label' partition (#'$partno')'
+    Unit_conversion $len
+    declare -ig end=$((${start}+${part_len}))
+
+    parttype='ext4'
+    [[ $label =~ 'swap' ]] && parttype='linux-swap'
+    sudo parted -s -a optimal /dev/sda unit $units_OUT mkpart $label $parttype $start $end
+    Proc_mess $? $Mess;declare RC=$?
+
+    return $RC
+}
+#udo parted -s            /dev/sda unit s          mkpart root ext2 0% $end
+
+Unit_conversion() {
+    #declare units_IN=${1:-'MiB'}
+    #declare units_OUT=${2:-'MB'}
+    declare -i len_IN=$1
+
+    declare -ig part_len=1
+    case $units_IN in
+        MiB)
+            case $units_OUT in
+                MB)
+                    part_len=$(((($len_IN*1024*1024)/1000)/1000))
+                    ;;
+            esac
+        ;;
+    esac
+            
+    return 0
+}
+
+# ((((10x1000x1000x1000)/1024)/1024)/1024) = 9.313225746
+# (((10x1000x1000)/1024)/1024)             = 9.536743164
+
+#  Example converting 74 MiB to sectors
+#     end=$(((74*1024*1024)/512))
 
 Set_Mess() {
     declare -g Mess=${1:-'Unknown Task!'}
