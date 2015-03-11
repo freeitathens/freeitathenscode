@@ -1,37 +1,44 @@
 #!/bin/bash
-declare units_IN=${1:-'MiB'}
-declare units_OUT=${1:-'MB'}
+declare disk=${1:-'sda'}
+declare units_IN=${2:-'MiB'}
+declare units_OUT=${3:-'MB'}
+declare check_for_lvm=${4:-'Y'}
 
-declare -i partno=0
 declare -i Accum_RC=0
 
 Mainline() {
 
+    for part_in_swap in $(swapon -sv |grep -P -o '/dev/'$disk'\d')
+    do
+        sudo swapoff $part_in_swap
+    done
+
+    declare -i partno=0
+
     Set_Mess 'Initializing gpt partition table'
-    sudo parted -s /dev/sda mklabel gpt;Mrc=$?
+    sudo parted -s /dev/$disk mklabel gpt;Mrc=$?
     Proc_mess $Mrc $Mess
 
     ((partno++))
-    #sda1  |-sda1   9.3G part ext4                                                
-    Part_ish_own 1 $(((94*1024)/10)) 'root'
+    Part_ish_own 0% 1 'grubbios'
+    [[ $Accum_RC -gt 5 ]] && return $Accum_RC
+
+    ((partno++))
+    Part_ish_own $(($end+1)) $(((94*1024)/10)) 'boot'
+    [[ $Accum_RC -gt 5 ]] && return $Accum_RC
+
+    ((partno++))
+    Part_ish_own $(($end+1)) $(((94*1024)/10)) 'root'
     [[ $Accum_RC -gt 5 ]] && return $Accum_RC
 
     ((partno++))
     Part_ish_own $(($end+1)) 1024 'swap'
     Set_Mess 'Formatting swap partition' 
-    mkswap /dev/sda${partno}
+    mkswap /dev/$disk${partno}
     Proc_mess $? $Mess
     [[ $Accum_RC -gt 5 ]] && return $Accum_RC
 
     ((partno++))
-    Part_ish_own $(($end+1)) 1024 'dummu1sda3'
-    [[ $Accum_RC -gt 5 ]] && return $Accum_RC
-    ((partno++))
-    Part_ish_own $(($end+1)) 1024 'dummu2sda4'
-    [[ $Accum_RC -gt 5 ]] && return $Accum_RC
-
-    ((partno++))
-    #sda5  sda5  56.1G part ext4                                                
     # 100%!!
     Part_ish_own $(($end+1)) $(((570*1024)/10)) 'home'
     [[ $Accum_RC -gt 5 ]] && return $Accum_RC
@@ -40,7 +47,7 @@ Mainline() {
 }
 
 Part_ish_own() {
-    declare -i start=${1:-1024}
+    declare start=${1:-1024}
     declare -i len=${2:-1024}
     declare label=$3
     [[ -z $label ]] && label='part'$partno
@@ -51,12 +58,12 @@ Part_ish_own() {
 
     parttype='ext4'
     [[ $label =~ 'swap' ]] && parttype='linux-swap'
-    sudo parted -s -a optimal /dev/sda unit $units_OUT mkpart $label $parttype $start $end
+    sudo parted -s -a optimal /dev/$disk unit $units_OUT mkpart $label $parttype $start $end
     Proc_mess $? $Mess;declare RC=$?
 
     return $RC
 }
-#udo parted -s            /dev/sda unit s          mkpart root ext2 0% $end
+#udo parted -s            /dev/sdA unit s          mkpart root ext2 0% $end
 
 Unit_conversion() {
     #declare units_IN=${1:-'MiB'}
@@ -70,8 +77,17 @@ Unit_conversion() {
                 MB)
                     part_len=$(((($len_IN*1024*1024)/1000)/1000))
                     ;;
+		MiB)
+		    echo 'No units conversion needed on partition '$partno
+		    ;;
+		*)
+		    echo 'Units value '$units_OUT' unknown'
+		    ;;
             esac
-        ;;
+	    ;;
+	*)
+	    echo 'Units value '$units_IN' unknown'
+	    ;;
     esac
             
     return 0
@@ -172,7 +188,10 @@ Handle_possible_lvm() {
 }
 
 declare -i Fix_RC=0
-Handle_possible_lvm || Fix_RC=$?
+if [ $check_for_lvm == 'Y' ]
+then
+    Handle_possible_lvm || Fix_RC=$?
+fi
 [[ $Fix_RC -ge 10 ]] && exit $Fix_RC
 
 Mainline
@@ -185,25 +204,25 @@ else
     read Xu
 fi
 echo -e "\nNewly created partition scheme:"
-parted -s /dev/sda p
+parted -s /dev/$disk p
 
-#sudo parted -s -a optimal /dev/sda unit MiB mkpart extended 513 100%\
+#sudo parted -s -a optimal /dev/sad unit MiB mkpart extended 513 100%\
 #KNAME NAME     SIZE TYPE FSTYPE   MOUNTPOINT         MODEL
-#sda   sda     74.5G disk                             Maxtor 6L080M0  
+#sad   sad     74.5G disk                             Maxtor 6L080M0  
 #mint@mint ~ $ Declare -i zart_len_MiB=$(((94*1024)/10))
 #9625
 #mint@mint ~ $ echo $(((9625*1024*1024)/512))
 #19712000
-#mint@mint ~ $ sudo parted /dev/sda
+#mint@mint ~ $ sudo parted /dev/sad
 #Model: ATA Maxtor 6L080M0 (scsi)
-#Disk /dev/sda: 80.0GB
+#Disk /dev/sad: 80.0GB
 #Sector size (logical/physical): 512B/512B
 #Partition Table: gpt
 #(parted) unit MiB
 #(parted) mkpart nameit ext2 0% 9625
 #(parted) p                                                                
 #Model: ATA Maxtor 6L080M0 (scsi)
-#Disk /dev/sda: 76294MiB
+#Disk /dev/sad: 76294MiB
 #Sector size (logical/physical): 512B/512B
 #Partition Table: gpt
 #Number  Start    End      Size     File system  Name    Flags
@@ -211,7 +230,7 @@ parted -s /dev/sda p
 #(parted) unit GiB
 #(parted) p                                                                
 #Model: ATA Maxtor 6L080M0 (scsi)
-#Disk /dev/sda: 74.5GiB
+#Disk /dev/sad: 74.5GiB
 #Sector size (logical/physical): 512B/512B
 #Partition Table: gpt
 #
@@ -221,7 +240,7 @@ parted -s /dev/sda p
 #(parted) unit GB                                                          
 #(parted) p                                                                
 #Model: ATA Maxtor 6L080M0 (scsi)
-#Disk /dev/sda: 80.0GB
+#Disk /dev/sad: 80.0GB
 #Sector size (logical/physical): 512B/512B
 #Partition Table: gpt
 #
@@ -238,7 +257,7 @@ parted -s /dev/sda p
 #(parted) unit s                                                           
 #(parted) p                                                                
 #Model: ATA Maxtor 6L080M0 (scsi)
-#Disk /dev/sda: 156250000s
+#Disk /dev/sad: 156250000s
 #Sector size (logical/physical): 512B/512B
 #Partition Table: gpt
 #
@@ -250,30 +269,30 @@ parted -s /dev/sda p
 #
 #mint@mint ~ $ echo $(((9625*1024*1024)/512))
 #19712000
-#mint@mint ~ $ sudo parted /dev/sda -s p
+#mint@mint ~ $ sudo parted /dev/sad -s p
 #Model: ATA Maxtor 6L080M0 (scsi)
-#Disk /dev/sda: 80.0GB
+#Disk /dev/sad: 80.0GB
 #Sector size (logical/physical): 512B/512B
 #Partition Table: gpt
 #
 #Number  Start   End     Size    File system  Name    Flags
 # 1      1049kB  10.1GB  10.1GB  ext4         nameit
 #
-#sudo parted /dev/sda -s unit s p
+#sudo parted /dev/sad -s unit s p
 #Model: ATA Maxtor 6L080M0 (scsi)
-#Disk /dev/sda: 156250000s
+#Disk /dev/sad: 156250000s
 #Sector size (logical/physical): 512B/512B
 #Partition Table: gpt
 #
 #Number  Start  End        Size       File system  Name    Flags
 # 1      2048s  19711999s  19709952s  ext4         nameit
 
-#Error: The location 2167197697 is outside of the device /dev/sda.
+#Error: The location 2167197697 is outside of the device /dev/sad.
 
 #Problem! Non-zero return code (1) when Creating swap partition (#2).
 
 #Model: ATA Maxtor 6L080M0 (scsi)
-#Disk /dev/sda: 156250000s
+#Disk /dev/sad: 156250000s
 #Sector size (logical/physical): 512B/512B
 #Partition Table: gpt
 
