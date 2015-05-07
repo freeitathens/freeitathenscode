@@ -4,28 +4,36 @@
 if [[ 0 -eq $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]]
 then
     read\
-	-p'NOTE: Please run as normal (but sudo-ed) user <CONTROL-C>'\
-	-t10
-    exit
+        -p'NOTE: Please run as normal (but sudo-ed) user <CONTROL-C>'\
+        -t10
+    exit 4
 fi
-
-# Establish base of version-controlled code tree.
-[[ -z $SOURCEBASE ]] && declare -x SOURCEBASE=${HOME}'/freeitathenscode'
-[[ -d $SOURCEBASE ]] || exit 25
-# Establish location of these scripts within SOURCEBASE
-codebase=${SOURCEBASE}'/image_scripts'
-[[ -d $codebase ]] || exit 14
-declare -x codebase
-source ${codebase}/Prepare_functions || exit 136
 
 Mainline() {
 
-    echo 'Run sudo ifconfig'
-    sudo ifconfig
-    Housekeeping
-    Integrity_check
-    Swap_check
-    Install_Remove_requested_packages
+    Housekeeping || return $?
+    select Action in\
+	integrity_check swap_check customize_package_set\
+	NEXT QUIT
+    do
+	case $Action in
+	    integrity_check)
+		Integrity_check || return $?
+		;;
+	    swap_check)
+		Swap_check || return $?
+		;;
+	    customize_package_set)
+		Install_Remove_requested_packages
+		;;
+	    NEXT)
+		echo 'whats next'
+		;;
+	    QUIT)
+		return 0
+		;;
+	esac
+    done
 
     case $distro_generia in
         ubuntu|mint)
@@ -58,6 +66,18 @@ Mainline() {
 
 Housekeeping() {
 
+    echo 'Establish sudo and net address'
+    sudo ifconfig
+    read -p'<Enter>'
+    # Establish base of version-controlled code tree.
+    [[ -z $SOURCEBASE ]] && declare -x SOURCEBASE=${HOME}'/freeitathenscode'
+    [[ -d $SOURCEBASE ]] || return 25
+    # Establish location of these scripts within SOURCEBASE
+    codebase=${SOURCEBASE}'/image_scripts'
+    [[ -d $codebase ]] || return 14
+    declare -x codebase
+    source ${codebase}/Prepare_functions || return 136
+
     sys_rpts_distro_name=''
     if [ -z $DISTRO_NAME ]
     then
@@ -66,7 +86,7 @@ Housekeeping() {
         then
             echo 'Distro_name_set ='$RCxDnS
             read -p'<ENTER>'
-            No_distro_name_bye $RCxDnS
+            No_distro_name_bye $RCxDnS || return $?
         else
             Pauze 'Good Selection!:'$DISTRO_NAME
         fi
@@ -168,7 +188,7 @@ No_distro_name_bye() {
     prettyprint '1,31,40,M,n' 'Cannot Set Distro name'
     Pauze 'Exiting....'
 
-    exit $RCxDC
+    return $RCxDC
 }
 
 Confirm_DISTRO_CPU() {
@@ -219,7 +239,7 @@ User_no_distro_bye() {
     prettyprint '5,31,47,M,n,0' 'No Known Distro Name, Exiting.'
     Pauze "See you back soon!"
 
-    exit $RCxDC
+    return $RCxDC
 }
 
 Integrity_check() {
@@ -252,11 +272,11 @@ Swap_check() {
     Pauze 'Verifying (absence of) local UUID reference for swap in fstab.'
     declare -ix RCxU=0
     (date +'%s.%N';grep -P 'UUID.+swap' /etc/fstab;RCxU=$?)\
-	|tee $filepath_swap_mess
+        |tee $filepath_swap_mess
     if [ $RCxU -eq 0 ]
     then
-	(date +'%s.%N';echo 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference')\
-	    |tee -a $filepath_swap_mess
+        (date +'%s.%N';echo 'fstab cAnNoT gO oN iMaGe wItH lOcAl UUID reference')\
+            |tee -a $filepath_swap_mess
     fi
 
     Pauze 'Verify swap off'
@@ -457,9 +477,9 @@ Pkg_by_distro_session() {
            Pkg_add || return $?
            ;;
        *)
-	   echo 'Unknown Distro Generic Description '$distro_session
-	   return 4
-	   ;;
+           echo 'Unknown Distro Generic Description '$distro_session
+           return 4
+           ;;
    esac
 
    return 1
@@ -467,7 +487,6 @@ Pkg_by_distro_session() {
 
 Check_Setup_wallpaper() {
 
-    # 64 bit : #0df2c6, #04227e
     [[ $DISTRO_NAME == 'lubuntu' ]] &&\
         sys_dir_wallpaper='/usr/share/lubuntu/wallpapers'
     sys_path_wallpaper=${sys_dir_wallpaper}/$filename_wallpaper
@@ -492,7 +511,7 @@ Check_Setup_wallpaper() {
     if [ "${Answer}." == 'Y.' ]
     then
         sudo cp -iv $src_path_wallpaper ${sys_dir_wallpaper}/\
-	    || return 7
+            || return 7
         return 0
     fi
 
@@ -603,7 +622,7 @@ do
             ;;
         h)
             echo $This_script
-	    echo "D makes live_run='Y'"
+            echo "D makes live_run='Y'"
             echo "A makes ADD_ALL='N'"
             echo "P makes PUR_ALL='N'"
             echo "b makes batch_run='Y'"
@@ -655,7 +674,7 @@ declare -rx live_run
 [[ $live_run == 'Y' ]] && echo 'LIVE RUN Selected. System files COULD be changed!'
 read -p'Confirm Selections <ENTER> ... or LEAVE <Control-C>'
 
-Mainline
+Mainline || exit $?
 
 [[ -z $PIDnu ]] || echo 'Check on process '$PIDnu
 [[ -z $PIDng ]] || echo 'Check on process '$PIDng

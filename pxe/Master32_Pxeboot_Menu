@@ -1,5 +1,4 @@
-default vesamenu.c32
-#default menu.c32
+DEFAULT vesamenu.c32
 prompt 0
 MENU MARGIN 2
 MENU BACKGROUND clonezilla-i486/syslinux/syslinux-100.png
@@ -9,68 +8,52 @@ MENU COLOR TIMEOUT 1;34;47 #c0000090 #00000000
 MENU COLOR HELP 1;36;40 #c0000090 #00000000
 
 MENU TITLE Special Menu for Master Build 32-bit
-menu color title        * #d8d8d8ff *
-menu color border       * #d8d8d8ff #00000000 none
-menu color sel          * #00000000 #d8d8d8ff *
-menu color unsel        * #d8d8d8ff #00000000 *
-menu color hotsel       1;7;37;40 #ffffffff #76a1d0ff *
-menu color tabmsg       * #ffffffff #00000000 *
-menu color help         37;40 #ffdddd00 #00000000 none
-menu vshift 4
-menu rows 18
-menu helpmsgrow 15
-menu cmdlinerow 16
-menu timeoutrow 16
-menu tabmsgrow 18
-menu tabmsg Press ENTER to boot or TAB to edit a menu entry
+MENU color title        * #d8d8d8ff *
+MENU color border       * #d8d8d8ff #00000000 none
+MENU color sel          * #00000000 #d8d8d8ff *
+MENU color unsel        * #d8d8d8ff #00000000 *
+MENU color hotsel       1;7;37;40 #ffffffff #76a1d0ff *
+MENU color tabmsg       * #ffffffff #00000000 *
+MENU color help         37;40 #ffdddd00 #00000000 none
+MENU vshift 4
+MENU rows 18
+MENU helpmsgrow 15
+MENU cmdlinerow 16
+MENU timeoutrow 16
+MENU tabmsgrow 18
+MENU tabmsg Press ENTER to boot or TAB to edit a menu entry
 
 LABEL local
-MENU default
-MENU LABEL Boot from Local Disk
-localboot 0x80
-timeout 0
-
-LABEL clonezilla_32
-MENU LABEL Clone (32-bit)
-    KERNEL clonezilla-i486/live/vmlinuz
-    INITRD clonezilla-i486/live/initrd.img 
-    APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag"  ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p true saveparts MINT17v1_MATE_32_OEM_20149999.img sda1 sda3 sda5"  ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+    MENU default
+    MENU LABEL Boot from Local Disk
+    localboot 0x80
+    timeout 0
 
 MENU BEGIN INSTALL GNU+Linux (Image with Clonezilla)
 
     MENU BEGIN Image with Clonezilla: 32-bit
 
-        MENU BEGIN 32-bit: Ready for Prime Time
+	MENU BEGIN 32-bit: Ready for Prime Time
+	LABEL Prod-mint17-normalfs
+	    MENU LABEL Install Mint 17 MATE 32-bit (20-Nov Build)
+	    KERNEL clonezilla-i486/live/vmlinuz
+	    INITRD clonezilla-i486/live/initrd.img 
+	    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod32_Mint17_PARTI.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts Prod32_Mint17 sda1 sda3 sda5" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs 
+	MENU END
 
-        LABEL Prod-mint17-normalfs
-        MENU LABEL Install Mint17 MATE 32-bit (25-Jul Build, Normal FS)
-        KERNEL clonezilla-i486/live/vmlinuz
-        INITRD clonezilla-i486/live/initrd.img 
-        APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Prod_Mint17N_32.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Prod_Mint17N_32bit sda1 sda3 sda5" ocs_live_batch="yes" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs 
-
-        MENU END
+	MENU BEGIN 32-bit: NOT Ready for Prime Time (Beta Tests)
+	LABEL Beta-mint17-32bit
+	    MENU LABEL Install Mint17.1 MATE 32-bit (Beta, 03-Dec Build)
+	    KERNEL clonezilla-i486/live/vmlinuz
+	    INITRD clonezilla-i486/live/initrd.img 
+	    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=en_US edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 1" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/Beta32_partitioning.sh" ocs_live_run="/usr/sbin/ocs-sr -l en_US.UTF-8 -g auto -e1 auto -e2 -c -j2 -srel -k -r -p true restoreparts Beta32_Mint17 sda1 sda3 sda5" ocs_live_batch="no" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs 
+	MENU END
 
     MENU END
 
 MENU END
 
 MENU BEGIN TRY GNU+Linux ("Live CD", installs to RAM only)
-
-    MENU BEGIN "Live CD" : 64-bit
-
-	LABEL live-mm-64-oem-config-17
-	MENU LABEL TRY Mint 17 with Mate Desktop Environment
-	KERNEL mint17-64bit-mate/casper/vmlinuz
-	INITRD mint17-64bit-mate/casper/initrd.lz 
-	APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/mint17-64bit-mate file=/cdrom/preseed/cli.seed
-
-	LABEL live-mm-64-oem-config-13
-	MENU LABEL TRY Mint 13 (oem-config) with Mate Desktop Environment
-	KERNEL mm64_oemconfig/casper/vmlinuz
-	INITRD mm64_oemconfig/casper/initrd.lz 
-	APPEND boot=casper netboot=nfs nfsroot=192.168.1.9:/tftpboot/mm64_oemconfig file=/cdrom/preseed/mint.seed
-
-    MENU END
 
     MENU BEGIN "Live CD" : 32-bit
 
@@ -96,40 +79,44 @@ MENU BEGIN TRY GNU+Linux ("Live CD", installs to RAM only)
 
 MENU END
 
+LABEL MakeNewClone32
+  MENU LABEL Make New Clonezilla Image (32-bit)
+  KERNEL clonezilla-i486/live/vmlinuz
+  INITRD clonezilla-i486/live/initrd.img 
+  APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p poweroff saveparts MINT17r1_MATE_32_OEM_20150416.img sda1 sda3 sda5" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+
 LABEL hdt
-MENU LABEL Identify Hardware
+    MENU LABEL Identify Hardware
     kernel memdisk
     append initrd=hdt/hdt.img floppy
 
 MENU BEGIN Utilities
 
-    LABEL DBAN
-    menu LABEL DBAN 2.2.8
-    kernel dban_test/dban.bzi
-    append initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe --method zero --prng twister --verify last" nofloppy
+LABEL DBAN
+  MENU LABEL DBAN 2.2.8
+  kernel dban_test/dban.bzi
+  append initrd dban_test/dban.bzi root=/dev/ram0 init=rc nuke="dwipe --method zero --prng twister --verify last" nofloppy
 
-    LABEL memtest
-    menu LABEL Test RAM
-    kernel memtest/memtestp
-    append -
+LABEL memtest
+  MENU LABEL Test RAM
+  kernel memtest/memtestp
+  append -
 
-    LABEL clonezilla_32
-    MENU LABEL Clonezilla live (32-bit)
-    KERNEL clonezilla-i486/live/vmlinuz
-    INITRD clonezilla-i486/live/initrd.img 
-    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch="no" vga=788 splash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+LABEL clonezilla_32
+  MENU LABEL Clonezilla live (32-bit)
+  KERNEL clonezilla-i486/live/vmlinuz
+  INITRD clonezilla-i486/live/initrd.img 
+  APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
-    LABEL Kiosk Boot
+LABEL Kiosk Boot
     LINUX systemrescuecd/isolinux/rescue32
     INITRD systemrescuecd/isolinux/initram.igz
     APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us dostartx
 
-    LABEL Kiosk Boot (text only, no gui)
+LABEL Kiosk Boot (text only, no gui)
     LINUX systemrescuecd/isolinux/rescue32
     INITRD systemrescuecd/isolinux/initram.igz
     APPEND netboot=tftp://192.168.1.9/systemrescuecd/sysrcd.dat setkmap=us
 
 MENU END
-
-# locales="en_US.UTF-8" keyboard-layouts=NONE
 
