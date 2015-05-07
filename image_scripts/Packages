@@ -56,3 +56,6 @@ libimobiledevice4 rhythmbox rhythmbox-plugins,0,ALL,REMOVE=audacious
 # Email
 sylpheed,0,NONE,INSTALL='claws-mail'
 claws-mail claws-mail-extra-plugins claws-mail-tools claws-mail-plugins,0,ALL,REMOVE=sylpheed
+virtualbox-guest-dkms,0,NONE
+virtualbox-guest-utils,0,NONE
+virtualbox-guest-x11,0,NONE
