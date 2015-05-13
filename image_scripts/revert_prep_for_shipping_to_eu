@@ -1,13 +1,16 @@
 #!/bin/bash +x
-if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
-then
-    echo -e "\e[5;31;40mWHA???\e[1;35;40m: Please rerun with sudo or as root\e[0m"
-    exit 4
-fi
+#if [ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]
+#then
+#    echo -e "\e[5;31;40mWHA???\e[1;35;40m: Please rerun with sudo or as root\e[0m"
+#    exit 4
+#fi
 
 Trigger_file='/var/lib/oem-config/run'
 Last_RC=0
-ls -l $Trigger_file 2>/dev/null || Last_RC=$?
+
+[[ 0 -lt $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]] &&\
+    echo -e "\e[5;31;40mYO\e[1;35;40m: Password prompt follows (usually 'oem')\e[0m"
+sudo ls -l $Trigger_file 2>/dev/null || Last_RC=$?
 if [ $Last_RC -gt 0 ]
 then
     echo -e "\e[5;31;40mWHA???\e[1;35;40m: can't find $Trigger_file\e[0m"
@@ -15,18 +18,18 @@ then
 fi
 
 Last_RC=0
-rm -v $Trigger_file || Last_RC=$?
+sudo rm -v $Trigger_file || Last_RC=$?
 if [ $Last_RC -eq 0 ]
 then
     echo -e "\n\e[1;32;40mSuccess!\e[0m\n"
-    echo -e "\e[1;34;40m10 Seconds to REBOOT...\e[0m\n"
-    sleep 10
-    /sbin/shutdown -r now
+    echo -e "\e[1;34;40m5 Seconds to REBOOT...\e[0m\n"
+    sleep 5
+    sudo /sbin/shutdown -r now
 else
     echo 'Return Code from Remove command was '$Last_RC
     echo -e "\e[5;31;40mWHA???\e[1;35;40m:Something weird is going on. Contact Staff.\e[0m"
     echo -e "\e[1;34;40m60 Seconds to REBOOT...\e[0m\n"
     sleep 60
-    /sbin/shutdown -r now
+    sudo /sbin/shutdown -r now
 fi
 
