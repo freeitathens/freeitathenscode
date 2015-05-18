@@ -50,11 +50,11 @@ MENU BEGIN INSTALL GNU/Linux (Image with Clonezilla)
     INITRD clonezilla-i486/live/initrd.img 
     APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-mint32pae sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
-    LABEL mint32-legacy
-    MENU label Install Mint13 XFCE (32-bit, emergency only)
-    KERNEL clonezilla-i486/live/vmlinuz
-    INITRD clonezilla-i486/live/initrd.img 
-    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+#    LABEL mint32-legacy
+#    MENU label Install Mint13 XFCE (32-bit, emergency only)
+#    KERNEL clonezilla-i486/live/vmlinuz
+#    INITRD clonezilla-i486/live/initrd.img 
+#    APPEND boot=live config noswap locales="en_US.UTF-8" keyboard-layouts=NONE edd=on nomodeset ocs_prerun="/usr/sbin/rpc.gssd" ocs_prerun1="sleep 7" ocs_prerun2="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_prerun3="/home/partimag/freeitathenscode/pxe/partition.sh" ocs_live_extra_param="" ocs_live_run="/usr/sbin/ocs-sr -g auto -e1 auto -e2 -c -j2 -srel -k -r -p reboot restoreparts latest-ubuntu sda2" ocs_live_batch="yes" vga=788 nosplash fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
     LABEL Install Emmabuntus 32-bit oem-config
     KERNEL clonezilla-i486/live/vmlinuz

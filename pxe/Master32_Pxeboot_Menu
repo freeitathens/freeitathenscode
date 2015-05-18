@@ -83,7 +83,7 @@ LABEL MakeNewClone32
   MENU LABEL Make New Clonezilla Image (32-bit)
   KERNEL clonezilla-i486/live/vmlinuz
   INITRD clonezilla-i486/live/initrd.img 
-  APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p poweroff saveparts MINT17r1_MATE_32_OEM_20150416.img sda1 sda3 sda5" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
+  APPEND boot=live config noswap locales="en_US.UTF-8" edd=on nomodeset ocs_prerun="mount -t nfs 192.168.1.9:/partimag /home/partimag" ocs_live_run="/usr/sbin/ocs-sr -q2 -c -j2 -gs -z1p -i 2000 -fsck-src-part -p poweroff saveparts MINT17r1_MATE_32_OEM_20150516.img sda1 sda3 sda5" ocs_live_keymap="" ocs_live_batch="no" ocs_lang="" vga=788 nosplash noprompt fetch=tftp://192.168.1.9/tftpboot/clonezilla-i486/live/filesystem.squashfs
 
 LABEL hdt
     MENU LABEL Identify Hardware

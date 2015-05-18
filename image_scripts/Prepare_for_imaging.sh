@@ -1,12 +1,8 @@
 #!/bin/bash +x
-#if [ $(whoami) == 'root' ]
-#if [ $(id -u) -eq 0 ]
 if [[ 0 -eq $(id |grep -o -P '^uid=\d+' |cut -f2 -d=) ]]
 then
-    read\
-	-p'NOTE: Please run as normal (but sudo-ed) user <CONTROL-C>'\
-	-t10
-    exit
+    read -p'NOTE: Please run as sudo-prived user <CONTROL-C>' -t10
+    exit 5
 fi
 
 # Establish base of version-controlled code tree.
@@ -20,7 +16,6 @@ source ${codebase}/Prepare_functions || exit 136
 
 Mainline() {
 
-    echo 'Run sudo ifconfig'
     sudo ifconfig
     Housekeeping
     Integrity_check
@@ -668,4 +663,6 @@ Mainline
 
     #Pauze 'Confirm no medibuntu in apt sources'
     #egrep -v '^\s*(#|$)' /etc/apt/sources.list |grep medi && sudo vi /etc/apt/sources.list
+#if [ $(whoami) == 'root' ]
+#if [ $(id -u) -eq 0 ]
 

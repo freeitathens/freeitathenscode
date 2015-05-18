@@ -222,11 +222,13 @@ Chromium_defaults() {
     fi
     
     Prompt_time 'Behold! CHROMIUM_FLAGS! Preparing to edit in-place...'
-    sudo perl -pi'.bak' -ne 's/^(CHROMIUM_FLAGS=".+)"/${1} --start-maximized --no-first-run --ssl-version-min=tls1 --disable-google-now-integration"/;' $filepath_sys_chromium_defaults
+    sudo perl -pi'.bak' -e 's/^(CHROMIUM_FLAGS=".+)"/$1 --ssl-version-min=tls1 --start-maximized --no-first-run --disable-google-now-integration"/' $filepath_sys_chromium_defaults
     sudo mv -iv ${filepath_sys_chromium_defaults}.bak $HOME
+    vim $filepath_sys_chromium_defaults
 
     return $?
 }
+#perl -pi'.bak' -ne 's/^(CHROMIUM_FLAGS=".+)"/${1} --start-maximized --no-first-run --ssl-version-min=tls1 --disable-google-now-integration"/;'
 
 Chromium_bookmarks() {
 
