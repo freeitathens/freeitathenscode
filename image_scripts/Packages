@@ -32,7 +32,8 @@ oem-config,32,ALL,
 oem-config-debconf,32,ALL,
 oem-config-gtk,32,ALL,
 terminator,0,ALL,
-ubiquity-frontend-[dgk].*,32,ALL,INSTALL='kde also?'
+"ubiquity-frontend-[dgk].*",32,ALL,
+#INSTALL=kde also?
 vim,0,ALL,
 vrms,0,ALL,
 xscreensaver-gl,0,ALL,
@@ -47,15 +48,26 @@ libabiword-3.0,0,NONE,
 gnumeric,0,NONE,
 gnumeric-common,0,NONE,
 git,0,ALL,
-# Movies
-gnome-mplayer,0,NONE,INSTALL=vlc
-vlc,0,ALL,REMOVE=gnome-mplayer
-# Music
-audacious,0,NONE,INSTALL='libimobiledevice4 rhythmbox rhythmbox-plugins'
-libimobiledevice4 rhythmbox rhythmbox-plugins,0,ALL,REMOVE=audacious
-# Email
-sylpheed,0,NONE,INSTALL='claws-mail'
-claws-mail claws-mail-extra-plugins claws-mail-tools claws-mail-plugins,0,ALL,REMOVE=sylpheed
+#*--* Movies *--*
+#REMOVE=gnome-mplayer
+#INSTALL=vlc
+gnome-mplayer,0,NONE,
+vlc,0,ALL,
+# *--* Music *--*
+#REMOVE=audacious
+#INSTALL='libimobiledevice4 rhythmbox rhythmbox-plugins'
+audacious,0,NONE,
+libimobiledevice4,0,ALL,
+rhythmbox,0,ALL,
+rhythmbox-plugins,0,ALL,
+#*--*Email*--*
+#REMOVE=sylpheed
+#INSTALL='claws-mail'
+sylpheed,0,NONE,
+claws-mail,0,ALL,
+claws-mail-plugins,0,ALL,
+claws-mail-extra-plugins,0,ALL,
+claws-mail-tools,0,ALL,
 virtualbox-guest-dkms,0,NONE
 virtualbox-guest-utils,0,NONE
 virtualbox-guest-x11,0,NONE
